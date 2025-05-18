@@ -9,6 +9,7 @@ use crate::types::enc_string::EncString;
 pub struct EncPath(Vec<EncString>);
 
 impl EncPath {
+    #[allow(unused)]
     pub fn plain(&self) -> Result<String, Error> {
         let mut res = String::new();
         

@@ -42,6 +42,7 @@ pub struct Item {
 }
 
 impl Item {
+    #[allow(unused)]
     pub fn set_id(&mut self, id: ItemId) -> Result<(), Error> {
         if self.id.is_valid() {
             Err(Error::msg("Cannot override a valid id"))
@@ -50,6 +51,7 @@ impl Item {
             Ok(())
         }
     }
+    #[allow(unused)]
     pub fn clear_id(&mut self) -> ItemId {
         let old_id = self.id.clone();
         self.id = Default::default();

@@ -86,6 +86,7 @@ impl Permissions {
         })
     }
 
+    #[allow(unused)]
     pub async fn upload_to_repository(&self, db: &Database, repository_id: &RepositoryId) -> Result<PermissionResult, ServerError> {
         self.view_repository(db, repository_id).await?.granted();
         let repository = DbRepository::from_id(db, repository_id).await?;
@@ -111,6 +112,7 @@ impl Permissions {
         self.view_repository(db, &item.repository).await
     }
 
+    #[allow(unused)]
     pub async fn edit_item(&self, db: &Database, item_id: &ItemId) -> Result<PermissionResult, ServerError> {
         self.view_item(db, item_id).await?.granted();
         let item = DbItem::from_id(db, item_id, Trash::Both).await?;
@@ -120,29 +122,6 @@ impl Permissions {
         Ok(if let Some(user) = &*self.request_context.connected_user().await {
             if item.owner == *user.id() {
                 PermissionResult::Granted
-            } else {
-                PermissionResult::Denied
-            }
-        } else {
-            PermissionResult::Denied
-        })
-    }
-
-    pub async fn upload_to_directory(&self, db: &Database, item_id: &ItemId) -> Result<PermissionResult, ServerError> {
-        self.view_item(db, item_id).await?.granted();
-        let item = DbItem::from_id(db, item_id, Trash::Both).await?;
-        if self.upload_to_repository(db, &item.repository).await?.granted() {
-            return Ok(PermissionResult::Granted)
-        }
-        Ok(if let Some(user) = &*self.request_context.connected_user().await {
-            if item.owner == *user.id() {
-                PermissionResult::Granted
-            } else if let Some(directory_data) = item.directory {
-                if directory_data.open_upload {
-                    PermissionResult::Granted
-                } else {
-                    PermissionResult::Denied
-                }
             } else {
                 PermissionResult::Denied
             }

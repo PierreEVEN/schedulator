@@ -138,6 +138,7 @@ impl RequestContext {
     pub async fn connected_user(&self) -> tokio::sync::RwLockReadGuard<Option<User>> {
         self.connected_user.read().await
     }
+    #[allow(unused)]
     pub async fn connected_user_mut(&self) -> tokio::sync::RwLockWriteGuard<Option<User>> {
         self.connected_user.write().await
     }
@@ -145,6 +146,7 @@ impl RequestContext {
     pub async fn display_user(&self) -> tokio::sync::RwLockReadGuard<Option<User>> {
         self.display_user.read().await
     }
+    #[allow(unused)]
     pub async fn display_user_mut(&self) -> tokio::sync::RwLockWriteGuard<Option<User>> {
         self.display_user.write().await
     }
@@ -152,6 +154,7 @@ impl RequestContext {
     pub async fn display_repository(&self) -> tokio::sync::RwLockReadGuard<Option<Repository>> {
         self.display_repository.read().await
     }
+    #[allow(unused)]
     pub async fn display_repository_mut(&self) -> tokio::sync::RwLockWriteGuard<Option<Repository>> {
         self.display_repository.write().await
     }
@@ -159,6 +162,7 @@ impl RequestContext {
     pub async fn display_item(&self) -> tokio::sync::RwLockReadGuard<Option<Item>> {
         self.display_item.read().await
     }
+    #[allow(unused)]
     pub async fn display_item_mut(&self) -> tokio::sync::RwLockWriteGuard<Option<Item>> {
         self.display_item.write().await
     }

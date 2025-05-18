@@ -1,20 +1,19 @@
 use crate::{query_fmt, query_object, query_objects};
 use anyhow::Error;
 use postgres_from_row::FromRow;
-use std::fs;
-use std::fs::File;
-use std::io::{BufReader, Read};
-use std::path::{Path, PathBuf};
-use tracing::{error};
 use crate::database::Database;
 use crate::types::database_ids::{ItemId, ObjectId};
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, FromRow)]
 pub struct Object {
+    #[allow(unused)]
     id: ObjectId,
+    #[allow(unused)]
     pub hash: String,
 }
 
+#[allow(unused)]
 impl Object {
     
     pub async fn from_id(db: &Database, id: &ObjectId) -> Result<Self, Error> {
@@ -29,7 +28,7 @@ impl Object {
         Ok(query_objects!(db, Object, "SELECT * FROM SCHEMA_NAME.objects WHERE hash = $1", hash))
     }
 
-    pub async fn insert(db: &Database, file: &Path, hash: &String) -> Result<Self, Error> {
+    pub async fn insert(db: &Database, _: &Path, hash: &String) -> Result<Self, Error> {
         let new_object = query_object!(db, Self, "INSERT INTO SCHEMA_NAME.objects (hash) VALUES ($1) RETURNING *", hash).ok_or(Error::msg("Failed to insert object"))?;
 
         Ok(new_object)
@@ -40,8 +39,6 @@ impl Object {
     }
 
     pub async fn delete_objects(db: &Database, objects: &Vec<ObjectId>) -> Result<(), Error> {
-        for object in objects {
-        }
         query_fmt!(db, r#"DELETE FROM SCHEMA_NAME.objects WHERE id = any($1);"#, objects);
         Ok(())
     }
@@ -51,7 +48,7 @@ impl Object {
     }
 
 
-    pub async fn equals_to_file(&self, db: &Database, file: PathBuf) -> Result<bool, Error> {
+    pub async fn equals_to_file(&self, _: &Database, _: PathBuf) -> Result<bool, Error> {
 
         Ok(true)
     }

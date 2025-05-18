@@ -1,5 +1,4 @@
 use std::{env, fs};
-use std::convert::Infallible;
 use std::fs::OpenOptions;
 use std::net::{SocketAddr};
 use std::str::FromStr;

@@ -46,6 +46,7 @@ impl EncString {
         }
     }
 
+    #[allow(unused)]
     pub fn from_os_string(string: &std::ffi::OsStr) -> Self {
         Self::encode(string.to_str().unwrap())
     }

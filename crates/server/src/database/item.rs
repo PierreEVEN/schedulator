@@ -12,6 +12,7 @@ use crate::types::enc_string::EncString;
 use crate::types::item::Item;
 
 pub enum Trash {
+    #[allow(unused)]
     Yes,
     No,
     Both,
@@ -29,10 +30,13 @@ impl Display for Trash {
 
 #[derive(Deserialize, Debug)]
 pub struct ItemSearchRepositoryField {
+    #[allow(unused)]
     pub repository: RepositoryId,
+    #[allow(unused)]
     pub root_items: Vec<ItemId>,
 }
 
+#[allow(unused)]
 #[derive(Deserialize, Debug)]
 pub struct ItemSearchData {
     pub repositories: Vec<ItemSearchRepositoryField>,
@@ -59,14 +63,17 @@ impl DbItem {
         Ok(query_objects!(db, Item, format!("SELECT * FROM SCHEMA_NAME.item_full_view WHERE repository = $1 {filter}"), id))
     }
 
+    #[allow(unused)]
     pub async fn from_user(db: &Database, id: &UserId, filter: Trash) -> Result<Vec<Item>, Error> {
         Ok(query_objects!(db, Item, format!("SELECT * FROM SCHEMA_NAME.item_full_view WHERE owner = $1 {filter}"), id))
     }
 
+    #[allow(unused)]
     pub async fn from_object(db: &Database, id: &ObjectId, filter: Trash) -> Result<Vec<Item>, Error> {
         Ok(query_objects!(db, Item, format!("SELECT * FROM SCHEMA_NAME.item_full_view WHERE id IN (SELECT id FROM SCHEMA_NAME.files WHERE object = $1) {filter}"), id))
     }
 
+    #[allow(unused)]
     pub async fn from_parent(db: &Database, parent_directory: &ItemId, filter: Trash) -> Result<Vec<Item>, Error> {
         Ok(query_objects!(db, Item, format!("SELECT * FROM SCHEMA_NAME.item_full_view WHERE parent_item = $1 {filter}"), parent_directory))
     }
@@ -78,7 +85,8 @@ impl DbItem {
     pub async fn repository_trash_root(db: &Database, repository: &RepositoryId) -> Result<Vec<Item>, Error> {
         Ok(query_objects!(db, Item, "SELECT * FROM SCHEMA_NAME.item_full_view WHERE in_trash AND repository = $1 AND (parent_item IS NULL OR parent_item IN (SELECT id FROM SCHEMA_NAME.item_full_view WHERE repository = $1 AND NOT in_trash))", repository))
     }
-    
+
+    #[allow(unused)]
     pub async fn search(db: &Database, filter: ItemSearchData) -> Result<Vec<Item>, Error> {
 
         if filter.repositories.is_empty() {
@@ -135,6 +143,7 @@ impl DbItem {
         Ok(())
     }
 
+    #[allow(unused)]
     pub async fn push(item: &mut Item, db: &Database) -> Result<(), Error> {
         if item.directory.is_none() && item.file.is_none() {
             return Err(Error::msg("Cannot push : neither a file or a directory"));
