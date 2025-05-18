@@ -110,19 +110,19 @@ impl Server {
 
 #[tokio::main]
 async fn main() {
-    fs::create_dir_all("fileshare_logs").unwrap();
-    let error_file = "fileshare_logs/errors.log";
-    let log_file = "fileshare_logs/logs.log";
+    fs::create_dir_all("ezplanning_logs").unwrap();
+    let error_file = "ezplanning_logs/errors.log";
+    let log_file = "ezplanning_logs/logs.log";
     if fs::exists(error_file).unwrap() {
         let last_write_time: DateTime<Utc> = fs::metadata(error_file).unwrap().modified().unwrap().into();
         let last_write_time = format!("{last_write_time}").replace(":", "-").replace(" ", "_");
-        fs::rename(error_file, format!("fileshare_logs/error_{}.log", last_write_time)).unwrap();
+        fs::rename(error_file, format!("ezplanning_logs/error_{}.log", last_write_time)).unwrap();
     }
 
     if fs::exists(log_file).unwrap() {
         let last_write_time: DateTime<Utc> = fs::metadata(log_file).unwrap().modified().unwrap().into();
         let last_write_time = format!("{last_write_time}").replace(":", "-").replace(" ", "_");
-        fs::rename(log_file, format!("fileshare_logs/logs_{}.log", last_write_time)).unwrap();
+        fs::rename(log_file, format!("ezplanning_logs/logs_{}.log", last_write_time)).unwrap();
     }
 
     let err_file = OpenOptions::new()

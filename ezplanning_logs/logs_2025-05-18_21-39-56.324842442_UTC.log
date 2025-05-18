@@ -1,0 +1,9 @@
+2025-05-18T21:37:08.503379Z  INFO server: Successfully started web client.
+2025-05-18T21:38:31.894250Z  INFO server: [GET] {?} | /
+2025-05-18T21:38:31.895226Z  WARN server: 500 Internal Server Error (/) : 500: Cannot find index file : No such file or directory (os error 2) (searching in ./webclient/public/index.html)
+2025-05-18T21:38:31.923863Z  INFO server: [GET] {?} | /favicon.ico
+2025-05-18T21:38:31.924194Z  WARN server: 404 Not Found (/favicon.ico) : 404: File not found ! (searching ./webclient/public/images/icons/favicon.ico)
+2025-05-18T21:39:50.363043Z  INFO server: [GET] {?} | /
+2025-05-18T21:39:50.382224Z  INFO server: [GET] {?} | /favicon.ico
+2025-05-18T21:39:50.382481Z  WARN server: 404 Not Found (/favicon.ico) : 404: File not found ! (searching ./webclient/public/images/icons/favicon.ico)
+2025-05-18T21:39:56.325360Z  INFO server: [GET] {?} | /

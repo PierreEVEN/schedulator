@@ -17,3 +17,5 @@ target/
 .idea/
 
 Cargo.lock
+/webclient/node_modules
+/webclient/package-lock.json
