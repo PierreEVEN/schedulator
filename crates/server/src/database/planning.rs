@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 pub struct Planning {
 
     id: PlanningId,
-    pub owner_id: i64,
+    pub owner_id: UserId,
     pub title: EncString,
     pub key: EncString,
     pub start: i64,

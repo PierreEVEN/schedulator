@@ -20,11 +20,11 @@ pub struct SlotRoutes {}
 
 impl SlotRoutes {
     pub fn create(ctx: &Arc<AppCtx>) -> Result<Router, Error> {
-        let router = Router::new()
+        let router = Router::new();
+            /*
             .route("/create/", post(create_repository).with_state(ctx.clone()))
             .route("/delete/", post(find_repositories).with_state(ctx.clone()))
-            .route("/delete_all/", post(find_repositories).with_state(ctx.clone()))
+            .route("/delete_all/", post(find_repositories).with_state(ctx.clone()))*/
         Ok(router)
     }
-}
 }
