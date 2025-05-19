@@ -104,10 +104,10 @@ impl DatabaseIdTrait for DatabaseId {
     fn is_valid(&self) -> bool { *self != 0 }
 }
 
-make_database_id!(ItemId);
+make_database_id!(PlanningUserId);
 make_database_id!(UserId);
-make_database_id!(ObjectId);
-make_database_id!(RepositoryId);
+make_database_id!(SlotId);
+make_database_id!(PlanningId);
 
 make_wrapped_db_type!(PasswordHash, String, Clone, Default, Debug, serde::Serialize, serde::Deserialize);
 impl PasswordHash {

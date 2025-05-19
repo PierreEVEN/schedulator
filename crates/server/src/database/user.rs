@@ -5,8 +5,7 @@ use rand::random;
 use std::time::{SystemTime, UNIX_EPOCH};
 use postgres_from_row::FromRow;
 use crate::database::Database;
-use crate::database::repository::DbRepository;
-use crate::database::subscription::Subscription;
+use crate::database::planning::Planning;
 use crate::types::database_ids::{DatabaseId, DatabaseIdTrait, PasswordHash, UserId};
 use crate::types::enc_string::EncString;
 use crate::types::user::{AuthToken, User};
@@ -114,7 +113,7 @@ impl DbUser {
     }
 
     pub async fn push(user: &mut User, db: &Database) -> Result<(), Error> {
-        if user.name.is_empty() {
+        if user.display_name.is_empty() {
             return Err(Error::msg("Invalid name"));
         }
         query_fmt!(db, "INSERT INTO SCHEMA_NAME.users
@@ -122,19 +121,16 @@ impl DbUser {
                         ($1, $2, $3, $4, $5, $6, $7)
                         ON CONFLICT(id) DO UPDATE SET
                         id = $1, email = $2, password_hash = $3, name = LOWER($4), allow_contact = $5, user_role = $6, login = $7;",
-            user.id(), user.email, user.password(), user.name, user.allow_contact, user.user_role, user.login);
+            user.id(), user.email, user.password(), user.display_name);
         Ok(())
     }
 
     pub async fn delete(user: &User, db: &Database) -> Result<(), Error> {
-        for repository in DbRepository::from_user(db, &user.id()).await? {
-            DbRepository::delete(&repository, db).await?;
+        for repository in Planning::from_user(db, &user.id()).await? {
+            Planning::delete(&repository, db).await?;
         }
         for token in DbAuthToken::from_user(db, user.id()).await? {
             DbAuthToken::delete(&token, db).await?;
-        }
-        for subscriptions in Subscription::from_user(db, &user.id()).await? {
-            subscriptions.delete(db).await?
         }
         query_fmt!(db, r#"DELETE FROM SCHEMA_NAME.users WHERE id = $1;"#, user.id());
         Ok(())

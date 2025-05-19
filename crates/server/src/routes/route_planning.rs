@@ -1,15 +1,11 @@
-use crate::database::item::{DbItem, Trash};
-use crate::database::repository::DbRepository;
-use crate::database::subscription::{Subscription, SubscriptionAccessType};
+use crate::database::planning::Planning;
 use crate::database::user::DbUser;
 use crate::require_connected_user;
 use crate::routes::app_ctx::AppCtx;
 use crate::routes::permissions::Permissions;
-use crate::routes::route_user::UserCredentials;
 use crate::server_error::ServerError;
-use crate::types::database_ids::{DatabaseId, RepositoryId, UserId};
+use crate::types::database_ids::{DatabaseId, PlanningId, UserId};
 use crate::types::enc_string::EncString;
-use crate::types::repository::{Repository, RepositoryStatus};
 use anyhow::Error;
 use axum::body::Body;
 use axum::extract::{FromRequest, Path, Request, State};
@@ -20,37 +16,29 @@ use axum::{Json, Router};
 use serde::Deserialize;
 use std::sync::Arc;
 
-pub struct RepositoryRoutes {}
+pub struct PlanningRoutes {}
 
-impl RepositoryRoutes {
+impl PlanningRoutes {
     pub fn create(ctx: &Arc<AppCtx>) -> Result<Router, Error> {
         let router = Router::new()
-            .route("/find/", post(find_repositories).with_state(ctx.clone()))
-            .route("/content/:id/", get(content).with_state(ctx.clone()))
-            .route("/owned/", get(get_owned_repositories).with_state(ctx.clone()))
-            .route("/shared/", get(get_shared_repositories).with_state(ctx.clone()))
-            .route("/public/", get(get_public_repositories).with_state(ctx.clone()))
             .route("/create/", post(create_repository).with_state(ctx.clone()))
-            .route("/delete/", post(delete_repository).with_state(ctx.clone()))
-            .route("/root-content/", post(root_content).with_state(ctx.clone()))
-            .route("/update/", post(update).with_state(ctx.clone()))
-            .route("/subscribe/", post(subscribe).with_state(ctx.clone()))
-            .route("/unsubscribe/", post(unsubscribe).with_state(ctx.clone()))
-            .route("/stats/", post(stats).with_state(ctx.clone()))
-            .route("/subscriptions/", post(subscriptions).with_state(ctx.clone()))
-            .route("/trash-content/", post(trash_content).with_state(ctx.clone()));
+            .route("/delete/", post(find_repositories).with_state(ctx.clone()))
+            .route("/my_plannings/", post(find_repositories).with_state(ctx.clone()))
+            .route("/get/", post(find_repositories).with_state(ctx.clone()))
+            .route("/add_user/", post(find_repositories).with_state(ctx.clone()))
+            .route("/remove_user/", post(find_repositories).with_state(ctx.clone()))
         Ok(router)
     }
 }
 
 /// Find repository by url name
-async fn find_repositories(State(ctx): State<Arc<AppCtx>>, request: Request) -> Result<Json<Vec<Repository>>, ServerError> {
+async fn find_repositories(State(ctx): State<Arc<AppCtx>>, request: Request) -> Result<Json<Vec<Planning>>, ServerError> {
     let permission = Permissions::new(&request)?;
-    let json = Json::<Vec<RepositoryId>>::from_request(request, &ctx).await.map_err(|err| { Error::msg(format!("Invalid body, {err} : expected Vec<RepositoryId>")) })?;
+    let json = Json::<Vec<PlanningId>>::from_request(request, &ctx).await.map_err(|err| { Error::msg(format!("Invalid body, {err} : expected Vec<RepositoryId>")) })?;
     let mut repositories = vec![];
     for repository in &json.0 {
         if permission.view_repository(&ctx.database, repository).await?.granted() {
-            repositories.push(DbRepository::from_id(&ctx.database, repository).await?);
+            repositories.push(Planning::from_id(&ctx.database, repository).await?);
         }
     }
     Ok(Json(repositories))
@@ -72,15 +60,15 @@ async fn create_repository(State(ctx): State<Arc<AppCtx>>, request: Request) -> 
     let repository_data = Json::<Vec<CreateReposData>>::from_request(request, &ctx).await?;
     let mut repositories = vec![];
     for data in repository_data.0 {
-        if DbRepository::from_url_name(&ctx.database, &data.name.url_formated()?).await.is_ok() {
+        if Planning::from_url_name(&ctx.database, &data.name.url_formated()?).await.is_ok() {
             return Err(ServerError::msg(StatusCode::FORBIDDEN, "A repository with this name already exists"));
         }
-        let mut repository = Repository::default();
+        let mut repository = Planning::default();
         repository.url_name = data.name.url_formated()?;
         repository.display_name = data.name.clone();
         repository.status = RepositoryStatus::from(data.status.clone());
         repository.owner = user.id().clone();
-        DbRepository::push(&mut repository, &ctx.database).await?;
+        Planning::push(&mut repository, &ctx.database).await?;
         repositories.push(repository);
     }
     Ok(Json(repositories))
@@ -88,7 +76,7 @@ async fn create_repository(State(ctx): State<Arc<AppCtx>>, request: Request) -> 
 
 /// Get repositories owned by connected user
 async fn content(State(ctx): State<Arc<AppCtx>>, Path(id): Path<DatabaseId>, request: Request) -> Result<impl IntoResponse, ServerError> {
-    let repository = RepositoryId::from(id);
+    let repository = PlanningId::from(id);
     let permissions = Permissions::new(&request)?;
     permissions.view_repository(&ctx.database, &repository).await?.require()?;
     let items = DbItem::from_repository(&ctx.database, &repository, Trash::No).await?;
@@ -99,18 +87,18 @@ async fn content(State(ctx): State<Arc<AppCtx>>, Path(id): Path<DatabaseId>, req
 /// Get repositories owned by connected user
 async fn get_owned_repositories(State(ctx): State<Arc<AppCtx>>, request: Request) -> impl IntoResponse {
     let user = require_connected_user!(request);
-    Ok(Json(DbRepository::from_user(&ctx.database, user.id()).await?))
+    Ok(Json(Planning::from_user(&ctx.database, user.id()).await?))
 }
 
 /// Get repositories shared with connected user
 async fn get_shared_repositories(State(ctx): State<Arc<AppCtx>>, request: Request) -> impl IntoResponse {
     let user = require_connected_user!(request);
-    Ok(Json(DbRepository::shared_with(&ctx.database, user.id()).await?))
+    Ok(Json(Planning::shared_with(&ctx.database, user.id()).await?))
 }
 
 /// Get all public repositories
 async fn get_public_repositories(State(ctx): State<Arc<AppCtx>>) -> Result<impl IntoResponse, ServerError> {
-    Ok(Json(DbRepository::public(&ctx.database).await?))
+    Ok(Json(Planning::public(&ctx.database).await?))
 }
 
 /// Delete repository
@@ -119,7 +107,7 @@ async fn delete_repository(State(ctx): State<Arc<AppCtx>>, request: axum::http::
 
     #[derive(Deserialize)]
     pub struct RequestParams {
-        pub repositories: Vec<RepositoryId>,
+        pub repositories: Vec<PlanningId>,
         pub credentials: UserCredentials,
     }
 
@@ -132,12 +120,12 @@ async fn delete_repository(State(ctx): State<Arc<AppCtx>>, request: axum::http::
         if connected_user.id() != from_creds.id() {
             continue;
         }
-        let repository = DbRepository::from_id(&ctx.database, repository).await?;
+        let repository = Planning::from_id(&ctx.database, repository).await?;
         if repository.owner != *connected_user.id() {
             continue;
         }
 
-        DbRepository::delete(&repository, &ctx.database).await?;
+        Planning::delete(&repository, &ctx.database).await?;
         deleted_ids.push(repository.clone());
     }
     Ok(Json(deleted_ids))
@@ -147,7 +135,7 @@ async fn delete_repository(State(ctx): State<Arc<AppCtx>>, request: axum::http::
 pub async fn root_content(State(ctx): State<Arc<AppCtx>>, request: axum::http::Request<Body>) -> Result<impl IntoResponse, ServerError> {
     let permission = Permissions::new(&request)?;
 
-    let data = Json::<Vec<RepositoryId>>::from_request(request, &ctx).await?;
+    let data = Json::<Vec<PlanningId>>::from_request(request, &ctx).await?;
 
     let mut result = vec![];
     for repository in data.0 {
@@ -161,7 +149,7 @@ pub async fn root_content(State(ctx): State<Arc<AppCtx>>, request: axum::http::R
 pub async fn trash_content(State(ctx): State<Arc<AppCtx>>, request: axum::http::Request<Body>) -> Result<impl IntoResponse, ServerError> {
     let permission = Permissions::new(&request)?;
 
-    let data = Json::<Vec<RepositoryId>>::from_request(request, &ctx).await?;
+    let data = Json::<Vec<PlanningId>>::from_request(request, &ctx).await?;
 
     let mut result = vec![];
     for repository in data.0 {
@@ -177,7 +165,7 @@ async fn update(State(ctx): State<Arc<AppCtx>>, request: Request) -> Result<impl
 
     #[derive(Deserialize, Debug)]
     struct Data {
-        id: RepositoryId,
+        id: PlanningId,
         display_name: EncString,
         url_name: EncString,
         max_file_size: Option<i64>,
@@ -192,7 +180,7 @@ async fn update(State(ctx): State<Arc<AppCtx>>, request: Request) -> Result<impl
     let mut repositories = vec![];
     for data in json.0 {
         if permissions.edit_repository(&ctx.database, &data.id).await?.granted() {
-            if let Ok(mut repository) = DbRepository::from_id(&ctx.database, &data.id).await {
+            if let Ok(mut repository) = Planning::from_id(&ctx.database, &data.id).await {
                 repository.display_name = data.display_name;
                 repository.description = data.description;
                 repository.url_name = data.url_name;
@@ -200,7 +188,7 @@ async fn update(State(ctx): State<Arc<AppCtx>>, request: Request) -> Result<impl
                 repository.visitor_file_lifetime = data.visitor_file_lifetime;
                 repository.allow_visitor_upload = data.allow_visitor_upload;
                 repository.status = RepositoryStatus::from(data.status);
-                DbRepository::push(&mut repository, &ctx.database).await?;
+                Planning::push(&mut repository, &ctx.database).await?;
                 repositories.push(repository.id().clone());
             }
         }
@@ -220,7 +208,7 @@ async fn subscribe(State(ctx): State<Arc<AppCtx>>, request: Request) -> Result<i
 
     #[derive(Deserialize, Debug)]
     struct Data {
-        repository: RepositoryId,
+        repository: PlanningId,
         users: Vec<Users>,
     }
 
@@ -245,7 +233,7 @@ async fn unsubscribe(State(ctx): State<Arc<AppCtx>>, request: Request) -> Result
 
     #[derive(Deserialize, Debug)]
     struct Data {
-        repository: RepositoryId,
+        repository: PlanningId,
         users: Vec<UserId>,
     }
 
@@ -261,7 +249,7 @@ async fn unsubscribe(State(ctx): State<Arc<AppCtx>>, request: Request) -> Result
 /// Get all users subscribed to a repository
 async fn subscriptions(State(ctx): State<Arc<AppCtx>>, request: Request) -> Result<impl IntoResponse, ServerError> {
     let permissions = Permissions::new(&request)?;
-    let data = Json::<RepositoryId>::from_request(request, &ctx).await?.0;
+    let data = Json::<PlanningId>::from_request(request, &ctx).await?.0;
     permissions.edit_repository(&ctx.database, &data).await?.require()?;
     Ok(Json(Subscription::from_repository(&ctx.database, &data).await?))
 }
@@ -269,7 +257,7 @@ async fn subscriptions(State(ctx): State<Arc<AppCtx>>, request: Request) -> Resu
 /// Get repository stats
 async fn stats(State(ctx): State<Arc<AppCtx>>, request: Request) -> Result<impl IntoResponse, ServerError> {
     let permissions = Permissions::new(&request)?;
-    let data = Json::<RepositoryId>::from_request(request, &ctx).await?.0;
+    let data = Json::<PlanningId>::from_request(request, &ctx).await?.0;
     permissions.edit_repository(&ctx.database, &data).await?.require()?;
-    Ok(Json(DbRepository::stats(&DbRepository::from_id(&ctx.database, &data).await?, &ctx.database).await?))
+    Ok(Json(Planning::stats(&Planning::from_id(&ctx.database, &data).await?, &ctx.database).await?))
 }
