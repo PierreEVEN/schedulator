@@ -124,8 +124,6 @@ struct ClientAppConfig {
     pub origin: String,
     pub connected_user: Option<User>,
     pub display_planning: Option<Planning>,
-    pub in_trash: bool,
-    pub repository_settings: bool,
 }
 
 pub fn get_origin(ctx: &Arc<AppCtx>, request: &Request) -> Result<String, ServerError> {

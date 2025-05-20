@@ -12,6 +12,11 @@ module.exports = {
     module: {
         rules: [
             {
+                test: /\.(hbs)$/,
+                include: path.resolve(__dirname, 'client'),
+                use: path.resolve('handlebars_custom_loader.js')
+            },
+            {
                 test: /\.(scss)$/,
                 include: path.resolve(__dirname, 'client'),
                 use: [
