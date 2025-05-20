@@ -125,7 +125,7 @@ class CalendarApp extends HTMLElement {
                 let cell_time_start = new Date(start_of_day.getTime() + this.daily_start.getTime() + j * this.daily_spacing.getTime());
                 let cell_time_end = new Date(start_of_day.getTime() + this.daily_start.getTime() + (j + 1) * this.daily_spacing.getTime());
 
-                let cell = require('./calendar_cell.hbs')({content: cell_time_start});
+                let cell = require('./calendar_cell.hbs')({content: ""});
                 cell.cell_time_start = cell_time_start;
                 cell.cell_time_end = cell_time_end;
                 cell.onclick = () => {
