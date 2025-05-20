@@ -3,6 +3,7 @@
   width: 100%;
   height: 100%;
   background-color: aliceblue;
+  flex-direction: column;
 
   .calendar-header {
     display: flex;
@@ -17,7 +18,69 @@
     }
   }
 
-  .calendar-column {
+  .calendar-columns {
+    display: flex;
+    width: 100%;
+    flex-grow: 1;
 
+    .calendar-column-header {
+      width: fit-content;
+      display: flex;
+      flex-direction: column;
+      h1 {
+        font-size: 1em;
+        visibility: hidden;
+      }
+
+      .calendar-column-header-cell {
+        border-top: dotted 1px;
+        font-size: 0.5em;
+        flex: 1 1 0;              /* grow/shrink allowed, base 0 */
+        background-color: red;
+        min-width: 0;             /* important to allow shrinking */
+        overflow: hidden;         /* clip overflow */
+      }
+    }
+
+    .calendar-column {
+      display: flex;
+      flex-direction: column;
+      border-left: solid 2px;
+
+      flex: 1 1 0;              /* grow/shrink allowed, base 0 */
+      min-width: 0;             /* important to allow shrinking */
+      overflow: hidden;         /* clip overflow */
+      text-overflow: ellipsis;  /* optional: "..." */
+      white-space: nowrap;      /* optional: prevent wrapping */
+
+      h1 {
+        text-align: center;
+        font-size: 1em;
+      }
+
+      .calendar-cells {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        .calendar-cell {
+          flex-grow: 1;
+          border-top: dotted 1px;
+          font-size: 0.5em;
+
+          &:hover {
+            background-color: beige;
+          }
+
+          &:active {
+            background-color: wheat;
+          }
+        }
+      }
+    }
+  }
+
+  .calendar-create-event {
+    position: absolute;
+    background-color: cadetblue;
   }
 }

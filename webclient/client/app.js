@@ -1,3 +1,4 @@
+import './utilities/handlebars_helpers';
 
 require('./app.scss');
 

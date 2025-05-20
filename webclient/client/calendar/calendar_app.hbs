@@ -1,14 +1,13 @@
 <div class="calendar-app">
     <div class="calendar-header">
-        <p>Semaine 8</p>
+        <button onclick="{{ctx "previous_week()"}}"><</button>
+        <p>{{month}} {{year}} - Semaine {{week_number}}</p>
+        <button onclick="{{ctx "next_week()"}}">></button>
 
         <button>Jour</button>
-        <button>Semaine</button>
-        <button>Mois</button>
-        <button>Année</button>
+        <button>Config</button>
     </div>
-    <div class="calendar-column">
-
-
+    <div class="calendar-columns" {{object "columns"}}>
+        <div class="calendar-column-header" {{object "column_header"}}><h1>h</h1></div>
     </div>
 </div>
