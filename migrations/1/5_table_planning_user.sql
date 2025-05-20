@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS SCHEMA_NAME.planning_user (
+CREATE TABLE IF NOT EXISTS SCHEMA_NAME.planning_users (
         id BIGSERIAL PRIMARY KEY,
         name VARCHAR(200) NOT NULL,
         planning_id BIGINT NOT NULL,

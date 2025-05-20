@@ -6,15 +6,16 @@ use axum::response::{IntoResponse};
 use axum::Router;
 use tracing::warn;
 use crate::database::planning::Planning;
+use crate::database::user::User;
 use crate::routes::app_ctx::AppCtx;
 use crate::routes::route_planning::PlanningRoutes;
 use crate::routes::route_slot::SlotRoutes;
-use crate::types::user::User;
+use crate::routes::route_user::UserRoutes;
 
 mod route_planning;
-pub mod permissions;
 pub mod app_ctx;
 pub mod route_slot;
+pub mod route_user;
 
 #[macro_export]
 macro_rules! get_connected_user {
@@ -116,6 +117,7 @@ impl ApiRoutes {
         let router = Router::new()
             .nest("/planning/", PlanningRoutes::create(ctx)?)
             .nest("/slot/", SlotRoutes::create(ctx)?)
+            .nest("/user/", UserRoutes::create(ctx)?)
             .fallback(handler_404);
         Ok(router)
     }

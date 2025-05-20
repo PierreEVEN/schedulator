@@ -1,35 +1,103 @@
+use std::fmt::Formatter;
+use crate::database::planning::Planning;
+use crate::database::Database;
+use crate::types::database_ids::{DatabaseId, DatabaseIdTrait, PasswordHash, UserId};
+use crate::types::enc_string::EncString;
 use crate::{query_fmt, query_object, query_objects};
 use anyhow::Error;
+use postgres_from_row::FromRow;
 use rand::distributions::{Alphanumeric, DistString};
 use rand::random;
 use std::time::{SystemTime, UNIX_EPOCH};
-use postgres_from_row::FromRow;
-use crate::database::Database;
-use crate::database::planning::Planning;
-use crate::types::database_ids::{DatabaseId, DatabaseIdTrait, PasswordHash, UserId};
-use crate::types::enc_string::EncString;
-use crate::types::user::{AuthToken, User};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::de::{MapAccess, Visitor};
+use serde::ser::SerializeStruct;
+use crate::database::auth_token::AuthToken;
 
-pub struct DbAuthToken;
 
-impl DbAuthToken {
-    pub async fn find(db: &Database, token: &EncString) -> Result<AuthToken, Error> {
-        query_object!(db, AuthToken, "SELECT * FROM SCHEMA_NAME.authtoken WHERE token = $1", token).ok_or(Error::msg("Invalid authentication token"))
+#[derive(Debug, Default, Clone, FromRow)]
+pub struct User {
+    id: UserId,
+    pub email: EncString,
+    pub display_name: EncString,
+    password_hash: PasswordHash,
+}
+
+impl User {
+    pub fn id(&self) -> &UserId {
+        &self.id
     }
 
-    pub async fn from_user(db: &Database, id: &UserId) -> Result<Vec<AuthToken>, Error> {
-        Ok(query_objects!(db, AuthToken, "SELECT * FROM SCHEMA_NAME.authtoken WHERE owner = $1", id))
+    pub fn set_id(&mut self, id: UserId) -> Result<(), Error> {
+        if self.id.is_valid() {
+            Err(Error::msg("Cannot override a valid id"))
+        } else {
+            self.id = id;
+            Ok(())
+        }
     }
 
-    pub async fn delete(token: &AuthToken, db: &Database) -> Result<(), Error> {
-        query_fmt!(db, "DELETE FROM SCHEMA_NAME.authtoken WHERE token = $1", token.token);
-        Ok(())
+    pub fn update_password(&mut self, password: PasswordHash) {
+        self.password_hash = password
+    }
+
+    pub fn password(&self) -> &PasswordHash {
+        &self.password_hash
     }
 }
 
-pub struct DbUser;
+impl Serialize for User {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Item", 3)?;
 
-impl DbUser {
+        state.serialize_field("id", &self.id)?;
+        state.serialize_field("name", &self.display_name)?;
+        state.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for User {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct UserVisitor;
+
+        impl<'de> Visitor<'de> for UserVisitor {
+            type Value = User;
+
+            fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+                formatter.write_str("Item data")
+            }
+
+            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                let mut user = User::default();
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        "id" => { user.id = map.next_value()? }
+                        "email" => {
+                            user.email = map.next_value()?;
+                        }
+                        "name" => { user.display_name = map.next_value()? }
+                        _ => {}
+                    }
+                }
+                Ok(user)
+            }
+        }
+        const FIELDS: &[&str] = &["id", "email", "name", "login", "user_role"];
+        deserializer.deserialize_struct("Item", FIELDS, UserVisitor)
+    }
+}
+
+
+impl User {
     pub async fn from_id(db: &Database, id: &UserId) -> Result<User, Error> {
         match query_object!(db, User, "SELECT * FROM SCHEMA_NAME.users WHERE id = $1", id) {
             None => { Err(Error::msg("User not found")) }
@@ -44,28 +112,8 @@ impl DbUser {
         }
     }
 
-    pub async fn search(db: &Database, name: &EncString, exact: bool) -> Result<Vec<User>, Error> {
-        if exact {
-            match query_object!(db, User, "SELECT * FROM SCHEMA_NAME.users WHERE LOWER(name) = LOWER($1)", name) {
-                None => { Err(Error::msg("User not found")) }
-                Some(user) => { Ok(vec![user]) }
-            }
-        } else {
-            Ok(query_objects!(db, User, "SELECT * FROM SCHEMA_NAME.users WHERE LOWER(name) LIKE '%' || LOWER($1) || '%'", name))
-        }
-    }
-
     pub async fn exists(db: &Database, login: &EncString, email: &EncString) -> Result<bool, Error> {
         Ok(!query_objects!(db, User, r#"SELECT * FROM SCHEMA_NAME.users WHERE login = $1 OR email = $2"#, login, email).is_empty())
-    }
-
-    pub async fn has_admin(db: &Database) -> Result<bool, Error> {
-        let admins = query_objects!(db, User, "SELECT * FROM SCHEMA_NAME.users WHERE user_role = 'admin'");
-        if admins.is_empty() {
-            Ok(false)
-        } else {
-            Ok(true)
-        }
     }
 
     pub async fn from_credentials(db: &Database, login: &EncString, password: &EncString) -> Result<User, Error> {
@@ -80,7 +128,7 @@ impl DbUser {
     }
 
     pub async fn from_auth_token(db: &Database, authtoken: &EncString) -> Result<User, Error> {
-        DbUser::from_id(db, DbAuthToken::find(db, authtoken).await?.owner()).await
+        User::from_id(db, &AuthToken::find(db, authtoken).await?.owner).await
     }
 
     pub async fn generate_auth_token(user: &User, db: &Database, device: &EncString) -> Result<AuthToken, Error> {
@@ -129,8 +177,8 @@ impl DbUser {
         for repository in Planning::from_user(db, &user.id()).await? {
             Planning::delete(&repository, db).await?;
         }
-        for token in DbAuthToken::from_user(db, user.id()).await? {
-            DbAuthToken::delete(&token, db).await?;
+        for token in AuthToken::from_user(db, user.id()).await? {
+            AuthToken::delete(&token, db).await?;
         }
         query_fmt!(db, r#"DELETE FROM SCHEMA_NAME.users WHERE id = $1;"#, user.id());
         Ok(())

@@ -48,7 +48,7 @@ impl PlanningUser {
                         ($1, $2, $3) RETURNING id",
                 self.name, self.planning_id, self.user_id);
             if let Some(res) = res {
-                self.id = res;;
+                self.id = res;
             }
         }
         Ok(())

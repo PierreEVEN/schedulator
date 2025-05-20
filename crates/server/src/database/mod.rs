@@ -11,7 +11,8 @@ use crate::config::BackendConfig;
 pub mod slot;
 pub mod planning;
 pub mod user;
-pub mod planning_user;
+pub mod planning_users;
+pub mod auth_token;
 
 pub struct Database {
     db: Client,

@@ -1,27 +1,25 @@
 use crate::database::Database;
 use crate::types::database_ids::{DatabaseIdTrait, PlanningId, PlanningUserId, SlotId};
-use crate::{query_fmt, query_object, query_objects};
+use crate::types::enc_string::EncString;
+use crate::{query_fmt, query_object};
 use anyhow::Error;
 use postgres_from_row::FromRow;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, FromRow)]
+#[derive(Debug, Default, Serialize, Deserialize, FromRow)]
 pub struct Slot {
     id: SlotId,
     pub planning: PlanningId,
-    pub title: String,
+    pub title: EncString,
     pub owner: PlanningUserId,
-    pub start: i64,
-    pub end: i64,
-    pub source: String
+    pub start_time: i64,
+    pub end_time: i64,
+    pub source: EncString
 }
 
 impl Slot {
     pub async fn from_id(db: &Database, id: &SlotId) -> Result<Self, Error> {
         Ok(query_object!(db, Slot, "SELECT * FROM SCHEMA_NAME.slots WHERE id = $1", id).unwrap())
-    }
-
-    pub async fn from_planning_user(db: &Database, id: &PlanningUserId) -> Result<Vec<Self>, Error> {
-        Ok(query_objects!(db, Slot, "SELECT * FROM SCHEMA_NAME.slots AND planning = $2", id))
     }
 
     pub async fn delete(&self, db: &Database) -> Result<(), Error> {
@@ -37,16 +35,16 @@ impl Slot {
     pub async fn push(&mut self, db: &Database) -> Result<(), Error> {
         if self.id().is_valid() {
             query_fmt!(db, "INSERT INTO SHEMA_NAME.slots
-                        (id, planning, title, owner, start, end) VALUES
+                        (id, planning, title, owner, start_time, end_time) VALUES
                         ($1, $2, $3, $4, $5, $6, $7)
                         ON CONFLICT(id) DO UPDATE SET
-                        id = $1, planning = $2, title = $3, owner = $4, start = $5, end = $6, source = $7;",
-                self.id(), self.planning, self.title, self.owner, self.start, self.end, self.source);
+                        id = $1, planning = $2, title = $3, owner = $4, start_time = $5, end_time = $6, source = $7;",
+                self.id(), self.planning, self.title, self.owner, self.start_time, self.end_time, self.source);
         } else {
             let res = query_object!(db, SlotId, "INSERT INTO SHEMA_NAME.slots
-                        (planning, title, owner, start, end) VALUES
+                        (planning, title, owner, start_time, end_time) VALUES
                         ($1, $2, $3, $4, $5, $6) RETURNING id",
-                self.planning, self.title, self.owner, self.start, self.end, self.source);
+                self.planning, self.title, self.owner, self.start_time, self.end_time, self.source);
             if let Some(res) = res {
                 self.id = res;
             }

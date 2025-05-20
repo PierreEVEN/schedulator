@@ -10,20 +10,19 @@ use axum::extract::{Path, Request, State};
 use axum::http::{StatusCode};
 use axum::middleware::Next;
 use axum::response::{Html, IntoResponse, Response};
-use axum::{middleware, Json, Router};
+use axum::{middleware, Router};
 use axum::routing::{get};
 use serde::{Deserialize, Serialize};
-use tracing::{error, info};
+use tracing::{info};
 use which::which;
 use crate::config::WebClientConfig;
 use crate::database::planning::Planning;
-use crate::{get_action, get_connected_user, get_display_planning};
+use crate::{get_connected_user, get_display_planning};
+use crate::database::user::User;
 use crate::routes::app_ctx::AppCtx;
-use crate::routes::permissions::Permissions;
 use crate::routes::RequestContext;
 use crate::server_error::ServerError;
 use crate::types::enc_string::EncString;
-use crate::types::user::User;
 use crate::web_client::static_file_server::StaticFileServer;
 
 pub struct WebClient {
@@ -158,8 +157,6 @@ async fn get_index(State(ctx): State<Arc<AppCtx>>, request: Request) -> Result<i
         client_config.connected_user = Some(user.clone());
     });
     get_display_planning!(request, repository, {
-        let permission = Permissions::new(&request)?;
-        permission.view_planning(&ctx.database, repository.id()).await?.require()?;
         client_config.display_planning = Some(repository.clone());
     });
 

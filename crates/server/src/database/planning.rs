@@ -1,4 +1,4 @@
-use crate::database::planning_user::PlanningUser;
+use crate::database::planning_users::PlanningUser;
 use crate::database::Database;
 use crate::types::database_ids::{DatabaseIdTrait, PlanningId, UserId};
 use crate::types::enc_string::EncString;
@@ -14,11 +14,12 @@ pub struct Planning {
     pub owner_id: UserId,
     pub title: EncString,
     pub key: EncString,
-    pub start: i64,
-    pub end: i64,
+    pub start_date: i64,
+    pub end_date: i64,
     pub time_precision: i64,
     pub start_daily_hour: i64,
     pub end_daily_hour: i64,
+    pub require_account: bool,
 }
 
 impl Planning {
@@ -40,18 +41,18 @@ impl Planning {
     pub async fn push(&mut self, db: &Database) -> Result<(), Error> {
         if self.id().is_valid() {
             query_fmt!(db, "INSERT INTO SHEMA_NAME.plannings
-                        (id, owner_id, title, key, start, end, time_precision, start_daily_hour, end_daily_hour) VALUES
-                        ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                        (id, owner_id, title, key, start_date, end_date, time_precision, start_daily_hour, end_daily_hour, require_account) VALUES
+                        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                         ON CONFLICT(id) DO UPDATE SET
-                        id = $1, owner_id = $2, title = $3, key = $4, start = $5, end = $6, time_precision = $7, start_daily_hour = $8, end_daily_hour = $9;",
-                self.id(), self.owner_id, self.title, self.key, self.start, self.end, self.time_precision, self.start_daily_hour, self.end_daily_hour);
+                        id = $1, owner_id = $2, title = $3, key = $4, start_date = $5, end_date = $6, time_precision = $7, start_daily_hour = $8, end_daily_hour = $9, require_account = $10;",
+                self.id(), self.owner_id, self.title, self.key, self.start_date, self.end_date, self.time_precision, self.start_daily_hour, self.end_daily_hour, self.require_account);
         } else {
             let res = query_object!(db, PlanningId, "INSERT INTO SHEMA_NAME.plannings
-                        (owner_id, title, key, start, end, time_precision, start_daily_hour, end_daily_hour) VALUES
-                        ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id",
-                self.owner_id, self.title, self.key, self.start, self.end, self.time_precision, self.start_daily_hour, self.end_daily_hour);
+                        (owner_id, title, key, start_date, end_date, time_precision, start_daily_hour, end_daily_hour, require_account) VALUES
+                        ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
+                self.owner_id, self.title, self.key, self.start_date, self.end_date, self.time_precision, self.start_daily_hour, self.end_daily_hour, self.require_account);
             if let Some(res) = res {
-                self.id = res;;
+                self.id = res;
             }
         }
         Ok(())

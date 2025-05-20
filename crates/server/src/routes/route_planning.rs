@@ -1,11 +1,9 @@
 use crate::database::planning::Planning;
-use crate::database::planning_user::PlanningUser;
+use crate::database::planning_users::PlanningUser;
 use crate::routes::app_ctx::AppCtx;
-use crate::routes::permissions::Permissions;
 use crate::server_error::ServerError;
-use crate::types::database_ids::{PlanningId, PlanningUserId, UserId};
+use crate::types::database_ids::{PlanningId, PlanningUserId};
 use crate::types::enc_string::EncString;
-use crate::types::user::User;
 use crate::{get_connected_user, require_connected_user};
 use anyhow::Error;
 use axum::body::Body;
@@ -61,8 +59,8 @@ async fn create(
         }
         let mut planning = Planning::default();
         planning.title = data.title.clone();
-        planning.start = data.start.clone();
-        planning.end = data.end.clone();
+        planning.start_date = data.start.clone();
+        planning.end_date = data.end.clone();
         planning.owner_id = user.id().clone();
         planning.time_precision = data.time_precision.clone();
         planning.start_daily_hour = data.start_daily_hour.clone();
@@ -133,7 +131,7 @@ pub async fn add_user(
     }
 
     let mut user = None;
-    get_connected_user!(request, found_user, { user = Some(found_user.clone()) });
+    get_connected_user!(request, found_user, user = Some(found_user.clone()));
     let user_id = match &user {
         None => None,
         Some(user) => Some(user.id().clone()),

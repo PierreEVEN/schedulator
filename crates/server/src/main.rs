@@ -1,5 +1,4 @@
 use crate::config::{Config, WebClientConfig};
-use crate::database::user::DbUser;
 use crate::routes::app_ctx::AppCtx;
 use crate::routes::{RequestContext, ApiRoutes};
 use crate::server_error::ServerError;
@@ -26,6 +25,7 @@ use std::path::PathBuf;
 use tracing::{error, info, warn, Level};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::{filter, fmt, Layer, Registry};
+use crate::database::user::User;
 
 mod config;
 mod database;
@@ -219,6 +219,7 @@ async fn main() {
 
     let args: Vec<String> = env::args().collect();
     let mut it = args.iter();
+    it.next().expect("Expected first arg");
     while let Some(arg) = it.next() {
         match arg.as_str() {
             "-migrate" => {
@@ -292,7 +293,7 @@ pub async fn middleware_get_request_context(
 
     if let Some(token) = token {
         context.connected_user = tokio::sync::RwLock::new(
-            match DbUser::from_auth_token(&ctx.database, &token?).await {
+            match User::from_auth_token(&ctx.database, &token?).await {
                 Ok(connected_user) => Some(connected_user),
                 Err(_) => None,
             },
