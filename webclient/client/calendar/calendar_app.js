@@ -1,23 +1,5 @@
 require('./calendar_app.scss');
 
-class Mode {
-}
-
-class ModeWeek extends Mode {
-
-    get_columns() {
-        return [
-            {title: "Lundi"},
-            {title: "Mardi"},
-            {title: "Mercredi"},
-            {title: "Jeudi"},
-            {title: "Vendredi"},
-            {title: "Samedi"},
-            {title: "Dimanche"}
-        ]
-    }
-}
-
 function time_format_from_ms(ms) {
     const totalSeconds = Math.floor(ms / 1000);
     const hours = Math.floor(totalSeconds / 3600);
@@ -45,8 +27,6 @@ let GLOBAL_EVENT_CREATOR = null;
 class CalendarApp extends HTMLElement {
     constructor() {
         super();
-
-        this.mode = new ModeWeek()
 
         this.events = [];
 

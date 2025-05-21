@@ -1,6 +1,7 @@
 use crate::config::{Config, WebClientConfig};
+use crate::database::user::User;
 use crate::routes::app_ctx::AppCtx;
-use crate::routes::{RequestContext, ApiRoutes};
+use crate::routes::{ApiRoutes, RequestContext};
 use crate::server_error::ServerError;
 use crate::types::enc_string::EncString;
 use crate::web_client::{get_origin, WebClient};
@@ -18,14 +19,14 @@ use http_body_util::BodyExt;
 use serde::Serialize;
 use std::fs::OpenOptions;
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
 use std::{env, fs};
-use std::path::PathBuf;
 use tracing::{error, info, warn, Level};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::{filter, fmt, Layer, Registry};
-use crate::database::user::User;
 
 mod config;
 mod database;
@@ -224,8 +225,14 @@ async fn main() {
         match arg.as_str() {
             "-migrate" => {
                 let dir = it.next().expect("Missing <migration_dir> parameter");
-                ctx.database.migrate(PathBuf::from(dir), &config.backend_config.postgres.scheme_name).await.expect("Failed to migrate database");
-                return
+                ctx.database
+                    .migrate(
+                        PathBuf::from(dir),
+                        &config.backend_config.postgres.scheme_name,
+                    )
+                    .await
+                    .expect("Failed to migrate database");
+                return;
             }
             val => {
                 error!("Unknown arg : {}", val);
@@ -292,12 +299,11 @@ pub async fn middleware_get_request_context(
     };
 
     if let Some(token) = token {
-        context.connected_user = tokio::sync::RwLock::new(
-            match User::from_auth_token(&ctx.database, &token?).await {
+        context.connected_user =
+            tokio::sync::RwLock::new(match User::from_auth_token(&ctx.database, &token?).await {
                 Ok(connected_user) => Some(connected_user),
                 Err(_) => None,
-            },
-        )
+            })
     }
 
     let uri = request.uri().clone();
@@ -344,56 +350,58 @@ async fn print_request_response(
 
         warn!("{} ({}) : {}", parts.status, path, data_string);
         // Embed the response into a html webpage if it was sent from a web client
-        if let Some(_) = context {
-            let index_path_buf = ctx
-                .config
-                .web_client_config
-                .client_path
-                .join("public")
-                .join("index.html");
-            let index_path = index_path_buf.to_str().unwrap();
-            let index_data = match fs::read_to_string(index_path) {
-                Ok(file) => file,
-                Err(err) => {
-                    return Err(ServerError::msg(
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        format!("Cannot find index file : {err} (searching in {index_path})"),
-                    ))
-                }
-            };
-
-            #[derive(Serialize, Default)]
-            struct ErrorInfos {
-                origin: String,
-                error_message: String,
-                error_code: String,
-            }
-            let infos = ErrorInfos {
-                origin,
-                error_message: data_string,
-                error_code: parts.status.to_string(),
-            };
-
-            let index_data = index_data.replace(
-                r#"data-app_config='{}'"#,
-                format!(
-                    r##"data-app_config='{}'"##,
-                    match serde_json::to_string(&infos) {
-                        Ok(data) => {
-                            data.replace("'", "&apos;")
-                        }
-                        Err(err) => {
-                            return Err(ServerError::msg(
-                                StatusCode::INTERNAL_SERVER_ERROR,
-                                err.to_string(),
-                            ));
-                        }
+        if let Some(context) = context {
+            if context.is_web_client.load(SeqCst) {
+                let index_path_buf = ctx
+                    .config
+                    .web_client_config
+                    .client_path
+                    .join("public")
+                    .join("index.html");
+                let index_path = index_path_buf.to_str().unwrap();
+                let index_data = match fs::read_to_string(index_path) {
+                    Ok(file) => file,
+                    Err(err) => {
+                        return Err(ServerError::msg(
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            format!("Cannot find index file : {err} (searching in {index_path})"),
+                        ))
                     }
-                )
-                .as_str(),
-            );
+                };
 
-            return Ok(Html(index_data).into_response());
+                #[derive(Serialize, Default)]
+                struct ErrorInfos {
+                    origin: String,
+                    error_message: String,
+                    error_code: String,
+                }
+                let infos = ErrorInfos {
+                    origin,
+                    error_message: data_string,
+                    error_code: parts.status.to_string(),
+                };
+
+                let index_data = index_data.replace(
+                    r#"data-app_config='{}'"#,
+                    format!(
+                        r##"data-app_config='{}'"##,
+                        match serde_json::to_string(&infos) {
+                            Ok(data) => {
+                                data.replace("'", "&apos;")
+                            }
+                            Err(err) => {
+                                return Err(ServerError::msg(
+                                    StatusCode::INTERNAL_SERVER_ERROR,
+                                    err.to_string(),
+                                ));
+                            }
+                        }
+                    )
+                    .as_str(),
+                );
+
+                return Ok(Html(index_data).into_response());
+            }
         }
 
         res = Response::from_parts(parts, Body::from(bytes));

@@ -1,0 +1,9 @@
+<div class="user-header">
+    <div class="content" {{object 'mode_default'}}>
+        <button onclick="{{ctx 'signin()'}}">Signin</button>
+        <button onclick="{{ctx 'signup()'}}">Signup</button>
+    </div>
+    <div class="content" {{object 'mode_connected'}} style="display: none">
+        <button onclick="{{ctx 'logout()'}}">Logout</button>
+    </div>
+</div>

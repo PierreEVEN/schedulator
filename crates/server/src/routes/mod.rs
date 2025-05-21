@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use anyhow::Error;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
@@ -89,6 +90,7 @@ macro_rules! get_action {
 pub struct RequestContext {
     pub connected_user: tokio::sync::RwLock<Option<User>>,
     pub display_planning: tokio::sync::RwLock<Option<Planning>>,
+    pub is_web_client: AtomicBool,
 }
 
 impl RequestContext {

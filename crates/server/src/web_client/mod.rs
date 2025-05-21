@@ -4,6 +4,7 @@ use std::{env, fs};
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::sync::Arc;
+use std::sync::atomic::Ordering::SeqCst;
 use anyhow::Error;
 use axum::body::Body;
 use axum::extract::{Path, Request, State};
@@ -109,6 +110,7 @@ pub struct PathData {
 
 pub async fn middleware_get_path_context(State(ctx): State<Arc<AppCtx>>, Path(PathData { display_planning }): Path<PathData>, request: axum::http::Request<Body>, next: Next) -> Result<Response, ServerError> {
     let context = request.extensions().get::<Arc<RequestContext>>().unwrap();
+    context.is_web_client.store(true, SeqCst);
     if let Some(display_planning) = display_planning {
         if let Ok(display_planning) = Planning::from_key(&ctx.database, &EncString::from_url_path(display_planning.clone())?).await {
             *context.display_planning.write().await = Some(display_planning);

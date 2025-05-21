@@ -54,7 +54,7 @@ impl Serialize for User {
         let mut state = serializer.serialize_struct("Item", 3)?;
 
         state.serialize_field("id", &self.id)?;
-        state.serialize_field("name", &self.display_name)?;
+        state.serialize_field("display_name", &self.display_name)?;
         state.end()
     }
 }
@@ -84,14 +84,14 @@ impl<'de> Deserialize<'de> for User {
                         "email" => {
                             user.email = map.next_value()?;
                         }
-                        "name" => { user.display_name = map.next_value()? }
+                        "display_name" => { user.display_name = map.next_value()? }
                         _ => {}
                     }
                 }
                 Ok(user)
             }
         }
-        const FIELDS: &[&str] = &["id", "email", "name", "login", "user_role"];
+        const FIELDS: &[&str] = &["id", "email", "display_name"];
         deserializer.deserialize_struct("Item", FIELDS, UserVisitor)
     }
 }
@@ -112,12 +112,12 @@ impl User {
         }
     }
 
-    pub async fn exists(db: &Database, login: &EncString, email: &EncString) -> Result<bool, Error> {
-        Ok(!query_objects!(db, User, r#"SELECT * FROM SCHEMA_NAME.users WHERE login = $1 OR email = $2"#, login, email).is_empty())
+    pub async fn exists(db: &Database, display_name: &EncString, email: &EncString) -> Result<bool, Error> {
+        Ok(!query_objects!(db, User, r#"SELECT * FROM SCHEMA_NAME.users WHERE display_name = $1 OR email = $2"#, display_name, email).is_empty())
     }
 
-    pub async fn from_credentials(db: &Database, login: &EncString, password: &EncString) -> Result<User, Error> {
-        let user = query_object!(db, User, r#"SELECT * FROM SCHEMA_NAME.users WHERE login = $1 OR email = $1"#, login.encoded())
+    pub async fn from_credentials(db: &Database, display_name: &EncString, password: &EncString) -> Result<User, Error> {
+        let user = query_object!(db, User, r#"SELECT * FROM SCHEMA_NAME.users WHERE display_name = $1 OR email = $1"#, display_name.encoded())
             .ok_or(Error::msg("User not found"))
             .map_err(|err| Error::msg(format!("Failed to query credentials for user : {}", err)))?;
         if user.password().verify(password)? {
@@ -165,10 +165,10 @@ impl User {
             return Err(Error::msg("Invalid name"));
         }
         query_fmt!(db, "INSERT INTO SCHEMA_NAME.users
-                        (id, email, password_hash, name, allow_contact, user_role, login) VALUES
-                        ($1, $2, $3, $4, $5, $6, $7)
+                        (id, email, password_hash, display_name) VALUES
+                        ($1, $2, $3, $4)
                         ON CONFLICT(id) DO UPDATE SET
-                        id = $1, email = $2, password_hash = $3, name = LOWER($4), allow_contact = $5, user_role = $6, login = $7;",
+                        id = $1, email = $2, password_hash = $3, display_name = $4;",
             user.id(), user.email, user.password(), user.display_name);
         Ok(())
     }
