@@ -4,6 +4,7 @@ import {APP_COOKIES} from "../cookies";
 import {APP_CONFIG} from "../app_config";
 import {Message, NOTIFICATION} from "../../views/message_box/notification";
 import {User} from "../user";
+import {MODAL} from "../modal/modal";
 
 const Authentication = {
     login: async () => {
@@ -50,7 +51,7 @@ const Authentication = {
                     event.preventDefault();
                     let errored = false;
                     await fetch_api('user/create/', 'POST', {
-                        username: EncString.from_client(signup_div.elements.login.value),
+                        display_name: EncString.from_client(signup_div.elements.login.value),
                         email: EncString.from_client(signup_div.elements.email.value),
                         password: EncString.from_client(signup_div.elements.password.value)
                     }).catch(error => {
@@ -90,7 +91,6 @@ const Authentication = {
             .catch(error => NOTIFICATION.error(new Message(error).title("Erreur lors de la déconnexion")));
         APP_COOKIES.logout();
         APP_CONFIG.set_connected_user(null);
-        location.reload();
     }
 }
 

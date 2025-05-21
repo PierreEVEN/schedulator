@@ -1,5 +1,7 @@
 import {APP_CONFIG} from "./app_config";
 import {APP_COOKIES} from "./cookies";
+import {Authentication} from "./authentication/authentication";
+import {Message, NOTIFICATION} from "../views/message_box/notification";
 
 /**
  * @param path
@@ -20,6 +22,7 @@ async function fetch_api(path, method = 'GET', body = null, custom_token = null)
         headers: headers
     });
     if (result.status === 401) {
+        NOTIFICATION.error(new Message(await result.text()).title("Connexion échouée"));
         let error = false;
         await Authentication.login()
             .catch(() => {
@@ -36,9 +39,11 @@ async function fetch_api(path, method = 'GET', body = null, custom_token = null)
             } catch (err) {
                 return text;
             }
+        } else {
+            NOTIFICATION.error(new Message(await result.text()).title("Connexion échouée"));
         }
     }
-    throw {message: `${await result.text()}`, code: result.status}
+    throw {message: `Connexion annulée`, code: result.status}
 }
 
 export {fetch_api}

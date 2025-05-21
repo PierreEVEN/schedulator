@@ -88,7 +88,6 @@ class Notification {
             }, message._lifespan)
         }
 
-
         notification.classList.add(level);
         setTimeout(() => {
             notification.classList.add('open');

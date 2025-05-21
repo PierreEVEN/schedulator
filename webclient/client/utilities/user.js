@@ -19,13 +19,10 @@ class User {
         /**
          * @type {EncString}
          */
-        this.email = new EncString(data.email);
-        /**
-         * @type {EncString}
-         */
-        this.name = new EncString(data.name);
+        this.display_name = new EncString(data.name);
 
         console.assert(!data['password_hash'])
+        console.assert(!data['email'])
     }
 
     /**

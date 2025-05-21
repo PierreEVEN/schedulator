@@ -36,14 +36,6 @@ impl User {
             Ok(())
         }
     }
-
-    pub fn update_password(&mut self, password: PasswordHash) {
-        self.password_hash = password
-    }
-
-    pub fn password(&self) -> &PasswordHash {
-        &self.password_hash
-    }
 }
 
 impl Serialize for User {
@@ -120,7 +112,7 @@ impl User {
         let user = query_object!(db, User, r#"SELECT * FROM SCHEMA_NAME.users WHERE display_name = $1 OR email = $1"#, display_name.encoded())
             .ok_or(Error::msg("User not found"))
             .map_err(|err| Error::msg(format!("Failed to query credentials for user : {}", err)))?;
-        if user.password().verify(password)? {
+        if user.password_hash.verify(password)? {
             Ok(user)
         } else {
             Err(Error::msg("Failed to find user with given credentials"))
@@ -141,6 +133,7 @@ impl User {
         }
         let enc_token = EncString::encode(token.as_str());
 
+        //@TODO : set a valid exp date
         let exp_date = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64;
 
         query_fmt!(db, "INSERT INTO SCHEMA_NAME.authtoken (owner, token, device, expdate) VALUES ($1, $2, $3, $4)", user.id(), enc_token, device, exp_date);
@@ -156,7 +149,7 @@ impl User {
                 }
             }
         }
-        user.update_password(password_hash.clone());
+        user.password_hash = password_hash.clone();
         Self::push(user, db).await
     }
 
@@ -169,7 +162,7 @@ impl User {
                         ($1, $2, $3, $4)
                         ON CONFLICT(id) DO UPDATE SET
                         id = $1, email = $2, password_hash = $3, display_name = $4;",
-            user.id(), user.email, user.password(), user.display_name);
+            user.id(), user.email, user.password_hash, user.display_name);
         Ok(())
     }
 

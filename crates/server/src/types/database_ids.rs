@@ -1,3 +1,4 @@
+use tracing::warn;
 use crate::types::enc_string;
 
 #[macro_export]
@@ -116,6 +117,7 @@ impl PasswordHash {
         Ok(s)
     }
 
+    // @TODO : Don't send password to server
     pub fn verify(&self, password: &enc_string::EncString) -> Result<bool, anyhow::Error> {
         Ok(bcrypt::verify(password.encoded(), self.0.as_str())?)
     }
