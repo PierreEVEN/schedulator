@@ -1,4 +1,3 @@
-use tracing::warn;
 use crate::types::enc_string;
 
 #[macro_export]

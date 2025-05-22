@@ -48,26 +48,24 @@ async fn create(
 
     let key = EncString::from("todo");
 
-    let planning_data = Json::<Vec<CreatePlanningData>>::from_request(request, &ctx).await?;
+    let planning_data = Json::<CreatePlanningData>::from_request(request, &ctx).await?;
     let mut plannings = vec![];
-    for data in planning_data.0 {
-        if Planning::from_key(&ctx.database, &key).await.is_ok() {
-            return Err(ServerError::msg(
-                StatusCode::FORBIDDEN,
-                "A repository with this key already exists",
-            ));
-        }
-        let mut planning = Planning::default();
-        planning.title = data.title.clone();
-        planning.start_date = data.start.clone();
-        planning.end_date = data.end.clone();
-        planning.owner_id = user.id().clone();
-        planning.time_precision = data.time_precision.clone();
-        planning.start_daily_hour = data.start_daily_hour.clone();
-        planning.end_daily_hour = data.end_daily_hour.clone();
-        Planning::push(&mut planning, &ctx.database).await?;
-        plannings.push(planning);
+    if Planning::from_key(&ctx.database, &key).await.is_ok() {
+        return Err(ServerError::msg(
+            StatusCode::FORBIDDEN,
+            "A repository with this key already exists",
+        ));
     }
+    let mut planning = Planning::default();
+    planning.title = planning_data.title.clone();
+    planning.start_date = planning_data.start.clone();
+    planning.end_date = planning_data.end.clone();
+    planning.owner_id = user.id().clone();
+    planning.time_precision = planning_data.time_precision.clone();
+    planning.start_daily_hour = planning_data.start_daily_hour.clone();
+    planning.end_daily_hour = planning_data.end_daily_hour.clone();
+    Planning::push(&mut planning, &ctx.database).await?;
+    plannings.push(planning);
     Ok(Json(plannings))
 }
 

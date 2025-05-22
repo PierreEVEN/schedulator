@@ -36,14 +36,14 @@ impl PlanningUser {
 
     pub async fn push(&mut self, db: &Database) -> Result<(), Error> {
         if self.id().is_valid() {
-            query_fmt!(db, "INSERT INTO SHEMA_NAME.planning_users
+            query_fmt!(db, "INSERT INTO SCHEMA_NAME.planning_users
                         (id, name, planning_id, user_id) VALUES
                         ($1, $2, $3, $4)
                         ON CONFLICT(id) DO UPDATE SET
                         id = $1, name = $2, planning_id = $3, user_id = $4;",
                 self.id(), self.name, self.planning_id, self.user_id);
         } else {
-            let res = query_object!(db, PlanningUserId, "INSERT INTO SHEMA_NAME.planning_users
+            let res = query_object!(db, PlanningUserId, "INSERT INTO SCHEMA_NAME.planning_users
                         (name, planning_id, user_id) VALUES
                         ($1, $2, $3) RETURNING id",
                 self.name, self.planning_id, self.user_id);

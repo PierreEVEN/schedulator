@@ -1,3 +1,7 @@
+import {fetch_api} from "../utilities/request";
+import {EncString} from "../utilities/encstring";
+import {Message, NOTIFICATION} from "../views/message_box/notification";
+
 require('./calendar_app.scss');
 
 function time_format_from_ms(ms) {
@@ -62,6 +66,8 @@ class CalendarApp extends HTMLElement {
         this.display_start = new Date(new Date().setMonth(new Date(this.end).getMonth() - 1));
 
         this._refresh_calendar();
+
+        this.selection = [];
     }
 
     _refresh_calendar() {
@@ -109,7 +115,8 @@ class CalendarApp extends HTMLElement {
                 cell.cell_time_start = cell_time_start;
                 cell.cell_time_end = cell_time_end;
                 cell.onclick = () => {
-                    this.spawn_add_event()
+                    this.selection.push(cell);
+                    this.spawn_add_event();
                 }
 
 
@@ -133,7 +140,31 @@ class CalendarApp extends HTMLElement {
             GLOBAL_EVENT_CREATOR.remove();
         GLOBAL_EVENT_CREATOR = null;
 
-        GLOBAL_EVENT_CREATOR = require('./create_event.hbs')()
+        GLOBAL_EVENT_CREATOR = require('./create_event.hbs')({}, {
+            close:() => {
+                GLOBAL_EVENT_CREATOR.remove();
+                GLOBAL_EVENT_CREATOR = null;
+
+            },
+            submit:async (event) => {
+                event.preventDefault();
+                GLOBAL_EVENT_CREATOR.remove();
+                GLOBAL_EVENT_CREATOR = null;
+
+                for (const item of this.selection) {
+                    await fetch_api('slot/create/', 'POST', {
+                        display_name: EncString.from_client(signup_div.elements.login.value),
+                        email: EncString.from_client(signup_div.elements.email.value),
+                        password: EncString.from_client(signup_div.elements.password.value)
+                    }).catch(error => {
+                        NOTIFICATION.error(new Message(error).title("Impossible de créer l'évenement"));
+                    });
+                }
+
+
+                this.selection = [];
+            }
+        })
         this.append(GLOBAL_EVENT_CREATOR);
 
         const popupWidth = GLOBAL_EVENT_CREATOR.offsetWidth;

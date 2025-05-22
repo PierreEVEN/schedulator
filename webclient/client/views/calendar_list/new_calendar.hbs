@@ -1,0 +1,25 @@
+<div class="modal-root">
+    <h1>Nouveau calendrier</h1>
+    <form onsubmit="{{ctx 'create(event)'}}">
+        <label for='title'>
+            <input {{object "title"}} type="text" name="title" placeholder="Titre" id="title" required>
+        </label>
+        <label for='start'>
+            <input {{object "start"}} type="date" name="start" placeholder="Date de début" id="start" required>
+        </label>
+        <label for='end'>
+            <input {{object "end"}} type="date" name="end" placeholder="Date de fin" id="end" required>
+        </label>
+        <label for='time_precision'>
+            <input {{object "time_precision"}} type="time" name="time_precision"  min="00:01" max="24:00" value="00:30" placeholder="Précision" id="time_precision" required>
+        </label>
+
+        <label for='start_daily_hour'>
+            <input {{object "start_daily_hour"}} type="time" name="start_daily_hour"  min="00:00" max="24:00" value="06:00" placeholder="Heure minimale quotidienne" id="start_daily_hour" required>
+        </label>
+        <label for='end_daily_hour'>
+            <input {{object "end_daily_hour"}} type="time" name="end_daily_hour"  min="00:00" max="24:00" value="20:00" placeholder="Heure maximale quotidienne" id="end_daily_hour" required>
+        </label>
+        <input type="submit" value="Créer le calendrier">
+    </form>
+</div>

@@ -34,14 +34,14 @@ impl Slot {
 
     pub async fn push(&mut self, db: &Database) -> Result<(), Error> {
         if self.id().is_valid() {
-            query_fmt!(db, "INSERT INTO SHEMA_NAME.slots
+            query_fmt!(db, "INSERT INTO SCHEMA_NAME.slots
                         (id, planning, title, owner, start_time, end_time) VALUES
                         ($1, $2, $3, $4, $5, $6, $7)
                         ON CONFLICT(id) DO UPDATE SET
                         id = $1, planning = $2, title = $3, owner = $4, start_time = $5, end_time = $6, source = $7;",
                 self.id(), self.planning, self.title, self.owner, self.start_time, self.end_time, self.source);
         } else {
-            let res = query_object!(db, SlotId, "INSERT INTO SHEMA_NAME.slots
+            let res = query_object!(db, SlotId, "INSERT INTO SCHEMA_NAME.slots
                         (planning, title, owner, start_time, end_time) VALUES
                         ($1, $2, $3, $4, $5, $6) RETURNING id",
                 self.planning, self.title, self.owner, self.start_time, self.end_time, self.source);
