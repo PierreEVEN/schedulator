@@ -137,10 +137,11 @@ class CalendarApp extends HTMLElement {
 
         this.append(this._calendar_object)
         this._modal_container = this._calendar_object.elements.modal_container;
+        for (const event of this.events)
+            this.display_event(event);
     }
 
-    add_event(config) {
-        this.events.push(config);
+    display_event(config) {
         const display_start = new Date(this.display_start);
         display_start.setHours(0, 0, 0, 0);
         const start = new Date(config.start_time);
@@ -149,11 +150,13 @@ class CalendarApp extends HTMLElement {
         const event_dail_start = new Date(start);
         event_dail_start.setHours(0, 0, 0, 0);
         const daily_span = this.daily_end - this.daily_start;
+        const hmin = Math.trunc((start - display_start) / (1000 * 60 * 60 * 24)) / 7;
+        const hmax = Math.trunc((start - display_start) / (1000 * 60 * 60 * 24) + 1) / 7;
+        if (hmax < 0 || hmin > 1)
+            return;
 
         let vmin = (start - event_dail_start - this.daily_start) / daily_span;
         let vmax = (end - event_dail_start - this.daily_start) / daily_span;
-        const hmin = Math.trunc((start - display_start) / (1000 * 60 * 60 * 24)) / 7;
-        const hmax = Math.trunc((start - display_start) / (1000 * 60 * 60 * 24) + 1) / 7;
         const event = require('./calendar_event.hbs')({title: new EncString(config.title).plain()}, {})
 
         function valueToColor(value, min = -10, max = 10) {
@@ -180,20 +183,25 @@ class CalendarApp extends HTMLElement {
         this._calendar_object.elements.rows.append(event)
     }
 
+    add_event(config) {
+        this.events.push(config);
+    }
+
     /**
      * @param in_planning {Planning}
      */
     set_planning(in_planning) {
         this._planning = in_planning;
-        this._refresh_calendar();
 
         this.events = [];
         if (this._planning) {
             fetch_api('slot/from-planning/', 'POST', this._planning.id.toString()).catch(error => {
                 NOTIFICATION.error(new Message(error).title("Impossible d'obtenir les slots"));
+                this._refresh_calendar();
             }).then((res) => {
                 for (const event of res)
                     this.add_event(event);
+                this._refresh_calendar();
             });
         }
     }
@@ -328,8 +336,10 @@ class CalendarApp extends HTMLElement {
                     NOTIFICATION.error(new Message(error).title("Impossible de créer l'évenement"));
                 });
                 if (!errors)
-                    for (const event of res)
+                    for (const event of res) {
                         this.add_event(event);
+                        this.display_event(event);
+                    }
 
 
                 GLOBAL_EVENT_CREATOR.remove();

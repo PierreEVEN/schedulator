@@ -52,7 +52,6 @@ GLOBAL_EVENTS.add('on_display_planning_changed', (payload) => {
 try_update_display_planning(APP_CONFIG.display_planning());
 
 document.getElementById('global-title').onclick = (event) => {
-    console.log('ah')
     event.preventDefault();
     APP_CONFIG.set_display_planning(null);
 }
