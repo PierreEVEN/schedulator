@@ -17,6 +17,7 @@ impl SlotRoutes {
     pub fn create(ctx: &Arc<AppCtx>) -> Result<Router, Error> {
         let router = Router::new()
             .route("/create/", post(create_slot).with_state(ctx.clone()))
+            .route("/from-planning/", post(from_planning).with_state(ctx.clone()))
             .route("/delete/", post(delete_slot).with_state(ctx.clone()));
         Ok(router)
     }
@@ -57,6 +58,14 @@ async fn create_slot(
     }
 
     Ok(Json(slots))
+}
+
+async fn from_planning(
+    State(ctx): State<Arc<AppCtx>>,
+    request: Request,
+) -> Result<impl IntoResponse, ServerError> {
+    let data = Json::<PlanningId>::from_request(request, &ctx).await?;
+    Ok(Json(Slot::from_planning(&ctx.database, &data).await?))
 }
 
 async fn delete_slot(

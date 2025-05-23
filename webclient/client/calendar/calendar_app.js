@@ -120,6 +120,7 @@ class CalendarApp extends HTMLElement {
                 cell.cell_time_start = cell_time_start;
                 cell.cell_time_end = cell_time_end;
                 cell.onclick = () => {
+                    this.selection = []
                     this.selection.push(cell);
                     this.spawn_add_event();
                 }
@@ -147,6 +148,16 @@ class CalendarApp extends HTMLElement {
     set_planning(in_planning) {
         this._planning = in_planning;
         this._refresh_calendar();
+
+        this.events = [];
+        if (this._planning) {
+            fetch_api('slot/from-planning/', 'POST', this._planning.id.toString()).catch(error => {
+                NOTIFICATION.error(new Message(error).title("Impossible d'obtenir les slots"));
+            }).then((res) => {
+                for (const event of res)
+                    this.add_event(event);
+            });
+        }
     }
 
     /**
@@ -253,26 +264,38 @@ class CalendarApp extends HTMLElement {
             })
         }
 
-        GLOBAL_EVENT_CREATOR = require('./create_event.hbs')({}, {
+        GLOBAL_EVENT_CREATOR = require('./create_event.hbs')({when: this.selection[0].cell_time_start}, {
             close: () => {
                 GLOBAL_EVENT_CREATOR.remove();
                 GLOBAL_EVENT_CREATOR = null;
             },
             submit: async (event) => {
                 event.preventDefault();
-                GLOBAL_EVENT_CREATOR.remove();
-                GLOBAL_EVENT_CREATOR = null;
 
+                const body = [];
                 for (const item of this.selection) {
-                    await fetch_api('slot/create/', 'POST', {
-                        display_name: EncString.from_client(signup_div.elements.login.value),
-                        email: EncString.from_client(signup_div.elements.email.value),
-                        password: EncString.from_client(signup_div.elements.password.value)
-                    }).catch(error => {
-                        NOTIFICATION.error(new Message(error).title("Impossible de créer l'évenement"));
+                    body.push({
+                        planning: this._planning.id.toString(),
+                        title: EncString.from_client(GLOBAL_EVENT_CREATOR.elements.name.value),
+                        owner: this._anonymous_user.id.toString(),
+                        start: this.selection[0].cell_time_start.getTime(),
+                        end: this.selection[0].cell_time_end.getTime(),
+                        source: EncString.from_client("Manual placement"),
+                        presence: Number(GLOBAL_EVENT_CREATOR.elements.availability.value)
                     });
                 }
+                let errors = false;
+                const res = await fetch_api('slot/create/', 'POST', body).catch(error => {
+                    errors = true;
+                    NOTIFICATION.error(new Message(error).title("Impossible de créer l'évenement"));
+                });
+                if (!errors)
+                    for (const event of res)
+                        this.add_event(event);
 
+
+                    GLOBAL_EVENT_CREATOR.remove();
+                GLOBAL_EVENT_CREATOR = null;
 
                 this.selection = [];
             }

@@ -96,4 +96,24 @@
     align-items: center;
     pointer-events: none;
   }
+
+  .calendar-create-event {
+    .slider-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 400px;
+    font-family: sans-serif;
+  }
+
+    .slider-wrapper span {
+      white-space: nowrap;
+      font-size: 14px;
+    }
+
+    .slider-wrapper input[type=range] {
+      flex: 1; /* Expand to fill space between labels */
+    }
+  }
 }

@@ -3,12 +3,14 @@
     <form onsubmit="{{ctx 'submit(event)'}}">
         <button onclick="{{ctx 'close()'}}">X</button>
         <h2>Ajouter un évenement</h2>
-        <input type="text" name="name" placeholder="Nom de l'évenement">
-        <label for="presence">Présence :</label>
-        <select id="presence" name="presence">
-            <option value="present">Je suis là</option>
-            <option value="absent">je suis pas là</option>
-        </select>
+        <p>{{when}}</p>
+        <input type="text" name="name" placeholder="Nom de l'évenement" {{object "name"}} required>
+
+
+        <span>Indisponible</span>
+        <input type="range" min="-10" max="10" value="-10" id="availability" {{object "availability"}}>
+        <span>Disponible</span>
+
         <input type="submit" value="Ajouter">
     </form>
 

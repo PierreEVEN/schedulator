@@ -1,7 +1,7 @@
 use crate::database::Database;
 use crate::types::database_ids::{DatabaseIdTrait, PlanningId, PlanningUserId, SlotId};
 use crate::types::enc_string::EncString;
-use crate::{query_fmt, query_object};
+use crate::{query_fmt, query_object, query_objects};
 use anyhow::Error;
 use postgres_from_row::FromRow;
 use serde::{Deserialize, Serialize};
@@ -20,7 +20,11 @@ pub struct Slot {
 
 impl Slot {
     pub async fn from_id(db: &Database, id: &SlotId) -> Result<Self, Error> {
-        Ok(query_object!(db, Slot, "SELECT * FROM SCHEMA_NAME.slots WHERE id = $1", id).unwrap())
+        query_object!(db, Slot, "SELECT * FROM SCHEMA_NAME.slots WHERE id = $1", id).ok_or(Error::msg("Failed to get slot from id"))
+    }
+
+    pub async fn from_planning(db: &Database, id: &PlanningId) -> Result<Vec<Self>, Error> {
+        Ok(query_objects!(db, Slot, "SELECT * FROM SCHEMA_NAME.slots WHERE planning = $1", id))
     }
 
     pub async fn delete(&self, db: &Database) -> Result<(), Error> {
@@ -43,7 +47,7 @@ impl Slot {
                 self.id(), self.planning, self.title, self.owner, self.start_time, self.end_time, self.source, self.presence);
         } else {
             let res = query_object!(db, SlotId, "INSERT INTO SCHEMA_NAME.slots
-                        (planning, title, owner, start_time, end_time, presence) VALUES
+                        (planning, title, owner, start_time, end_time, source, presence) VALUES
                         ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
                 self.planning, self.title, self.owner, self.start_time, self.end_time, self.source, self.presence);
             if let Some(res) = res {
