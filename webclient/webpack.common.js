@@ -26,6 +26,9 @@ module.exports = {
                         loader: "sass-loader",
                         options: {
                             implementation: require("sass"),
+                            sassOptions: {
+                                silenceDeprecations: ['mixed-decls', 'color-functions', 'global-builtin', 'import', 'legacy-js-api'],
+                            }
                         },
                     },
                 ],

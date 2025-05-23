@@ -7,7 +7,7 @@ use crate::types::enc_string::EncString;
 use crate::{get_connected_user, require_connected_user};
 use anyhow::Error;
 use axum::body::Body;
-use axum::extract::{FromRequest, Request, State};
+use axum::extract::{FromRequest, Path, Request, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
@@ -23,7 +23,7 @@ impl PlanningRoutes {
             .route("/create/", post(create).with_state(ctx.clone()))
             .route("/delete/", post(delete).with_state(ctx.clone()))
             .route("/my_plannings/", get(my_plannings).with_state(ctx.clone()))
-            .route("/get/", get(get_planning).with_state(ctx.clone()))
+            .route("/get/{key}/", get(get_planning).with_state(ctx.clone()))
             .route("/add_user/", post(add_user).with_state(ctx.clone()))
             .route("/remove_user/", post(remove_user).with_state(ctx.clone()));
         Ok(router)
@@ -77,17 +77,10 @@ async fn my_plannings(State(ctx): State<Arc<AppCtx>>, request: Request) -> impl 
 
 async fn get_planning(
     State(ctx): State<Arc<AppCtx>>,
-    request: Request,
+    Path(path): Path<EncString>,
 ) -> Result<impl IntoResponse, ServerError> {
-    #[derive(Deserialize)]
-    pub struct CreatePlanningData {
-        planning_key: EncString,
-    }
-
-    let data = Json::<CreatePlanningData>::from_request(request, &ctx).await?;
-
     Ok(Json(
-        Planning::from_key(&ctx.database, &data.planning_key).await?,
+        Planning::from_key(&ctx.database, &path).await?,
     ))
 }
 

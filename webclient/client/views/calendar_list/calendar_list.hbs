@@ -1,8 +1,6 @@
-
-<h2>Mes agendas</h2>
-<button onclick="{{ctx 'create()'}}">Nouvel agenda</button>
 <div>
-    {{#each widget}}
-        <li>- {{this}}</li>
-    {{/each}}
+    <h2>Mes agendas</h2>
+    <button onclick="{{ctx 'create()'}}">Nouvel agenda</button>
+    <div class="calendar-list" {{object "calendar_list"}}>
+    </div>
 </div>

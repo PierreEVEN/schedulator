@@ -112,11 +112,10 @@ make_database_id!(PlanningId);
 make_wrapped_db_type!(PasswordHash, String, Clone, Default, Debug, serde::Serialize, serde::Deserialize);
 impl PasswordHash {
     pub fn new(password_string: &enc_string::EncString) -> Result<Self, anyhow::Error> {
-        let s = Self(bcrypt::hash(password_string.encoded(), bcrypt::DEFAULT_COST)?);
+        let s = Self(bcrypt::hash(password_string.encoded(), 10)?);
         Ok(s)
     }
 
-    // @TODO : Don't send password to server
     pub fn verify(&self, password: &enc_string::EncString) -> Result<bool, anyhow::Error> {
         Ok(bcrypt::verify(password.encoded(), self.0.as_str())?)
     }

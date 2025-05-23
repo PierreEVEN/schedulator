@@ -30,7 +30,7 @@ $button_yes: #00ff04;
 }
 
 @function lighten($base) {
-  @return adjust-color($base, $hue: 0deg, $lightness: 10%);
+  @return adjust_color($base, $hue: 0deg, $lightness: 10%);
 }
 
 @function opaque($base) {

@@ -247,7 +247,7 @@ async fn main() {
     // Instantiate router
     let router = Router::new()
         .nest("/api/", ApiRoutes::create(&ctx).unwrap())
-        .nest("/", WebClient::router(&ctx).unwrap())
+        .merge(WebClient::router(&ctx).unwrap())
         .layer(middleware::from_fn_with_state(
             ctx.clone(),
             print_request_response,

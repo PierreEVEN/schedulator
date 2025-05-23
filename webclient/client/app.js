@@ -11,11 +11,9 @@ require('./calendar/calendar_app');
 
 let CURRENT_WIDGET = null;
 
-function refresh_content(connected_user) {
+function try_update_display_user(connected_user) {
     if (CURRENT_WIDGET)
         CURRENT_WIDGET.remove();
-    CURRENT_WIDGET = null;
-
     CURRENT_WIDGET = document.createElement('calendar-list');
 
     if (connected_user) {
@@ -27,9 +25,28 @@ function refresh_content(connected_user) {
     container.append(CURRENT_WIDGET);
 }
 
-refresh_content(APP_CONFIG.connected_user());
 
+function try_update_display_planning(planning) {
+    if (planning) {
+
+        if (CURRENT_WIDGET)
+            CURRENT_WIDGET.remove();
+
+        CURRENT_WIDGET = document.createElement('calendar-app');
+        CURRENT_WIDGET.set_planning(planning);
+        const container = document.getElementById('page-content');
+        container.append(CURRENT_WIDGET);
+    } else {
+        try_update_display_user(APP_CONFIG.connected_user());
+    }
+}
 GLOBAL_EVENTS.add('on_connected_user_changed', (payload) => {
-    refresh_content(payload.new);
+    try_update_display_user(payload.new);
 });
 
+GLOBAL_EVENTS.add('on_display_planning_changed', (payload) => {
+    try_update_display_planning(payload.new);
+});
+
+
+try_update_display_planning(APP_CONFIG.display_planning());

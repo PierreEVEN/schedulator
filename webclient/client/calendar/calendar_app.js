@@ -40,8 +40,6 @@ class CalendarApp extends HTMLElement {
         this.start = new Date(new Date().setMonth(new Date(this.end).getMonth() - 3));
         this.daily_spacing = new Date(30 * 60 * 1000); // 30 minutes
 
-        this.classList.add('calendar-app');
-
         this.addEventListener('mousemove', (event) => {
             this.mouse_x = event.clientX;
             this.mouse_y = event.clientY;
@@ -65,9 +63,12 @@ class CalendarApp extends HTMLElement {
 
         this.display_start = new Date(new Date().setMonth(new Date(this.end).getMonth() - 1));
 
-        this._refresh_calendar();
-
         this.selection = [];
+    }
+
+
+    connectedCallback() {
+        this.classList.add('calendar-app');
     }
 
     _refresh_calendar() {
@@ -76,6 +77,7 @@ class CalendarApp extends HTMLElement {
         this._calendar_object = null;
 
         this._calendar_object = require('./calendar_app.hbs')({
+            title: this._planning.title.plain(),
             week_number: get_week_number(this.display_start),
             year: this.display_start.getFullYear(),
             month: this.display_start.toLocaleDateString(undefined, {month: 'long'})
@@ -133,6 +135,22 @@ class CalendarApp extends HTMLElement {
 
     add_event(config) {
         this.events.push(config);
+    }
+
+    /**
+     * @param in_planning {Planning}
+     */
+    set_planning(in_planning)
+    {
+        this._planning = in_planning;
+        this._refresh_calendar();
+    }
+
+    /**
+     * @returns {Planning}
+     */
+    planning() {
+        return this._planning;
     }
 
     spawn_add_event() {

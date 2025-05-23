@@ -6,9 +6,9 @@ use crate::types::enc_string::EncString;
 use crate::{query_fmt, query_object, query_objects};
 use anyhow::Error;
 use postgres_from_row::FromRow;
-use rand::distributions::{Alphanumeric, DistString};
 use rand::random;
 use std::time::{SystemTime, UNIX_EPOCH};
+use rand::distr::{Alphanumeric, SampleString};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
@@ -126,7 +126,7 @@ impl User {
     pub async fn generate_auth_token(user: &User, db: &Database, device: &EncString) -> Result<AuthToken, Error> {
         let mut token: String;
         loop {
-            token = Alphanumeric.sample_string(&mut rand::thread_rng(), 64);
+            token = Alphanumeric.sample_string(&mut rand::rng(), 64);
             if query_fmt!(db, "SELECT token FROM SCHEMA_NAME.authtoken WHERE token = $1", token).is_empty() {
                 break;
             }
