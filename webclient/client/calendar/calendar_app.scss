@@ -11,6 +11,7 @@
     width: 100%;
     background-color: darkolivegreen;
     align-items: center;
+    position: relative;
 
     p {
       flex-grow: 1;
@@ -20,61 +21,116 @@
     }
   }
 
-  .calendar-columns {
+  .calendar-body {
     display: flex;
     width: 100%;
     flex-grow: 1;
+    flex-direction: column;
 
-    .calendar-column-header {
-      width: fit-content;
+    .calendar-column-headers {
       display: flex;
-      flex-direction: column;
-      h1 {
-        font-size: 1em;
-        visibility: hidden;
-      }
-
-      .calendar-column-header-cell {
-        border-top: dotted 1px;
-        font-size: 0.5em;
-        flex: 1 1 0;              /* grow/shrink allowed, base 0 */
-        background-color: red;
-        min-width: 0;             /* important to allow shrinking */
-        overflow: hidden;         /* clip overflow */
-      }
-    }
-
-    .calendar-column {
-      display: flex;
-      flex-direction: column;
-      border-left: solid 2px;
-
-      flex: 1 1 0;              /* grow/shrink allowed, base 0 */
-      min-width: 0;             /* important to allow shrinking */
-      overflow: hidden;         /* clip overflow */
-      text-overflow: ellipsis;  /* optional: "..." */
-      white-space: nowrap;      /* optional: prevent wrapping */
+      flex-direction: row;
+      width: 100%;
 
       h1 {
         text-align: center;
         font-size: 1em;
       }
 
-      .calendar-cells {
+      .calendar-column-header {
+        border-top: dotted 1px;
+        border-right: solid 2px;
+        flex: 1 1 0; /* grow/shrink allowed, base 0 */
+        min-width: 0; /* important to allow shrinking */
+        overflow: hidden; /* clip overflow */
+        text-overflow: ellipsis; /* optional: "..." */
+        white-space: nowrap; /* optional: prevent wrapping */
+      }
+    }
+
+    .calendar-row-header {
+      height: 100%;
+      border-right: solid 2px;
+      border-left: solid 2px;
+      display: flex;
+      flex-direction: column;
+
+      h1 {
+        margin: 0;
+        border-top: dotted 1px;
+        font-size: 0.75em;
+        flex: 1 1 0; /* grow/shrink allowed, base 0 */
+        background-color: #6a93a5;
+        min-width: 0; /* important to allow shrinking */
+        overflow: hidden; /* clip overflow */
+      }
+    }
+
+    .calendar-rows {
+      display: flex;
+      flex-direction: row;
+      flex-grow: 1;
+
+      .calendar-event {
+        position: absolute;
+        background-color: #cf9721;
+        overflow: hidden;
+        font-size: 0.7em;
+
+        p {
+          z-index: 100;
+          position: absolute;
+          top: 0;
+          left: 0;
+        }
+
+        .calendar-event-presence {
+          position: absolute;
+          bottom: 0;
+          right: 0;
+          width: 20px;
+          top: 0;
+          border-left: solid 1px;
+          z-index: 10;
+        }
+      }
+
+      .calendar-rows-header {
         display: flex;
         flex-direction: column;
-        flex-grow: 1;
-        .calendar-cell {
-          flex-grow: 1;
-          border-top: dotted 1px;
-          font-size: 0.5em;
+      }
 
-          &:hover {
-            background-color: beige;
-          }
+      .calendar-rows {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 0;
+        overflow: hidden;
+        position: relative;
 
-          &:active {
-            background-color: wheat;
+        .calendar-row {
+          display: flex;
+          flex-direction: row;
+          flex: 1 1 0;
+          overflow: hidden;
+
+          .calendar-cell {
+            display: flex;
+            border-top: dotted 1px;
+            border-right: solid 2px;
+
+            margin: 0;
+            border-top: dotted 1px;
+            font-size: 0.75em;
+            flex: 1 1 0;
+            overflow: hidden;
+
+            &:hover {
+              background-color: beige;
+            }
+
+            &:active {
+              background-color: wheat;
+            }
           }
         }
       }
@@ -90,8 +146,10 @@
   .calendar-modal-container {
     display: flex;
     position: absolute;
-    width: 100%;
-    height: 100%;
+    bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
     justify-content: center;
     align-items: center;
     pointer-events: none;
@@ -99,13 +157,13 @@
 
   .calendar-create-event {
     .slider-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    max-width: 400px;
-    font-family: sans-serif;
-  }
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 400px;
+      font-family: sans-serif;
+    }
 
     .slider-wrapper span {
       white-space: nowrap;

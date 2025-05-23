@@ -37,11 +37,11 @@ class CalendarApp extends HTMLElement {
 
         this.events = [];
 
-        this.daily_start = new Date(60 * 60 * 1000 * 6); // 6h
-        this.daily_end = new Date(60 * 60 * 1000 * 20); // 20h
+        this.daily_start = 60 * 60 * 1000 * 6; // 6h
+        this.daily_end = 60 * 60 * 1000 * 20; // 20h
         this.end = new Date(Date.now());
         this.start = new Date(new Date().setMonth(new Date(this.end).getMonth() - 3));
-        this.daily_spacing = new Date(30 * 60 * 1000); // 30 minutes
+        this.daily_spacing = 30 * 60 * 1000; // 30 minutes
 
         this.addEventListener('mousemove', (event) => {
             this.mouse_x = event.clientX;
@@ -69,7 +69,6 @@ class CalendarApp extends HTMLElement {
         this.selection = [];
     }
 
-
     connectedCallback() {
         this.classList.add('calendar-app');
     }
@@ -86,52 +85,54 @@ class CalendarApp extends HTMLElement {
             month: this.display_start.toLocaleDateString(undefined, {month: 'long'})
         }, {
             next_week: () => {
-                this.display_start.setDate(this.display_start.getDate());
+                this.display_start.setDate(this.display_start.getDate() + 7);
                 this._refresh_calendar();
             },
             previous_week: () => {
-                this.display_start.setDate(this.display_start.getDate() - 14)
+                this.display_start.setDate(this.display_start.getDate() - 7)
                 this._refresh_calendar();
             }
         });
 
-        let daily_subdivision = (this.daily_end.getTime() - this.daily_start.getTime()) / this.daily_spacing.getTime()
+        let daily_subdivision = (this.daily_end - this.daily_start) / this.daily_spacing
 
-        for (let j = 0; j < daily_subdivision; j++) {
-            let time = this.daily_start.getTime() + j * this.daily_spacing.getTime();
-            this._calendar_object.elements.column_header.append(require('./calendar_column_header_cell.hbs')({value: time_format_from_ms(time)}))
+        this._calendar_object.elements.columns_header.append(require('./calendar_column_header.hbs')())
+        for (let i = 0; i < 7; i++) {
+            let this_day = new Date(this.display_start);
+            this_day.setDate(this.display_start.getDate() + i)
+            this._calendar_object.elements.columns_header.append(require('./calendar_column_header.hbs')({title: this_day.toLocaleDateString(undefined, {weekday: 'short'}) + " " + this_day.getDate()}));
         }
 
-        for (let i = 0; i < 7; ++i) {
+        for (let i = 0; i < daily_subdivision; ++i) {
+            let time = this.daily_start + i * this.daily_spacing;
+            this._calendar_object.elements.rows_header.append(require('./calendar_row_header.hbs')({time: time_format_from_ms(time)}))
+        }
 
-            let start_of_day = new Date(this.display_start);
+        for (let i = 0; i < daily_subdivision; ++i) {
+
+            const row = document.createElement('div');
+            row.classList.add('calendar-row')
+
+            let start_of_day = new Date(this.display_start.getTime());
             start_of_day.setHours(0, 0, 0, 0);
+            for (let j = 0; j < 7; j++) {
 
-            let column = require('./calendar_column.hbs')({title: start_of_day.toLocaleDateString(undefined, {weekday: 'long'}) + " " + start_of_day.getDate()});
+                start_of_day.setDate(this.display_start.getDate() + j)
 
-
-            for (let j = 0; j < daily_subdivision; j++) {
-
-
-                let cell_time_start = new Date(start_of_day.getTime() + this.daily_start.getTime() + j * this.daily_spacing.getTime());
-                let cell_time_end = new Date(start_of_day.getTime() + this.daily_start.getTime() + (j + 1) * this.daily_spacing.getTime());
-
+                let cell_time_start = new Date(start_of_day.getTime() + this.daily_start + i * this.daily_spacing);
+                let cell_time_end = new Date(start_of_day.getTime() + this.daily_start + (i + 1) * this.daily_spacing);
                 let cell = require('./calendar_cell.hbs')({content: ""});
                 cell.cell_time_start = cell_time_start;
                 cell.cell_time_end = cell_time_end;
-                cell.onclick = () => {
+                cell.onclick = async () => {
                     this.selection = []
                     this.selection.push(cell);
-                    this.spawn_add_event();
+                    await this.spawn_add_event();
                 }
 
-
-                column.elements.cells.append(cell)
+                row.append(cell)
             }
-            this._calendar_object.elements.columns.append(column);
-
-
-            this.display_start.setDate(this.display_start.getDate() + 1)
+            this._calendar_object.elements.rows.append(row);
         }
 
         this.append(this._calendar_object)
@@ -140,6 +141,46 @@ class CalendarApp extends HTMLElement {
 
     add_event(config) {
         this.events.push(config);
+        const display_start = new Date(this.display_start);
+        display_start.setHours(0, 0, 0, 0);
+        const start = new Date(config.start_time);
+        const end = new Date(config.end_time);
+
+        const event_dail_start = new Date(start);
+        event_dail_start.setHours(0, 0, 0, 0);
+        const daily_span = this.daily_end - this.daily_start;
+
+        let vmin = (start - event_dail_start - this.daily_start) / daily_span;
+        let vmax = (end - event_dail_start - this.daily_start) / daily_span;
+        const hmin = Math.trunc((start - display_start) / (1000 * 60 * 60 * 24)) / 7;
+        const hmax = Math.trunc((start - display_start) / (1000 * 60 * 60 * 24) + 1) / 7;
+        const event = require('./calendar_event.hbs')({title: new EncString(config.title).plain()}, {})
+
+        function valueToColor(value, min = -10, max = 10) {
+            const clamped = Math.max(min, Math.min(max, value));
+
+            const percent = (clamped - min) / (max - min);
+
+            const hue = percent * 120;
+
+            return `hsl(${hue}, 100%, 50%)`;
+        }
+
+        function numberToColorHSL(n, total = 10) {
+            const hue = (n * (387.4713 / total)) % 360;
+            return `hsl(${hue}, 70%, 50%)`;
+        }
+
+        const user_color = numberToColorHSL(config.owner);
+        event.elements.event_presence.style.backgroundColor = valueToColor(config.presence);
+        event.style.backgroundColor = user_color;
+        event.style.top = `${vmin * 100}%`;
+        event.style.bottom = `${(1 - vmax) * 100}%`;
+        event.style.left = `${hmin * 100}%`;
+        event.style.right = `${(1 - hmax) * 100}%`;
+
+
+        this._calendar_object.elements.rows.append(event)
     }
 
     /**
@@ -294,7 +335,7 @@ class CalendarApp extends HTMLElement {
                         this.add_event(event);
 
 
-                    GLOBAL_EVENT_CREATOR.remove();
+                GLOBAL_EVENT_CREATOR.remove();
                 GLOBAL_EVENT_CREATOR = null;
 
                 this.selection = [];

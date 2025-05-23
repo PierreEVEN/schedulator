@@ -7,8 +7,12 @@
         <button>Jour</button>
         <button>Config</button>
     </div>
-    <div class="calendar-columns" {{object "columns"}}>
-        <div class="calendar-column-header" {{object "column_header"}}><h1>h</h1></div>
+    <div class="calendar-body">
+        <div class="calendar-column-headers" {{object "columns_header"}}><h1></h1></div>
+        <div class="calendar-rows">
+            <div class="calendar-rows-header" {{object "rows_header"}}></div>
+            <div class="calendar-rows" {{object "rows"}}></div>
+        </div>
     </div>
     <div class="calendar-modal-container" {{object "modal_container"}}></div>
 </div>

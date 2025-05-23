@@ -1,3 +1,0 @@
-2025-05-18T21:38:31.895177Z  WARN server: 500 Internal Server Error (/) : 500: Cannot find index file : No such file or directory (os error 2) (searching in ./webclient/public/index.html)
-2025-05-18T21:38:31.924180Z  WARN server: 404 Not Found (/favicon.ico) : 404: File not found ! (searching ./webclient/public/images/icons/favicon.ico)
-2025-05-18T21:39:50.382468Z  WARN server: 404 Not Found (/favicon.ico) : 404: File not found ! (searching ./webclient/public/images/icons/favicon.ico)

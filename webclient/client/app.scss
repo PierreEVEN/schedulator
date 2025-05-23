@@ -3,8 +3,11 @@ body {
   flex-direction: column;
   margin: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100svh;
   background-color: darkgray;
+  font-family: Muli,sans-serif;
+  font-size: 16px;
+  font-weight: 400;
 
   .header {
     display: flex;
