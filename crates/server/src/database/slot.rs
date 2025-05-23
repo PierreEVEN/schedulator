@@ -14,7 +14,8 @@ pub struct Slot {
     pub owner: PlanningUserId,
     pub start_time: i64,
     pub end_time: i64,
-    pub source: EncString
+    pub source: EncString,
+    pub presence: f32
 }
 
 impl Slot {
@@ -35,16 +36,16 @@ impl Slot {
     pub async fn push(&mut self, db: &Database) -> Result<(), Error> {
         if self.id().is_valid() {
             query_fmt!(db, "INSERT INTO SCHEMA_NAME.slots
-                        (id, planning, title, owner, start_time, end_time) VALUES
-                        ($1, $2, $3, $4, $5, $6, $7)
+                        (id, planning, title, owner, start_time, end_time, presence) VALUES
+                        ($1, $2, $3, $4, $5, $6, $7, $8)
                         ON CONFLICT(id) DO UPDATE SET
-                        id = $1, planning = $2, title = $3, owner = $4, start_time = $5, end_time = $6, source = $7;",
-                self.id(), self.planning, self.title, self.owner, self.start_time, self.end_time, self.source);
+                        id = $1, planning = $2, title = $3, owner = $4, start_time = $5, end_time = $6, source = $7, presence = $8;",
+                self.id(), self.planning, self.title, self.owner, self.start_time, self.end_time, self.source, self.presence);
         } else {
             let res = query_object!(db, SlotId, "INSERT INTO SCHEMA_NAME.slots
-                        (planning, title, owner, start_time, end_time) VALUES
-                        ($1, $2, $3, $4, $5, $6) RETURNING id",
-                self.planning, self.title, self.owner, self.start_time, self.end_time, self.source);
+                        (planning, title, owner, start_time, end_time, presence) VALUES
+                        ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+                self.planning, self.title, self.owner, self.start_time, self.end_time, self.source, self.presence);
             if let Some(res) = res {
                 self.id = res;
             }

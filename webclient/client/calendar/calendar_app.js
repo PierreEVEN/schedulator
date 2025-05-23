@@ -1,6 +1,8 @@
 import {fetch_api} from "../utilities/request";
 import {EncString} from "../utilities/encstring";
 import {Message, NOTIFICATION} from "../views/message_box/notification";
+import {APP_CONFIG} from "../utilities/app_config";
+import {Authentication} from "../utilities/authentication/authentication";
 
 require('./calendar_app.scss');
 
@@ -104,7 +106,7 @@ class CalendarApp extends HTMLElement {
             let start_of_day = new Date(this.display_start);
             start_of_day.setHours(0, 0, 0, 0);
 
-            let column = require('./calendar_column.hbs')({title: start_of_day.toLocaleDateString(undefined, {weekday: 'long'}) + " " + start_of_day    .getDate()});
+            let column = require('./calendar_column.hbs')({title: start_of_day.toLocaleDateString(undefined, {weekday: 'long'}) + " " + start_of_day.getDate()});
 
 
             for (let j = 0; j < daily_subdivision; j++) {
@@ -131,6 +133,7 @@ class CalendarApp extends HTMLElement {
         }
 
         this.append(this._calendar_object)
+        this._modal_container = this._calendar_object.elements.modal_container;
     }
 
     add_event(config) {
@@ -140,8 +143,7 @@ class CalendarApp extends HTMLElement {
     /**
      * @param in_planning {Planning}
      */
-    set_planning(in_planning)
-    {
+    set_planning(in_planning) {
         this._planning = in_planning;
         this._refresh_calendar();
     }
@@ -153,18 +155,62 @@ class CalendarApp extends HTMLElement {
         return this._planning;
     }
 
-    spawn_add_event() {
+    open_modal(content) {
+        this.close_modal();
+        this._modal_container.append(content);
+    }
+
+    close_modal() {
+        for (const child of this._modal_container.children)
+            child.remove();
+    }
+
+    async spawn_add_event() {
         if (GLOBAL_EVENT_CREATOR)
             GLOBAL_EVENT_CREATOR.remove();
         GLOBAL_EVENT_CREATOR = null;
 
+        if (!this._planning)
+            return;
+
+        let left = this.mouse_x;
+        let top = this.mouse_y;
+
+        if (this._planning.require_account && !APP_CONFIG.connected_user())
+            await Authentication.login();
+        else if (!this._anonymous_user && !APP_CONFIG.connected_user()) {
+            await new Promise((success, failure) => {
+                const form = require('./add_user.hbs')({}, {
+                    submit: async (event) => {
+                        event.preventDefault();
+                        let error = false;
+                        await fetch_api('planning/add_user/', 'POST', {
+                            name: EncString.from_client(form.elements.name),
+                            planning: this._planning.id,
+                        }).catch(error => {
+                            NOTIFICATION.error(new Message(error).title("Impossible de créer l'utilisateur"));
+                            error = true;
+                            failure();
+                        });
+                        this.close_modal();
+                        if (!error)
+                            success();
+                    },
+                    close: () => {
+                        this.close_modal();
+                        failure();
+                    }
+                });
+                this.open_modal(form);
+            })
+        }
+
         GLOBAL_EVENT_CREATOR = require('./create_event.hbs')({}, {
-            close:() => {
+            close: () => {
                 GLOBAL_EVENT_CREATOR.remove();
                 GLOBAL_EVENT_CREATOR = null;
-
             },
-            submit:async (event) => {
+            submit: async (event) => {
                 event.preventDefault();
                 GLOBAL_EVENT_CREATOR.remove();
                 GLOBAL_EVENT_CREATOR = null;
@@ -189,9 +235,6 @@ class CalendarApp extends HTMLElement {
         const popupHeight = GLOBAL_EVENT_CREATOR.offsetHeight;
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
-
-        let left = this.mouse_x;
-        let top = this.mouse_y;
 
         if (left + popupWidth > screenWidth) {
             left = screenWidth - popupWidth;

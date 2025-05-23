@@ -12,7 +12,7 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 pub struct PlanningRoutes {}
@@ -44,12 +44,12 @@ async fn create(
         time_precision: i64,
         start_daily_hour: i64,
         end_daily_hour: i64,
+        require_account: bool
     }
 
     let key = EncString::from("todo");
 
     let planning_data = Json::<CreatePlanningData>::from_request(request, &ctx).await?;
-    let mut plannings = vec![];
     if Planning::from_key(&ctx.database, &key).await.is_ok() {
         return Err(ServerError::msg(
             StatusCode::FORBIDDEN,
@@ -64,9 +64,9 @@ async fn create(
     planning.time_precision = planning_data.time_precision.clone();
     planning.start_daily_hour = planning_data.start_daily_hour.clone();
     planning.end_daily_hour = planning_data.end_daily_hour.clone();
+    planning.require_account = planning_data.require_account;
     Planning::push(&mut planning, &ctx.database).await?;
-    plannings.push(planning);
-    Ok(Json(plannings))
+    Ok(Json(planning))
 }
 
 /// Get repositories owned by connected user
@@ -79,9 +79,13 @@ async fn get_planning(
     State(ctx): State<Arc<AppCtx>>,
     Path(path): Path<EncString>,
 ) -> Result<impl IntoResponse, ServerError> {
-    Ok(Json(
-        Planning::from_key(&ctx.database, &path).await?,
-    ))
+    #[derive(Serialize)]
+    pub struct PlanningData {
+        planning: Planning,
+        users: Vec<PlanningUser>
+    }
+    let planning = Planning::from_key(&ctx.database, &path).await?;
+    Ok(Json(PlanningData{users: PlanningUser::from_planning(&ctx.database, planning.id()).await?, planning}))
 }
 
 /// Delete repository
@@ -116,8 +120,8 @@ pub async fn add_user(
     request: axum::http::Request<Body>,
 ) -> Result<impl IntoResponse, ServerError> {
     #[derive(Deserialize)]
-    pub struct CreatePlanningData {
-        optional_name: Option<EncString>,
+    pub struct CreateUserData {
+        name: EncString,
         planning: PlanningId,
     }
 
@@ -128,20 +132,8 @@ pub async fn add_user(
         Some(user) => Some(user.id().clone()),
     };
 
-    let data = Json::<CreatePlanningData>::from_request(request, &ctx).await?;
-
-    let name = match &data.optional_name {
-        None => {
-            let user = match &user {
-                None => return Err(ServerError::msg(StatusCode::FORBIDDEN, "Unknown user")),
-                Some(user) => user,
-            };
-            user.display_name.clone()
-        }
-        Some(name) => name.clone(),
-    };
-
-    if PlanningUser::from_user(&ctx.database, &data.planning, &name)
+    let data = Json::<CreateUserData>::from_request(request, &ctx).await?;
+    if PlanningUser::from_user(&ctx.database, &data.planning, &data.name)
         .await
         .is_ok()
     {
@@ -152,7 +144,7 @@ pub async fn add_user(
     }
 
     let mut planning_user = PlanningUser::default();
-    planning_user.name = name;
+    planning_user.name = data.name.clone();
     planning_user.user_id = user_id;
     planning_user.planning_id = data.planning.clone();
     PlanningUser::push(&mut planning_user, &ctx.database).await?;

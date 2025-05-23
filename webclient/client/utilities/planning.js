@@ -3,6 +3,7 @@ import {fetch_api} from "./request";
 import {Message, NOTIFICATION} from "../views/message_box/notification";
 import {EventManager} from "./event_manager";
 import {APP_CONFIG} from "./app_config";
+import {PlanningUser} from "./planning_user";
 
 class Planning {
     constructor(data) {
@@ -51,6 +52,10 @@ class Planning {
          * @type {boolean}
          */
         this.require_account = !!data.require_account;
+        /**
+         * @type {PlanningUser[]}
+         */
+        this.users = [];
     }
 
     /**
@@ -69,7 +74,10 @@ class Planning {
         const res = await fetch_api(`planning/get/${key.encoded()}/`, 'GET').catch(error => {
             NOTIFICATION.error(new Message(error).title("Impossible de télécharger l'agenda"));
         });
-        return Planning.new(res)
+        const planning = Planning.new(res.planning);
+        for (const user of res.users)
+            planning.add_user(PlanningUser.new(user));
+        return planning;
     }
 
     remove() {
@@ -78,6 +86,12 @@ class Planning {
             APP_CONFIG.set_display_planning(null);
     }
 
+    /**
+     * @param planning_user {PlanningUser}
+     */
+    add_user(planning_user) {
+        this.users.push(planning_user);
+    }
 }
 
 export {Planning}

@@ -32,15 +32,17 @@ class CalendarList extends HTMLElement {
                             end: new Date(create_div.elements.end.value).getTime(),
                             time_precision: time_to_ms(create_div.elements.time_precision.value),
                             start_daily_hour: time_to_ms(create_div.elements.start_daily_hour.value),
-                            end_daily_hour: time_to_ms(create_div.elements.end_daily_hour.value)
+                            end_daily_hour: time_to_ms(create_div.elements.end_daily_hour.value),
+                            require_account: create_div.elements.require_account.checked
                         };
                         let error = false;
-                        await fetch_api('planning/create/', 'POST', data).catch(error => {
+                        const res = await fetch_api('planning/create/', 'POST', data).catch(error => {
                             NOTIFICATION.error(new Message(error).title("Impossible de créer l'évenement"));
                             error = true;
                         });
                         if (!error)
                             MODAL.close();
+                        this._add_item(Planning.new(res));
                     }
                 })
                 const today = new Date();
@@ -49,32 +51,34 @@ class CalendarList extends HTMLElement {
                 create_div.elements.end.value = today.toISOString().split('T')[0];
 
                 MODAL.open(create_div)
-
             }
         });
 
-        for (const item of res) {
-            const planning = Planning.new(item);
-            const row = require('./calendar_list_item.hbs')({title: planning.title.plain()}, {
-                open: async () => {
-                    APP_CONFIG.set_display_planning(await Planning.get(planning.key))
-                },
-                delete: async () => {
-
-                    let error = false;
-                    await fetch_api('planning/delete/', 'POST', {planning_key: item.key}).catch(error => {
-                        NOTIFICATION.error(new Message(error).title("Impossible de supprimer le calendrier"));
-                        error = true;
-                    });
-                    if (!error)
-                        row.remove()
-                }
-            })
-
-            widget.elements.calendar_list.append(row)
-
-        }
+        this._list_container = widget;
+        for (const item of res)
+            this._add_item(Planning.new(item));
         this.append(widget);
+    }
+
+    _add_item(planning) {
+
+        const row = require('./calendar_list_item.hbs')({title: planning.title.plain()}, {
+            open: async () => {
+                APP_CONFIG.set_display_planning(await Planning.get(planning.key))
+            },
+            delete: async () => {
+
+                let error = false;
+                await fetch_api('planning/delete/', 'POST', {planning_key: planning.key.encoded()}).catch(error => {
+                    NOTIFICATION.error(new Message(error).title("Impossible de supprimer le calendrier"));
+                    error = true;
+                });
+                if (!error)
+                    row.remove()
+            }
+        })
+
+        this._list_container.elements.calendar_list.append(row)
     }
 }
 

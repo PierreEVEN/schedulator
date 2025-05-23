@@ -35,6 +35,7 @@ async fn create_slot(
         start: i64,
         end: i64,
         source: EncString,
+        presence: f32
     }
 
     let data = Json::<Vec<CreateSlotData>>::from_request(request, &ctx).await?;
@@ -49,6 +50,7 @@ async fn create_slot(
         new_slot.start_time = slot.start.clone();
         new_slot.end_time = slot.end.clone();
         new_slot.source = slot.source.clone();
+        new_slot.presence = slot.presence;
 
         new_slot.push(&ctx.database).await?;
         slots.push(new_slot);

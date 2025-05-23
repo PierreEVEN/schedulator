@@ -8,7 +8,6 @@ require('./app.scss');
 require('./calendar/calendar_app');
 
 
-
 let CURRENT_WIDGET = null;
 
 function try_update_display_user(connected_user) {
@@ -40,8 +39,10 @@ function try_update_display_planning(planning) {
         try_update_display_user(APP_CONFIG.connected_user());
     }
 }
+
 GLOBAL_EVENTS.add('on_connected_user_changed', (payload) => {
-    try_update_display_user(payload.new);
+    if (!APP_CONFIG.display_planning())
+        try_update_display_user(payload.new);
 });
 
 GLOBAL_EVENTS.add('on_display_planning_changed', (payload) => {

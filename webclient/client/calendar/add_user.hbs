@@ -1,0 +1,20 @@
+<div class="calendar-create-event">
+
+    <form onsubmit="{{ctx 'submit(event)'}}">
+        <button onclick="{{ctx 'close()'}}">X</button>
+        <h2>Identifies toi</h2>
+
+        <label for="who_are_you">Qui-es tu ?</label>
+        <select id="who_are_you" name="fruit" {{object "who_are_you"}}>
+            <option value="apple">Apple</option>
+            <option value="banana">Banana</option>
+            <option value="cherry">Cherry</option>
+        </select>
+
+        <label for="name">Je veux m'ajouter</label>
+        <input type="text" name="name" placeholder="Ton nom visible par les autres">
+        <input type="submit" value="Ajouter">
+    </form>
+
+
+</div>

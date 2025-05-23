@@ -20,6 +20,9 @@
         <label for='end_daily_hour'>
             <input {{object "end_daily_hour"}} type="time" name="end_daily_hour"  min="00:00" max="24:00" value="20:00" placeholder="Heure maximale quotidienne" id="end_daily_hour" required>
         </label>
+        <label for='require_account'>
+            <input {{object "require_account"}} type="checkbox" name="require_account" value="false" id="require_account">
+        </label>
         <input type="submit" value="Créer le calendrier">
     </form>
 </div>
