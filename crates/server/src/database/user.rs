@@ -1,5 +1,5 @@
 use std::fmt::Formatter;
-use crate::database::planning::Planning;
+use crate::database::calendar::Calendar;
 use crate::database::Database;
 use crate::types::database_ids::{DatabaseId, DatabaseIdTrait, PasswordHash, UserId};
 use crate::types::enc_string::EncString;
@@ -167,8 +167,8 @@ impl User {
     }
 
     pub async fn delete(user: &User, db: &Database) -> Result<(), Error> {
-        for repository in Planning::from_user(db, &user.id()).await? {
-            Planning::delete(&repository, db).await?;
+        for repository in Calendar::from_user(db, &user.id()).await? {
+            Calendar::delete(&repository, db).await?;
         }
         for token in AuthToken::from_user(db, user.id()).await? {
             AuthToken::delete(&token, db).await?;

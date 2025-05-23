@@ -1,7 +1,7 @@
 import {EncString} from "./encstring";
 import {EventManager} from "./event_manager";
 import {APP_CONFIG} from "./app_config";
-import {Planning} from "./planning";
+import {Calendar} from "./calendar";
 
 class User {
 
@@ -26,10 +26,10 @@ class User {
 
     /**
      * @param data
-     * @return {Planning}
+     * @return {Calendar}
      */
     static new(data) {
-        return new Planning(data);
+        return new Calendar(data);
     }
 
 

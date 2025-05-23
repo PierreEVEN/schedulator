@@ -1,9 +1,9 @@
 import {EncString} from "./encstring";
 import {EventManager} from "./event_manager";
 import {APP_CONFIG} from "./app_config";
-import {Planning} from "./planning";
+import {Calendar} from "./calendar";
 
-class PlanningUser {
+class CalendarUser {
 
     constructor(data) {
         this._build_from_data(data);
@@ -26,11 +26,11 @@ class PlanningUser {
 
     /**
      * @param data
-     * @return {PlanningUser}
+     * @return {CalendarUser}
      */
     static new(data) {
-        return new PlanningUser(data);
+        return new CalendarUser(data);
     }
 }
 
-export {PlanningUser}
+export {CalendarUser}

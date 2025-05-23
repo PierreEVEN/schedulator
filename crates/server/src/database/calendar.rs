@@ -1,6 +1,6 @@
-use crate::database::planning_users::PlanningUser;
+use crate::database::calendar_users::CalendarUser;
 use crate::database::Database;
-use crate::types::database_ids::{DatabaseIdTrait, PlanningId, UserId};
+use crate::types::database_ids::{DatabaseIdTrait, CalendarId, UserId};
 use crate::types::enc_string::EncString;
 use crate::{query_fmt, query_object, query_objects};
 use anyhow::Error;
@@ -9,9 +9,9 @@ use rand::distr::{Alphanumeric, SampleString};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Default, Debug, Clone, FromRow)]
-pub struct Planning {
+pub struct Calendar {
 
-    id: PlanningId,
+    id: CalendarId,
     pub owner_id: UserId,
     pub title: EncString,
     pub key: EncString,
@@ -23,25 +23,25 @@ pub struct Planning {
     pub require_account: bool,
 }
 
-impl Planning {
-    pub async fn from_id(db: &Database, id: &PlanningId) -> Result<Self, Error> {
-        match query_object!(db, Planning, "SELECT * FROM SCHEMA_NAME.plannings WHERE id = $1", id) {
-            None => { Err(Error::msg("Planning not found")) }
+impl Calendar {
+    pub async fn from_id(db: &Database, id: &CalendarId) -> Result<Self, Error> {
+        match query_object!(db, Calendar, "SELECT * FROM SCHEMA_NAME.calendars WHERE id = $1", id) {
+            None => { Err(Error::msg("Calendar not found")) }
             Some(user) => { Ok(user) }
         }
     }
     pub async fn from_key(db: &Database, key: &EncString) -> Result<Self, Error> {
-        match query_object!(db, Planning, "SELECT * FROM SCHEMA_NAME.plannings WHERE key = $1", key) {
-            None => { Err(Error::msg("Planning not found")) }
+        match query_object!(db, Calendar, "SELECT * FROM SCHEMA_NAME.calendars WHERE key = $1", key) {
+            None => { Err(Error::msg("Calendar not found")) }
             Some(user) => { Ok(user) }
         }
     }
     pub async fn from_user(db: &Database, user: &UserId) -> Result<Vec<Self>, Error> {
-        Ok(query_objects!(db, Self, "SELECT * FROM SCHEMA_NAME.plannings WHERE owner_id = $1", user))
+        Ok(query_objects!(db, Self, "SELECT * FROM SCHEMA_NAME.calendars WHERE owner_id = $1", user))
     }
     pub async fn push(&mut self, db: &Database) -> Result<(), Error> {
         if self.id().is_valid() {
-            query_fmt!(db, "INSERT INTO SCHEMA_NAME.plannings
+            query_fmt!(db, "INSERT INTO SCHEMA_NAME.calendars
                         (id, owner_id, title, key, start_date, end_date, time_precision, start_daily_hour, end_daily_hour, require_account) VALUES
                         ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                         ON CONFLICT(id) DO UPDATE SET
@@ -50,11 +50,11 @@ impl Planning {
         } else {
             loop {
                 self.key = EncString::from(Alphanumeric.sample_string(&mut rand::rng(), 16));
-                if query_object!(db, Self, "SELECT * FROM SCHEMA_NAME.plannings WHERE key = $1", self.key).is_none() {
+                if query_object!(db, Self, "SELECT * FROM SCHEMA_NAME.calendars WHERE key = $1", self.key).is_none() {
                     break;
                 }
             }
-            let res = query_object!(db, PlanningId, "INSERT INTO SCHEMA_NAME.plannings
+            let res = query_object!(db, CalendarId, "INSERT INTO SCHEMA_NAME.calendars
                         (owner_id, title, key, start_date, end_date, time_precision, start_daily_hour, end_daily_hour, require_account) VALUES
                         ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
                 self.owner_id, self.title, self.key, self.start_date, self.end_date, self.time_precision, self.start_daily_hour, self.end_daily_hour, self.require_account);
@@ -66,16 +66,16 @@ impl Planning {
     }
 
     pub async fn delete(&self, db: &Database) -> Result<(), Error> {
-        for user in PlanningUser::from_planning(db, self.id()).await? {
-            PlanningUser::delete(&user, db).await?;
+        for user in CalendarUser::from_calendar(db, self.id()).await? {
+            CalendarUser::delete(&user, db).await?;
         }
-        query_fmt!(db, r#"DELETE FROM SCHEMA_NAME.plannings WHERE id = $1;"#, self.id());
+        query_fmt!(db, r#"DELETE FROM SCHEMA_NAME.calendars WHERE id = $1;"#, self.id());
         Ok(())
     }
 }
 
-impl Planning {
-    pub fn id(&self) -> &PlanningId {
+impl Calendar {
+    pub fn id(&self) -> &CalendarId {
         &self.id
     }
 }

@@ -3,7 +3,7 @@ import {EncString} from "../utilities/encstring";
 import {Message, NOTIFICATION} from "../views/message_box/notification";
 import {APP_CONFIG} from "../utilities/app_config";
 import {Authentication} from "../utilities/authentication/authentication";
-import {PlanningUser} from "../utilities/planning_user";
+import {CalendarUser} from "../utilities/calendar_user";
 
 require('./calendar_app.scss');
 
@@ -79,7 +79,7 @@ class CalendarApp extends HTMLElement {
         this._calendar_object = null;
 
         this._calendar_object = require('./calendar_app.hbs')({
-            title: this._planning.title.plain(),
+            title: this._calendar.title.plain(),
             week_number: get_week_number(this.display_start),
             year: this.display_start.getFullYear(),
             month: this.display_start.toLocaleDateString(undefined, {month: 'long'})
@@ -188,15 +188,15 @@ class CalendarApp extends HTMLElement {
     }
 
     /**
-     * @param in_planning {Planning}
+     * @param in_calendar {Calendar}
      */
-    set_planning(in_planning) {
-        this._planning = in_planning;
+    set_calendar(in_calendar) {
+        this._calendar = in_calendar;
 
         this.events = [];
-        if (this._planning) {
-            fetch_api('slot/from-planning/', 'POST', this._planning.id.toString()).catch(error => {
-                NOTIFICATION.error(new Message(error).title("Impossible d'obtenir les slots"));
+        if (this._calendar) {
+            fetch_api('event/from-calendar/', 'POST', this._calendar.id.toString()).catch(error => {
+                NOTIFICATION.error(new Message(error).title("Impossible d'obtenir les events"));
                 this._refresh_calendar();
             }).then((res) => {
                 for (const event of res)
@@ -207,10 +207,10 @@ class CalendarApp extends HTMLElement {
     }
 
     /**
-     * @returns {Planning}
+     * @returns {Calendar}
      */
-    planning() {
-        return this._planning;
+    calendar() {
+        return this._calendar;
     }
 
     open_modal(content) {
@@ -228,7 +228,7 @@ class CalendarApp extends HTMLElement {
             GLOBAL_EVENT_CREATOR.remove();
         GLOBAL_EVENT_CREATOR = null;
 
-        if (!this._planning)
+        if (!this._calendar)
             return;
 
         let left = this.mouse_x;
@@ -237,15 +237,15 @@ class CalendarApp extends HTMLElement {
         // Retrieve or create user from account
         if (!this._anonymous_user && APP_CONFIG.connected_user()) {
             let error = false;
-            const res = await fetch_api('planning/find_or_create_user/', 'POST', {planning: this._planning.id.toString()}).catch(error => {
+            const res = await fetch_api('calendar/find_or_create_user/', 'POST', {calendar: this._calendar.id.toString()}).catch(error => {
                 NOTIFICATION.error(new Message(error).title("Impossible d'obtenir l'utilisateur"));
                 error = true;
             });
             if (error)
                 return;
-            this._anonymous_user = PlanningUser.new(res);
+            this._anonymous_user = CalendarUser.new(res);
         }
-        if (this._planning.require_account && !APP_CONFIG.connected_user())
+        if (this._calendar.require_account && !APP_CONFIG.connected_user())
             await Authentication.login();
         else if (!this._anonymous_user && !APP_CONFIG.connected_user()) {
             await new Promise((success, failure) => {
@@ -260,7 +260,7 @@ class CalendarApp extends HTMLElement {
                             form.elements.who_I_am.style.display = 'none';
                         } else {
                             form.elements.who_I_am.style.display = 'flex';
-                            if (this._planning.users.has(value)) {
+                            if (this._calendar.users.has(value)) {
                                 form.elements.who_I_am.value = `Je suis '${value}'`;
                             } else {
                                 form.elements.who_I_am.value = `Ajouter l'utilisateur '${value}'`;
@@ -275,16 +275,16 @@ class CalendarApp extends HTMLElement {
                     submit: async (event) => {
                         event.preventDefault();
                         const value = form.elements.who_are_you_input.value;
-                        if (this._planning.users.has(value)) {
-                            this._anonymous_user = this._planning.users.get(value);
+                        if (this._calendar.users.has(value)) {
+                            this._anonymous_user = this._calendar.users.get(value);
                             this.close_modal();
                             success();
                             return;
                         }
                         let error = false;
-                        await fetch_api('planning/add_user/', 'POST', {
+                        await fetch_api('calendar/add_user/', 'POST', {
                             name: EncString.from_client(value),
-                            planning: this._planning.id.toString(),
+                            calendar: this._calendar.id.toString(),
                         }).catch(error => {
                             NOTIFICATION.error(new Message(error).title("Impossible de créer l'utilisateur"));
                             error = true;
@@ -300,7 +300,7 @@ class CalendarApp extends HTMLElement {
                     }
                 });
 
-                for (const user of this._planning.users.values()) {
+                for (const user of this._calendar.users.values()) {
                     const option = document.createElement('option');
                     option.value = user.name.plain();
                     form.elements.who_are_you_list.append(option);
@@ -321,7 +321,7 @@ class CalendarApp extends HTMLElement {
                 const body = [];
                 for (const item of this.selection) {
                     body.push({
-                        planning: this._planning.id.toString(),
+                        calendar: this._calendar.id.toString(),
                         title: EncString.from_client(GLOBAL_EVENT_CREATOR.elements.name.value),
                         owner: this._anonymous_user.id.toString(),
                         start: this.selection[0].cell_time_start.getTime(),
@@ -331,7 +331,7 @@ class CalendarApp extends HTMLElement {
                     });
                 }
                 let errors = false;
-                const res = await fetch_api('slot/create/', 'POST', body).catch(error => {
+                const res = await fetch_api('event/create/', 'POST', body).catch(error => {
                     errors = true;
                     NOTIFICATION.error(new Message(error).title("Impossible de créer l'évenement"));
                 });

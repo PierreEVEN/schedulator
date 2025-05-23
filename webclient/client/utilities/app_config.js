@@ -1,8 +1,8 @@
 import {User} from "./user";
 import {GLOBAL_EVENTS} from "./event_manager";
-import {Planning} from "./planning";
+import {Calendar} from "./calendar";
 import {EncString} from "./encstring";
-import {PlanningUser} from "./planning_user";
+import {CalendarUser} from "./calendar_user";
 
 class AppConfig {
     constructor() {
@@ -15,12 +15,12 @@ class AppConfig {
         this._connected_user = data.connected_user ? User.new(data.connected_user) : null;
 
         /**
-         * @type {Planning}
+         * @type {Calendar}
          */
-        this._display_planning = data.display_planning ? Planning.new(data.display_planning) : null;
-        if (data.display_planning_users)
-            for (const user of data.display_planning_users)
-                this._display_planning.add_user(PlanningUser.new(user));
+        this._display_calendar = data.display_calendar ? Calendar.new(data.display_calendar) : null;
+        if (data.display_calendar_users)
+            for (const user of data.display_calendar_users)
+                this._display_calendar.add_user(CalendarUser.new(user));
 
         /**
          * @type {String}
@@ -37,8 +37,8 @@ class AppConfig {
         this._error_code = data.error_code;
 
         addEventListener("popstate", (event) => {
-            if (!this._display_planning || !event.state || ! event.state._display_planning || event.state._display_planning.key !== this._display_planning.key)
-                this.set_display_planning(event.state ? event.state._display_planning : null, false);
+            if (!this._display_calendar || !event.state || ! event.state._display_calendar || event.state._display_calendar.key !== this._display_calendar.key)
+                this.set_display_calendar(event.state ? event.state._display_calendar : null, false);
         })
 
         if (!this._error_code)
@@ -51,16 +51,16 @@ class AppConfig {
         GLOBAL_EVENTS.broadcast('on_connected_user_changed', {old: old, new: new_user});
     }
 
-    set_display_planning(new_planning, with_state = true) {
-        const old = this._display_planning;
-        this._display_planning = new_planning;
+    set_display_calendar(new_calendar, with_state = true) {
+        const old = this._display_calendar;
+        this._display_calendar = new_calendar;
         if (with_state)
-        history.pushState({_display_planning: this._display_planning}, "", new_planning ? `/${new_planning.key.encoded()}/` : '');
-        GLOBAL_EVENTS.broadcast('on_display_planning_changed', {old: old, new: new_planning});
+        history.pushState({_display_calendar: this._display_calendar}, "", new_calendar ? `/${new_calendar.key.encoded()}/` : '');
+        GLOBAL_EVENTS.broadcast('on_display_calendar_changed', {old: old, new: new_calendar});
     }
 
-    display_planning() {
-        return this._display_planning;
+    display_calendar() {
+        return this._display_calendar;
     }
 
     connected_user() {

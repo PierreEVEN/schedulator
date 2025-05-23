@@ -8,10 +8,10 @@ use tokio_postgres::tls::NoTlsStream;
 use tracing::info;
 use crate::config::BackendConfig;
 
-pub mod slot;
-pub mod planning;
+pub mod event;
+pub mod calendar;
 pub mod user;
-pub mod planning_users;
+pub mod calendar_users;
 pub mod auth_token;
 
 pub struct Database {

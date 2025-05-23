@@ -17,9 +17,9 @@ use serde::{Deserialize, Serialize};
 use tracing::{info};
 use which::which;
 use crate::config::WebClientConfig;
-use crate::database::planning::Planning;
-use crate::{get_connected_user, get_display_planning};
-use crate::database::planning_users::PlanningUser;
+use crate::database::calendar::Calendar;
+use crate::{get_connected_user, get_display_calendar};
+use crate::database::calendar_users::CalendarUser;
 use crate::database::user::User;
 use crate::routes::app_ctx::AppCtx;
 use crate::routes::RequestContext;
@@ -92,7 +92,7 @@ impl WebClient {
     pub fn router(ctx: &Arc<AppCtx>) -> Result<Router, Error> {
         Ok(Router::new()
             .route("/", get(get_index).with_state(ctx.clone()))
-            .route("/{display_planning}/", get(get_index).with_state(ctx.clone()))
+            .route("/{display_calendar}/", get(get_index).with_state(ctx.clone()))
             .route("/favicon.ico", get(Self::get_favicon).with_state(ctx.clone()))
             .nest("/public/", StaticFileServer::router(ctx.config.web_client_config.client_path.join("public")))
             .layer(middleware::from_fn_with_state(ctx.clone(), middleware_get_path_context))
@@ -106,17 +106,17 @@ impl WebClient {
 
 #[derive(Deserialize, Debug)]
 pub struct PathData {
-    display_planning: Option<String>,
+    display_calendar: Option<String>,
 }
 
-pub async fn middleware_get_path_context(State(ctx): State<Arc<AppCtx>>, Path(PathData { display_planning }): Path<PathData>, request: axum::http::Request<Body>, next: Next) -> Result<Response, ServerError> {
+pub async fn middleware_get_path_context(State(ctx): State<Arc<AppCtx>>, Path(PathData { display_calendar }): Path<PathData>, request: axum::http::Request<Body>, next: Next) -> Result<Response, ServerError> {
     let context = request.extensions().get::<Arc<RequestContext>>().unwrap();
     context.is_web_client.store(true, SeqCst);
-    if let Some(display_planning) = display_planning {
-        if let Ok(display_planning) = Planning::from_key(&ctx.database, &EncString::from_url_path(display_planning.clone())?).await {
-            *context.display_planning.write().await = Some(display_planning);
+    if let Some(display_calendar) = display_calendar {
+        if let Ok(display_calendar) = Calendar::from_key(&ctx.database, &EncString::from_url_path(display_calendar.clone())?).await {
+            *context.display_calendar.write().await = Some(display_calendar);
         } else {
-            return Err(ServerError::msg(StatusCode::NOT_FOUND, format!("Unknown user '{}'", display_planning)));
+            return Err(ServerError::msg(StatusCode::NOT_FOUND, format!("Unknown user '{}'", display_calendar)));
         }
     }
     Ok(next.run(request).await)
@@ -126,8 +126,8 @@ pub async fn middleware_get_path_context(State(ctx): State<Arc<AppCtx>>, Path(Pa
 struct ClientAppConfig {
     pub origin: String,
     pub connected_user: Option<User>,
-    pub display_planning: Option<Planning>,
-    pub display_planning_users: Option<Vec<PlanningUser>>,
+    pub display_calendar: Option<Calendar>,
+    pub display_calendar_users: Option<Vec<CalendarUser>>,
 }
 
 pub fn get_origin(ctx: &Arc<AppCtx>, request: &Request) -> Result<String, ServerError> {
@@ -158,9 +158,9 @@ async fn get_index(State(ctx): State<Arc<AppCtx>>, request: Request) -> Result<i
     get_connected_user!(request, user, {
         client_config.connected_user = Some(user.clone());
     });
-    get_display_planning!(request, repository, {
-        client_config.display_planning_users = Some(PlanningUser::from_planning(&ctx.database, repository.id()).await?);
-        client_config.display_planning = Some(repository.clone());
+    get_display_calendar!(request, repository, {
+        client_config.display_calendar_users = Some(CalendarUser::from_calendar(&ctx.database, repository.id()).await?);
+        client_config.display_calendar = Some(repository.clone());
     });
 
     let index_path_buf = ctx.config.web_client_config.client_path.join("public").join("index.html");

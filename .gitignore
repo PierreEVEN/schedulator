@@ -19,5 +19,5 @@ target/
 Cargo.lock
 /webclient/node_modules
 /webclient/package-lock.json
-/ezplanning_logs
+/schedulator_logs
 /webclient/public/dist

@@ -25,14 +25,14 @@ function try_update_display_user(connected_user) {
 }
 
 
-function try_update_display_planning(planning) {
-    if (planning) {
+function try_update_display_calendar(calendar) {
+    if (calendar) {
 
         if (CURRENT_WIDGET)
             CURRENT_WIDGET.remove();
 
         CURRENT_WIDGET = document.createElement('calendar-app');
-        CURRENT_WIDGET.set_planning(planning);
+        CURRENT_WIDGET.set_calendar(calendar);
         const container = document.getElementById('page-content');
         container.append(CURRENT_WIDGET);
     } else {
@@ -41,17 +41,17 @@ function try_update_display_planning(planning) {
 }
 
 GLOBAL_EVENTS.add('on_connected_user_changed', (payload) => {
-    if (!APP_CONFIG.display_planning())
+    if (!APP_CONFIG.display_calendar())
         try_update_display_user(payload.new);
 });
 
-GLOBAL_EVENTS.add('on_display_planning_changed', (payload) => {
-    try_update_display_planning(payload.new);
+GLOBAL_EVENTS.add('on_display_calendar_changed', (payload) => {
+    try_update_display_calendar(payload.new);
 });
 
-try_update_display_planning(APP_CONFIG.display_planning());
+try_update_display_calendar(APP_CONFIG.display_calendar());
 
 document.getElementById('global-title').onclick = (event) => {
     event.preventDefault();
-    APP_CONFIG.set_display_planning(null);
+    APP_CONFIG.set_display_calendar(null);
 }

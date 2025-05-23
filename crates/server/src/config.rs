@@ -56,7 +56,7 @@ impl Default for Config {
                     port: 5432,
                     database: "postgres".to_string(),
                     ssl_mode: false,
-                    scheme_name: "ezplanning".to_string()
+                    scheme_name: "schedulator".to_string()
                 },
             },
             web_client_config: WebClientConfig {

@@ -1,8 +1,8 @@
-use crate::database::planning::Planning;
-use crate::database::planning_users::PlanningUser;
+use crate::database::calendar::Calendar;
+use crate::database::calendar_users::CalendarUser;
 use crate::routes::app_ctx::AppCtx;
 use crate::server_error::ServerError;
-use crate::types::database_ids::{PlanningId, PlanningUserId};
+use crate::types::database_ids::{CalendarId, CalendarUserId};
 use crate::types::enc_string::EncString;
 use crate::{get_connected_user, require_connected_user};
 use anyhow::Error;
@@ -15,15 +15,15 @@ use axum::{Json, Router};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-pub struct PlanningRoutes {}
+pub struct CalendarRoutes {}
 
-impl PlanningRoutes {
+impl CalendarRoutes {
     pub fn create(ctx: &Arc<AppCtx>) -> Result<Router, Error> {
         let router = Router::new()
             .route("/create/", post(create).with_state(ctx.clone()))
             .route("/delete/", post(delete).with_state(ctx.clone()))
-            .route("/my_plannings/", get(my_plannings).with_state(ctx.clone()))
-            .route("/get/{key}/", get(get_planning).with_state(ctx.clone()))
+            .route("/my_calendars/", get(my_calendars).with_state(ctx.clone()))
+            .route("/get/{key}/", get(get_calendar).with_state(ctx.clone()))
             .route("/add_user/", post(add_user).with_state(ctx.clone()))
             .route("/find_or_create_user/", post(find_or_create_user).with_state(ctx.clone()))
             .route("/remove_user/", post(remove_user).with_state(ctx.clone()));
@@ -38,7 +38,7 @@ async fn create(
     let user = require_connected_user!(request);
 
     #[derive(Deserialize)]
-    pub struct CreatePlanningData {
+    pub struct CreateCalendarData {
         title: EncString,
         start: i64,
         end: i64,
@@ -50,43 +50,43 @@ async fn create(
 
     let key = EncString::from("todo");
 
-    let planning_data = Json::<CreatePlanningData>::from_request(request, &ctx).await?;
-    if Planning::from_key(&ctx.database, &key).await.is_ok() {
+    let calendar_data = Json::<CreateCalendarData>::from_request(request, &ctx).await?;
+    if Calendar::from_key(&ctx.database, &key).await.is_ok() {
         return Err(ServerError::msg(
             StatusCode::FORBIDDEN,
             "A repository with this key already exists",
         ));
     }
-    let mut planning = Planning::default();
-    planning.title = planning_data.title.clone();
-    planning.start_date = planning_data.start.clone();
-    planning.end_date = planning_data.end.clone();
-    planning.owner_id = user.id().clone();
-    planning.time_precision = planning_data.time_precision.clone();
-    planning.start_daily_hour = planning_data.start_daily_hour.clone();
-    planning.end_daily_hour = planning_data.end_daily_hour.clone();
-    planning.require_account = planning_data.require_account;
-    Planning::push(&mut planning, &ctx.database).await?;
-    Ok(Json(planning))
+    let mut calendar = Calendar::default();
+    calendar.title = calendar_data.title.clone();
+    calendar.start_date = calendar_data.start.clone();
+    calendar.end_date = calendar_data.end.clone();
+    calendar.owner_id = user.id().clone();
+    calendar.time_precision = calendar_data.time_precision.clone();
+    calendar.start_daily_hour = calendar_data.start_daily_hour.clone();
+    calendar.end_daily_hour = calendar_data.end_daily_hour.clone();
+    calendar.require_account = calendar_data.require_account;
+    Calendar::push(&mut calendar, &ctx.database).await?;
+    Ok(Json(calendar))
 }
 
 /// Get repositories owned by connected user
-async fn my_plannings(State(ctx): State<Arc<AppCtx>>, request: Request) -> impl IntoResponse {
+async fn my_calendars(State(ctx): State<Arc<AppCtx>>, request: Request) -> impl IntoResponse {
     let user = require_connected_user!(request);
-    Ok(Json(Planning::from_user(&ctx.database, user.id()).await?))
+    Ok(Json(Calendar::from_user(&ctx.database, user.id()).await?))
 }
 
-async fn get_planning(
+async fn get_calendar(
     State(ctx): State<Arc<AppCtx>>,
     Path(path): Path<EncString>,
 ) -> Result<impl IntoResponse, ServerError> {
     #[derive(Serialize)]
-    pub struct PlanningData {
-        planning: Planning,
-        users: Vec<PlanningUser>,
+    pub struct CalendarData {
+        calendar: Calendar,
+        users: Vec<CalendarUser>,
     }
-    let planning = Planning::from_key(&ctx.database, &path).await?;
-    Ok(Json(PlanningData { users: PlanningUser::from_planning(&ctx.database, planning.id()).await?, planning }))
+    let calendar = Calendar::from_key(&ctx.database, &path).await?;
+    Ok(Json(CalendarData { users: CalendarUser::from_calendar(&ctx.database, calendar.id()).await?, calendar }))
 }
 
 /// Delete repository
@@ -98,20 +98,20 @@ async fn delete(
 
     #[derive(Deserialize)]
     pub struct RequestParams {
-        pub planning_key: EncString,
+        pub calendar_key: EncString,
     }
 
     let data = Json::<RequestParams>::from_request(request, &ctx).await?;
 
-    for planning in Planning::from_user(&ctx.database, connected_user.id()).await? {
-        if planning.key.encoded() == data.planning_key.encoded() {
-            planning.delete(&ctx.database).await?;
-            return Ok(Json(vec![planning.id().clone()]));
+    for calendar in Calendar::from_user(&ctx.database, connected_user.id()).await? {
+        if calendar.key.encoded() == data.calendar_key.encoded() {
+            calendar.delete(&ctx.database).await?;
+            return Ok(Json(vec![calendar.id().clone()]));
         }
     }
     return Err(ServerError::msg(
         StatusCode::FORBIDDEN,
-        "You don't own this planning",
+        "You don't own this calendar",
     ));
 }
 
@@ -124,20 +124,20 @@ pub async fn find_or_create_user(
 
     #[derive(Deserialize)]
     pub struct RequestParams {
-        pub planning: PlanningId,
+        pub calendar: CalendarId,
     }
     let data = Json::<RequestParams>::from_request(request, &ctx).await?;
 
-    if let Ok(found) = PlanningUser::from_user(&ctx.database, &data.planning, user.id()).await {
+    if let Ok(found) = CalendarUser::from_user(&ctx.database, &data.calendar, user.id()).await {
         return Ok(Json(found));
     };
 
-    let mut planning_user = PlanningUser::default();
-    planning_user.name = user.display_name.clone();
-    planning_user.user_id = Some(user.id().clone());
-    planning_user.planning_id = data.planning.clone();
-    PlanningUser::push(&mut planning_user, &ctx.database).await?;
-    Ok(Json(planning_user))
+    let mut calendar_user = CalendarUser::default();
+    calendar_user.name = user.display_name.clone();
+    calendar_user.user_id = Some(user.id().clone());
+    calendar_user.calendar_id = data.calendar.clone();
+    CalendarUser::push(&mut calendar_user, &ctx.database).await?;
+    Ok(Json(calendar_user))
 }
 
 /// Get all root items of a repository
@@ -148,7 +148,7 @@ pub async fn add_user(
     #[derive(Deserialize)]
     pub struct CreateUserData {
         name: EncString,
-        planning: PlanningId,
+        calendar: CalendarId,
     }
 
     let mut user = None;
@@ -164,19 +164,19 @@ pub async fn add_user(
         return Err(ServerError::msg(StatusCode::NOT_ACCEPTABLE, "Name cannot be empty"));
     }
 
-    if PlanningUser::from_username(&ctx.database, &data.planning, &data.name).await.is_ok() {
+    if CalendarUser::from_username(&ctx.database, &data.calendar, &data.name).await.is_ok() {
         return Err(ServerError::msg(
             StatusCode::FORBIDDEN,
-            format!("A planning user named {} already exists", data.name),
+            format!("A calendar user named {} already exists", data.name),
         ));
     }
 
-    let mut planning_user = PlanningUser::default();
-    planning_user.name = data.name.clone();
-    planning_user.user_id = user_id;
-    planning_user.planning_id = data.planning.clone();
-    PlanningUser::push(&mut planning_user, &ctx.database).await?;
-    Ok(Json(planning_user))
+    let mut calendar_user = CalendarUser::default();
+    calendar_user.name = data.name.clone();
+    calendar_user.user_id = user_id;
+    calendar_user.calendar_id = data.calendar.clone();
+    CalendarUser::push(&mut calendar_user, &ctx.database).await?;
+    Ok(Json(calendar_user))
 }
 
 /// Get trash root items of a repository
@@ -185,20 +185,20 @@ pub async fn remove_user(
     request: axum::http::Request<Body>,
 ) -> Result<impl IntoResponse, ServerError> {
     let owner = require_connected_user!(request);
-    let data = Json::<Vec<PlanningUserId>>::from_request(request, &ctx).await?;
+    let data = Json::<Vec<CalendarUserId>>::from_request(request, &ctx).await?;
 
     for removed in &data.0 {
-        let planning_user = PlanningUser::from_id(&ctx.database, &removed).await?;
-        let planning = Planning::from_id(&ctx.database, &planning_user.planning_id).await?;
+        let calendar_user = CalendarUser::from_id(&ctx.database, &removed).await?;
+        let calendar = Calendar::from_id(&ctx.database, &calendar_user.calendar_id).await?;
 
-        if planning.owner_id != *owner.id() {
+        if calendar.owner_id != *owner.id() {
             return Err(ServerError::msg(
                 StatusCode::FORBIDDEN,
-                "Forbidden : not owning this planning",
+                "Forbidden : not owning this calendar",
             ));
         }
 
-        planning_user.delete(&ctx.database).await?;
+        calendar_user.delete(&ctx.database).await?;
     }
 
     Ok(Json(data.0))

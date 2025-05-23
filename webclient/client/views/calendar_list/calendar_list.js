@@ -4,7 +4,7 @@ const {EncString} = require("../../utilities/encstring");
 const {NOTIFICATION, Message} = require("../message_box/notification");
 const {MODAL} = require("../../utilities/modal/modal");
 const {APP_CONFIG} = require("../../utilities/app_config");
-const {Planning} = require("../../utilities/planning");
+const {Calendar} = require("../../utilities/calendar");
 
 function time_to_ms(time_str) {
     const [hours, minutes] = time_str.split(':');
@@ -18,8 +18,8 @@ class CalendarList extends HTMLElement {
     }
 
     async connectedCallback() {
-        const res = await fetch_api('planning/my_plannings/', 'GET').catch(error => {
-            NOTIFICATION.error(new Message(error).title("Impossible de récuperer mes agendas"));
+        const res = await fetch_api('calendar/my_calendars/', 'GET').catch(error => {
+            NOTIFICATION.error(new Message(error).title("Impossible de récuperer mes calendriers"));
         });
         const widget = require('./calendar_list.hbs')({}, {
             create: () => {
@@ -36,13 +36,13 @@ class CalendarList extends HTMLElement {
                             require_account: create_div.elements.require_account.checked
                         };
                         let error = false;
-                        const res = await fetch_api('planning/create/', 'POST', data).catch(error => {
+                        const res = await fetch_api('calendar/create/', 'POST', data).catch(error => {
                             NOTIFICATION.error(new Message(error).title("Impossible de créer l'évenement"));
                             error = true;
                         });
                         if (!error)
                             MODAL.close();
-                        this._add_item(Planning.new(res));
+                        this._add_item(Calendar.new(res));
                     }
                 })
                 const today = new Date();
@@ -56,20 +56,20 @@ class CalendarList extends HTMLElement {
 
         this._list_container = widget;
         for (const item of res)
-            this._add_item(Planning.new(item));
+            this._add_item(Calendar.new(item));
         this.append(widget);
     }
 
-    _add_item(planning) {
+    _add_item(calendar) {
 
-        const row = require('./calendar_list_item.hbs')({title: planning.title.plain()}, {
+        const row = require('./calendar_list_item.hbs')({title: calendar.title.plain()}, {
             open: async () => {
-                APP_CONFIG.set_display_planning(await Planning.get(planning.key))
+                APP_CONFIG.set_display_calendar(await Calendar.get(calendar.key))
             },
             delete: async () => {
 
                 let error = false;
-                await fetch_api('planning/delete/', 'POST', {planning_key: planning.key.encoded()}).catch(error => {
+                await fetch_api('calendar/delete/', 'POST', {calendar_key: calendar.key.encoded()}).catch(error => {
                     NOTIFICATION.error(new Message(error).title("Impossible de supprimer le calendrier"));
                     error = true;
                 });

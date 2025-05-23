@@ -6,16 +6,16 @@ use axum::http::{Request, StatusCode};
 use axum::response::{IntoResponse};
 use axum::Router;
 use tracing::warn;
-use crate::database::planning::Planning;
+use crate::database::calendar::Calendar;
 use crate::database::user::User;
 use crate::routes::app_ctx::AppCtx;
-use crate::routes::route_planning::PlanningRoutes;
-use crate::routes::route_slot::SlotRoutes;
+use crate::routes::route_calendar::CalendarRoutes;
+use crate::routes::route_event::EventRoutes;
 use crate::routes::route_user::UserRoutes;
 
-mod route_planning;
+mod route_calendar;
 pub mod app_ctx;
-pub mod route_slot;
+pub mod route_event;
 pub mod route_user;
 
 #[macro_export]
@@ -50,10 +50,10 @@ macro_rules! require_connected_user {
 
 
 #[macro_export]
-macro_rules! get_display_planning {
+macro_rules! get_display_calendar {
     ($request:expr, $prop:ident, $body:expr, $or_else:expr) => {{
         let req_ctx = $request.extensions().get::<std::sync::Arc<crate::routes::RequestContext>>().unwrap();
-        if let Some($prop) = req_ctx.display_planning().await.as_ref() {
+        if let Some($prop) = req_ctx.display_calendar().await.as_ref() {
             {$body}
         } else {
             $or_else
@@ -62,17 +62,17 @@ macro_rules! get_display_planning {
 
     ($request:expr, $prop:ident, $body:expr) => (
         let req_ctx = $request.extensions().get::<std::sync::Arc<crate::routes::RequestContext>>().unwrap();
-        if let Some($prop) = req_ctx.display_planning().await.as_ref() {
+        if let Some($prop) = req_ctx.display_calendar().await.as_ref() {
             $body
         }
     );
 }
 
 #[macro_export]
-macro_rules! require_display_planning {
+macro_rules! require_display_calendar {
     ($request:expr) => {{
-        crate::require_display_planning!($request, display_planning, {
-            display_planning.clone()
+        crate::require_display_calendar!($request, display_calendar, {
+            display_calendar.clone()
         }, {
             return Err(ServerError::msg(StatusCode::UNAUTHORIZED, "Invalid repository"))
         })
@@ -89,7 +89,7 @@ macro_rules! get_action {
 #[derive(Default, Debug)]
 pub struct RequestContext {
     pub connected_user: tokio::sync::RwLock<Option<User>>,
-    pub display_planning: tokio::sync::RwLock<Option<Planning>>,
+    pub display_calendar: tokio::sync::RwLock<Option<Calendar>>,
     pub is_web_client: AtomicBool,
 }
 
@@ -103,12 +103,12 @@ impl RequestContext {
     }
 
 
-    pub async fn display_planning(&self) -> tokio::sync::RwLockReadGuard<Option<Planning>> {
-        self.display_planning.read().await
+    pub async fn display_calendar(&self) -> tokio::sync::RwLockReadGuard<Option<Calendar>> {
+        self.display_calendar.read().await
     }
     #[allow(unused)]
-    pub async fn display_planning_mut(&self) -> tokio::sync::RwLockWriteGuard<Option<Planning>> {
-        self.display_planning.write().await
+    pub async fn display_calendar_mut(&self) -> tokio::sync::RwLockWriteGuard<Option<Calendar>> {
+        self.display_calendar.write().await
     }
 }
 
@@ -117,8 +117,8 @@ pub struct ApiRoutes {}
 impl ApiRoutes {
     pub fn create(ctx: &Arc<AppCtx>) -> Result<Router<>, Error> {
         let router = Router::new()
-            .nest("/planning/", PlanningRoutes::create(ctx)?)
-            .nest("/slot/", SlotRoutes::create(ctx)?)
+            .nest("/calendar/", CalendarRoutes::create(ctx)?)
+            .nest("/event/", EventRoutes::create(ctx)?)
             .nest("/user/", UserRoutes::create(ctx)?)
             .fallback(handler_404);
         Ok(router)

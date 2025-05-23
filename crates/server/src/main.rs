@@ -133,9 +133,9 @@ impl Server {
 #[tokio::main]
 async fn main() {
     /*********************** INITIALIZE LOGGER ***********************/
-    fs::create_dir_all("ezplanning_logs").unwrap();
-    let error_file = "ezplanning_logs/errors.log";
-    let log_file = "ezplanning_logs/logs.log";
+    fs::create_dir_all("schedulator_logs").unwrap();
+    let error_file = "schedulator_logs/errors.log";
+    let log_file = "schedulator_logs/logs.log";
     if fs::exists(error_file).unwrap() {
         let last_write_time: DateTime<Utc> =
             fs::metadata(error_file).unwrap().modified().unwrap().into();
@@ -144,7 +144,7 @@ async fn main() {
             .replace(" ", "_");
         fs::rename(
             error_file,
-            format!("ezplanning_logs/error_{}.log", last_write_time),
+            format!("schedulator_logs/error_{}.log", last_write_time),
         )
         .unwrap();
     }
@@ -157,7 +157,7 @@ async fn main() {
             .replace(" ", "_");
         fs::rename(
             log_file,
-            format!("ezplanning_logs/logs_{}.log", last_write_time),
+            format!("schedulator_logs/logs_{}.log", last_write_time),
         )
         .unwrap();
     }
