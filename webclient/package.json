@@ -15,6 +15,7 @@
     "css-loader": "^6.8.1",
     "dayjs": "^1.11.12",
     "handlebars": "^4.7.8",
+    "ical.js": "^2.1.0",
     "mime": "^4.0.4",
     "mini-css-extract-plugin": "^2.7.6",
     "pdfjs-dist": "^4.5.136",

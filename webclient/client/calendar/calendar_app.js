@@ -4,6 +4,7 @@ import {Message, NOTIFICATION} from "../views/message_box/notification";
 import {APP_CONFIG} from "../utilities/app_config";
 import {Authentication} from "../utilities/authentication/authentication";
 import {CalendarUser} from "../utilities/calendar_user";
+import ICAL from "ical.js";
 
 require('./calendar_app.scss');
 
@@ -84,6 +85,64 @@ class CalendarApp extends HTMLElement {
             year: this.display_start.getFullYear(),
             month: this.display_start.toLocaleDateString(undefined, {month: 'long'})
         }, {
+            import: () => {
+                this._calendar_object.elements.file_input.click();
+            },
+            set_input_ics: async (event) => {
+
+                const raw_data = await new Promise((resolve, reject) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const fileContent = e.target.result;
+                        resolve(fileContent);
+                    };
+                    reader.onerror = function (e) {
+                        reject("Error reading ics file : " + e);
+                    };
+                    reader.readAsText(file);
+                });
+
+                const res = ICAL.parse(raw_data);
+
+                for (const event of res[2]) {
+                    const kind = event[0];
+                    if (kind === 'vevent') {
+                        let start = null;
+                        let end = null;
+                        let title = null;
+                        for (const prop of event[1]) {
+                            if (prop[0] === 'dtstart' && (prop[2] === "date-time" || prop[2] === 'date'))
+                                start = new Date(prop[3])
+                            else if (prop[0] === 'dtend' && prop[2] === "date-time" || prop[2] === 'date')
+                                end = new Date(prop[3])
+                            else if (prop[0] === 'summary' && prop[2] === "text")
+                                title = EncString.from_client(prop[3])
+                        }
+
+                        if (!start)
+                            console.warn('Invalid start : ', event)
+                        if (!end)
+                            console.warn('Invalid end : ', event)
+                        if (!title)
+                            console.warn('Invalid title : ', event)
+                        if (!start || !end || !title)
+                            continue;
+
+                        this.add_event({
+                            start_time: start.getTime(),
+                            end_time: end.getTime(),
+                            present: -10,
+                            source: EncString.from_client('ical data'),
+                            owner: 0,
+                            title: title.plain(),
+                            calendar: this._calendar.id
+                        })
+                    }
+                }
+                this._refresh_calendar();
+            },
             next_week: () => {
                 this.display_start.setDate(this.display_start.getDate() + 7);
                 this._refresh_calendar();
@@ -167,7 +226,7 @@ class CalendarApp extends HTMLElement {
         }
 
         function numberToColorHSL(n, total = 10) {
-            const hue = ((n +97.58) * (398787.4713 / total)) % 360;
+            const hue = ((n + 97.58) * (398787.4713 / total)) % 360;
             return `hsl(${hue}, 70%, 50%)`;
         }
 

@@ -4,7 +4,8 @@
         <p>{{title}} : {{month}} {{year}} - Semaine {{week_number}}</p>
         <button onclick="{{ctx "next_week()"}}">></button>
 
-        <button>Jour</button>
+        <input type="file" style="display:none" {{object "file_input"}} onchange="{{ctx "set_input_ics(event)"}}"/>
+        <button onclick="{{ctx "import()"}}">Importer ICS</button>
         <button>Config</button>
     </div>
     <div class="calendar-body">
