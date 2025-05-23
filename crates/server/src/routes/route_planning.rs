@@ -25,6 +25,7 @@ impl PlanningRoutes {
             .route("/my_plannings/", get(my_plannings).with_state(ctx.clone()))
             .route("/get/{key}/", get(get_planning).with_state(ctx.clone()))
             .route("/add_user/", post(add_user).with_state(ctx.clone()))
+            .route("/find_or_create_user/", post(find_or_create_user).with_state(ctx.clone()))
             .route("/remove_user/", post(remove_user).with_state(ctx.clone()));
         Ok(router)
     }
@@ -44,7 +45,7 @@ async fn create(
         time_precision: i64,
         start_daily_hour: i64,
         end_daily_hour: i64,
-        require_account: bool
+        require_account: bool,
     }
 
     let key = EncString::from("todo");
@@ -82,10 +83,10 @@ async fn get_planning(
     #[derive(Serialize)]
     pub struct PlanningData {
         planning: Planning,
-        users: Vec<PlanningUser>
+        users: Vec<PlanningUser>,
     }
     let planning = Planning::from_key(&ctx.database, &path).await?;
-    Ok(Json(PlanningData{users: PlanningUser::from_planning(&ctx.database, planning.id()).await?, planning}))
+    Ok(Json(PlanningData { users: PlanningUser::from_planning(&ctx.database, planning.id()).await?, planning }))
 }
 
 /// Delete repository
@@ -115,6 +116,31 @@ async fn delete(
 }
 
 /// Get all root items of a repository
+pub async fn find_or_create_user(
+    State(ctx): State<Arc<AppCtx>>,
+    request: axum::http::Request<Body>,
+) -> Result<impl IntoResponse, ServerError> {
+    let user = require_connected_user!(request);
+
+    #[derive(Deserialize)]
+    pub struct RequestParams {
+        pub planning: PlanningId,
+    }
+    let data = Json::<RequestParams>::from_request(request, &ctx).await?;
+
+    if let Ok(found) = PlanningUser::from_user(&ctx.database, &data.planning, user.id()).await {
+        return Ok(Json(found));
+    };
+
+    let mut planning_user = PlanningUser::default();
+    planning_user.name = user.display_name.clone();
+    planning_user.user_id = Some(user.id().clone());
+    planning_user.planning_id = data.planning.clone();
+    PlanningUser::push(&mut planning_user, &ctx.database).await?;
+    Ok(Json(planning_user))
+}
+
+/// Get all root items of a repository
 pub async fn add_user(
     State(ctx): State<Arc<AppCtx>>,
     request: axum::http::Request<Body>,
@@ -133,13 +159,15 @@ pub async fn add_user(
     };
 
     let data = Json::<CreateUserData>::from_request(request, &ctx).await?;
-    if PlanningUser::from_user(&ctx.database, &data.planning, &data.name)
-        .await
-        .is_ok()
-    {
+
+    if data.name.is_empty() {
+        return Err(ServerError::msg(StatusCode::NOT_ACCEPTABLE, "Name cannot be empty"));
+    }
+
+    if PlanningUser::from_username(&ctx.database, &data.planning, &data.name).await.is_ok() {
         return Err(ServerError::msg(
             StatusCode::FORBIDDEN,
-            "A repository with this key already exists",
+            format!("A planning user named {} already exists", data.name),
         ));
     }
 

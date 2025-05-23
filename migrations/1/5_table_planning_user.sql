@@ -4,5 +4,6 @@ CREATE TABLE IF NOT EXISTS SCHEMA_NAME.planning_users (
         planning_id BIGINT NOT NULL,
         user_id BIGINT,
         FOREIGN KEY(planning_id) REFERENCES SCHEMA_NAME.plannings(id),
-        FOREIGN KEY(user_id) REFERENCES SCHEMA_NAME.users(id)
+        FOREIGN KEY(user_id) REFERENCES SCHEMA_NAME.users(id),
+        UNIQUE (name, planning_id)
     );

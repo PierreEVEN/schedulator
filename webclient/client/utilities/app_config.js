@@ -1,6 +1,8 @@
 import {User} from "./user";
 import {GLOBAL_EVENTS} from "./event_manager";
 import {Planning} from "./planning";
+import {EncString} from "./encstring";
+import {PlanningUser} from "./planning_user";
 
 class AppConfig {
     constructor() {
@@ -16,6 +18,10 @@ class AppConfig {
          * @type {Planning}
          */
         this._display_planning = data.display_planning ? Planning.new(data.display_planning) : null;
+        if (data.display_planning_users)
+            for (const user of data.display_planning_users)
+                this._display_planning.add_user(PlanningUser.new(user));
+
         /**
          * @type {String}
          */

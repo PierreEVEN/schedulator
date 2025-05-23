@@ -19,6 +19,7 @@ use which::which;
 use crate::config::WebClientConfig;
 use crate::database::planning::Planning;
 use crate::{get_connected_user, get_display_planning};
+use crate::database::planning_users::PlanningUser;
 use crate::database::user::User;
 use crate::routes::app_ctx::AppCtx;
 use crate::routes::RequestContext;
@@ -126,6 +127,7 @@ struct ClientAppConfig {
     pub origin: String,
     pub connected_user: Option<User>,
     pub display_planning: Option<Planning>,
+    pub display_planning_users: Option<Vec<PlanningUser>>,
 }
 
 pub fn get_origin(ctx: &Arc<AppCtx>, request: &Request) -> Result<String, ServerError> {
@@ -157,6 +159,7 @@ async fn get_index(State(ctx): State<Arc<AppCtx>>, request: Request) -> Result<i
         client_config.connected_user = Some(user.clone());
     });
     get_display_planning!(request, repository, {
+        client_config.display_planning_users = Some(PlanningUser::from_planning(&ctx.database, repository.id()).await?);
         client_config.display_planning = Some(repository.clone());
     });
 

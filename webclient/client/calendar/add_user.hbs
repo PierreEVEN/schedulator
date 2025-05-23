@@ -2,19 +2,19 @@
 
     <form onsubmit="{{ctx 'submit(event)'}}">
         <button onclick="{{ctx 'close()'}}">X</button>
-        <h2>Identifies toi</h2>
+        <h2>Qui es-tu ?</h2>
 
-        <label for="who_are_you">Qui-es tu ?</label>
-        <select id="who_are_you" name="fruit" {{object "who_are_you"}}>
-            <option value="apple">Apple</option>
-            <option value="banana">Banana</option>
-            <option value="cherry">Cherry</option>
-        </select>
+        <label for="who_are_you">Compte temporaire</label>
+        <div style="position: relative; display: inline-block;">
+            <input list="who_are_you_values" id="who_are_you" name="who_are_you" autocomplete="off" {{object "who_are_you_input"}} onchange="{{ctx "value_changed()"}}" oninput="{{ctx "value_changed()"}}">
+            <button type="button" onclick="{{ctx "show_user_list_options()"}}" style="position: absolute; right: 0; top: 0; height: 100%;">▼</button>
+        </div>
 
-        <label for="name">Je veux m'ajouter</label>
-        <input type="text" name="name" placeholder="Ton nom visible par les autres">
-        <input type="submit" value="Ajouter">
+        <a href="javascript:{{ctx "login(event)"}}">Ou identifies toi</a>
+
+        <datalist id="who_are_you_values" {{object "who_are_you_list"}}>
+        </datalist>
+
+        <input type="submit" value="" style="display: none" {{object "who_I_am"}}>
     </form>
-
-
 </div>

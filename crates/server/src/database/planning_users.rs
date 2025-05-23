@@ -17,15 +17,19 @@ pub struct PlanningUser {
 
 impl PlanningUser {
     pub async fn from_id(db: &Database, id: &PlanningUserId) -> Result<Self, Error> {
-        Ok(query_object!(db, PlanningUser, "SELECT * FROM SCHEMA_NAME.planning_users WHERE id = $1", id).unwrap())
+        query_object!(db, PlanningUser, "SELECT * FROM SCHEMA_NAME.planning_users WHERE id = $1", id).ok_or(Error::msg("User not found"))
     }
 
     pub async fn from_planning(db: &Database, id: &PlanningId) -> Result<Vec<Self>, Error> {
-        Ok(query_objects!(db, Self, "SELECT * FROM SCHEMA_NAME.planning_users WHERE id = $1", id))
+        Ok(query_objects!(db, Self, "SELECT * FROM SCHEMA_NAME.planning_users WHERE planning_id = $1", id))
     }
 
-    pub async fn from_user(db: &Database, id: &PlanningId, name: &EncString) -> Result<Vec<Self>, Error> {
-        Ok(query_objects!(db, Self, "SELECT * FROM SCHEMA_NAME.planning_users WHERE id = $1 AND name = $2", id, name))
+    pub async fn from_username(db: &Database, id: &PlanningId, name: &EncString) -> Result<Self, Error> {
+        query_object!(db, Self, "SELECT * FROM SCHEMA_NAME.planning_users WHERE planning_id = $1 AND name = $2", id, name).ok_or(Error::msg("User not found"))
+    }
+
+    pub async fn from_user(db: &Database, id: &PlanningId, user: &UserId) -> Result<Self, Error> {
+        query_object!(db, Self, "SELECT * FROM SCHEMA_NAME.planning_users WHERE planning_id = $1 AND user_id = $2 AND user_id IS NOT NULL", id, user).ok_or(Error::msg("User not found"))
     }
 
     pub async fn delete(&self, db: &Database) -> Result<(), Error> {

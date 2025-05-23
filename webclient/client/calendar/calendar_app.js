@@ -3,6 +3,7 @@ import {EncString} from "../utilities/encstring";
 import {Message, NOTIFICATION} from "../views/message_box/notification";
 import {APP_CONFIG} from "../utilities/app_config";
 import {Authentication} from "../utilities/authentication/authentication";
+import {PlanningUser} from "../utilities/planning_user";
 
 require('./calendar_app.scss');
 
@@ -176,17 +177,57 @@ class CalendarApp extends HTMLElement {
         let left = this.mouse_x;
         let top = this.mouse_y;
 
+        // Retrieve or create user from account
+        if (!this._anonymous_user && APP_CONFIG.connected_user()) {
+            let error = false;
+            const res = await fetch_api('planning/find_or_create_user/', 'POST', {planning: this._planning.id.toString()}).catch(error => {
+                NOTIFICATION.error(new Message(error).title("Impossible d'obtenir l'utilisateur"));
+                error = true;
+            });
+            if (error)
+                return;
+            this._anonymous_user = PlanningUser.new(res);
+        }
         if (this._planning.require_account && !APP_CONFIG.connected_user())
             await Authentication.login();
         else if (!this._anonymous_user && !APP_CONFIG.connected_user()) {
             await new Promise((success, failure) => {
                 const form = require('./add_user.hbs')({}, {
+                    show_user_list_options: () => {
+                        form.elements.who_are_you_input.focus();
+                        form.elements.who_are_you_input.value = '';
+                    },
+                    value_changed: () => {
+                        const value = form.elements.who_are_you_input.value;
+                        if (!value || value === "") {
+                            form.elements.who_I_am.style.display = 'none';
+                        } else {
+                            form.elements.who_I_am.style.display = 'flex';
+                            if (this._planning.users.has(value)) {
+                                form.elements.who_I_am.value = `Je suis '${value}'`;
+                            } else {
+                                form.elements.who_I_am.value = `Ajouter l'utilisateur '${value}'`;
+                            }
+                        }
+                    },
+                    login: async () => {
+                        await Authentication.login();
+                        this.close_modal();
+                        success();
+                    },
                     submit: async (event) => {
                         event.preventDefault();
+                        const value = form.elements.who_are_you_input.value;
+                        if (this._planning.users.has(value)) {
+                            this._anonymous_user = this._planning.users.get(value);
+                            this.close_modal();
+                            success();
+                            return;
+                        }
                         let error = false;
                         await fetch_api('planning/add_user/', 'POST', {
-                            name: EncString.from_client(form.elements.name),
-                            planning: this._planning.id,
+                            name: EncString.from_client(value),
+                            planning: this._planning.id.toString(),
                         }).catch(error => {
                             NOTIFICATION.error(new Message(error).title("Impossible de créer l'utilisateur"));
                             error = true;
@@ -201,6 +242,13 @@ class CalendarApp extends HTMLElement {
                         failure();
                     }
                 });
+
+                for (const user of this._planning.users.values()) {
+                    const option = document.createElement('option');
+                    option.value = user.name.plain();
+                    form.elements.who_are_you_list.append(option);
+                }
+
                 this.open_modal(form);
             })
         }

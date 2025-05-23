@@ -53,9 +53,9 @@ class Planning {
          */
         this.require_account = !!data.require_account;
         /**
-         * @type {PlanningUser[]}
+         * @type {Map<String, PlanningUser>}
          */
-        this.users = [];
+        this.users = new Map;
     }
 
     /**
@@ -90,7 +90,7 @@ class Planning {
      * @param planning_user {PlanningUser}
      */
     add_user(planning_user) {
-        this.users.push(planning_user);
+        this.users.set(planning_user.name.plain(), planning_user);
     }
 }
 
