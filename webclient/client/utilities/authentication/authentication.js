@@ -18,21 +18,20 @@ const Authentication = {
                         device: EncString.from_client(navigator.userAgent)
                     }).catch(error => {
                         NOTIFICATION.error(new Message(error).title("Connexion échouée"));
+                        throw new Error(error);
                     });
-                    if (!result)
-                        return;
                     APP_COOKIES.login(result.token);
                     APP_CONFIG.set_connected_user(User.new(result.user));
                     if (APP_CONFIG.error())
                         location.reload();
-
-                    success();
                     MODAL.close();
+                    success();
                 },
                 signup: () => {
                     Authentication.signup().then(success).catch(fail);
                 },
                 reset_password: () => {
+                    NOTIFICATION.error(new Message("Unhandled event").title("La réinitialisation de mot de passe n'est pas encore possible"));
                     fail();
                 }
             });
@@ -49,18 +48,14 @@ const Authentication = {
             const signup_div = require('./signup.hbs')({},  {
                 signup: async (event) => {
                     event.preventDefault();
-                    let errored = false;
                     await fetch_api('user/create/', 'POST', {
                         display_name: EncString.from_client(signup_div.elements.login.value),
                         email: EncString.from_client(signup_div.elements.email.value),
                         password: EncString.from_client(signup_div.elements.password.value)
                     }).catch(error => {
-                        errored = true;
                         NOTIFICATION.error(new Message(error).title("Impossible de créer l'utilisateur"));
-                        fail(`Authentication failed : ${error.message}`)
+                        throw new Error(error);
                     });
-                    if (errored)
-                        return;
 
                     let login_result = await fetch_api('user/login/', 'POST', {
                         login: EncString.from_client(signup_div.elements.login.value),
@@ -68,12 +63,12 @@ const Authentication = {
                         device: EncString.from_client(navigator.userAgent)
                     }).catch(error => {
                         NOTIFICATION.error(new Message(error).title("Connexion échouée"));
-                        fail(`Authentication failed : ${error.message}`)
+                        throw new Error(error);
                     });
                     APP_COOKIES.login(login_result.token);
                     APP_CONFIG.set_connected_user(User.new(login_result.user))
-                    success();
                     MODAL.close();
+                    success();
                 },
                 login: () => {
                     Authentication.login().then(success).catch(fail);

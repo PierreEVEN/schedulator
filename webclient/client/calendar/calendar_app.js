@@ -5,30 +5,11 @@ import {APP_CONFIG} from "../utilities/app_config";
 import {Authentication} from "../utilities/authentication/authentication";
 import {CalendarUser} from "../utilities/calendar_user";
 import ICAL from "ical.js";
+import {Event} from "../utilities/event";
+import {get_week_number, time_format_from_ms} from "../utilities/time_utils";
+import {EventPool} from "../views/calendar_list/event_pool";
 
 require('./calendar_app.scss');
-
-function time_format_from_ms(ms) {
-    const totalSeconds = Math.floor(ms / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const seconds = Math.floor((totalSeconds % 3600) / 60);
-    return `${String(hours).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
-
-function get_week_number(date) {
-    const target = new Date(date.valueOf());
-
-    // Set to Thursday of the current week
-    target.setDate(target.getDate() + 3 - ((target.getDay() + 6) % 7));
-
-    // January 4th is always in week 1 (ISO rule)
-    const firstThursday = new Date(target.getFullYear(), 0, 4);
-    firstThursday.setDate(firstThursday.getDate() + 3 - ((firstThursday.getDay() + 6) % 7));
-
-    return 1 + Math.round(
-        ((target - firstThursday) / 86400000 - 3) / 7
-    );
-}
 
 let GLOBAL_EVENT_CREATOR = null;
 
@@ -36,38 +17,69 @@ class CalendarApp extends HTMLElement {
     constructor() {
         super();
 
-        this.events = [];
-
+        /**
+         * Daily start in ms
+         * @type {number}
+         */
         this.daily_start = 60 * 60 * 1000 * 6; // 6h
+        /**
+         * Daily end in ms
+         * @type {number}
+         */
         this.daily_end = 60 * 60 * 1000 * 20; // 20h
-        this.end = new Date(Date.now());
-        this.start = new Date(new Date().setMonth(new Date(this.end).getMonth() - 3));
+        /**
+         * Minimum time interval in ms
+         * @type {number}
+         */
         this.daily_spacing = 30 * 60 * 1000; // 30 minutes
+        /**
+         * Start date
+         * @type {Date}
+         */
+        this.end = new Date(Date.now());
+        /**
+         * End date
+         * @type {Date}
+         */
+        this.start = new Date(new Date().setMonth(new Date(this.end).getMonth() - 3));
+        /**
+         * Start of the display
+         * @type {Date}
+         */
+        this.display_start = new Date(new Date().setMonth(new Date(this.end).getMonth() - 1));
 
         this.addEventListener('mousemove', (event) => {
             this.mouse_x = event.clientX;
             this.mouse_y = event.clientY;
         });
 
-        if (this.hasAttribute('daily-start')) {
-            this.daily_start = this.getAttribute('daily-start')
-        }
-        if (this.hasAttribute('daily-end')) {
-            this.daily_end = this.getAttribute('daily-end')
-        }
-        if (this.hasAttribute('start')) {
-            this.start = this.getAttribute('start')
-        }
-        if (this.hasAttribute('end')) {
-            this.end = this.getAttribute('end')
-        }
-        if (this.hasAttribute('spacing')) {
-            this.daily_spacing = this.getAttribute('spacing')
-        }
+        if (this.hasAttribute('daily-start'))
+            this.daily_start = Number(this.getAttribute('daily-start'));
+        if (this.hasAttribute('daily-end'))
+            this.daily_end = Number(this.getAttribute('daily-end'));
+        if (this.hasAttribute('start'))
+            this.start = new Date(this.getAttribute('start'));
+        if (this.hasAttribute('end'))
+            this.end = new Date(this.getAttribute('end'));
+        if (this.hasAttribute('spacing'))
+            this.daily_spacing = Number(this.getAttribute('spacing'));
 
-        this.display_start = new Date(new Date().setMonth(new Date(this.end).getMonth() - 1));
+        /**
+         * @type {EventPool}
+         */
+        this.event_pool = new EventPool();
 
         this.selection = [];
+
+        /**
+         * @type {CalendarUser | null}
+         */
+        this._current_calendar_user = null;
+
+        /**
+         * @type {Calendar | null}
+         */
+        this._calendar = null;
     }
 
     connectedCallback() {
@@ -86,10 +98,12 @@ class CalendarApp extends HTMLElement {
             month: this.display_start.toLocaleDateString(undefined, {month: 'long'})
         }, {
             import: () => {
-                this._calendar_object.elements.file_input.click();
+                this._calendar_object.elements['file_input'].click();
             },
             set_input_ics: async (event) => {
-
+                /**
+                 * @type{string}
+                 */
                 const raw_data = await new Promise((resolve, reject) => {
                     const file = event.target.files[0];
                     if (!file) return;
@@ -103,9 +117,7 @@ class CalendarApp extends HTMLElement {
                     };
                     reader.readAsText(file);
                 });
-
                 const res = ICAL.parse(raw_data);
-
                 for (const event of res[2]) {
                     const kind = event[0];
                     if (kind === 'vevent') {
@@ -130,15 +142,15 @@ class CalendarApp extends HTMLElement {
                         if (!start || !end || !title)
                             continue;
 
-                        this.add_event({
+                        this.event_pool.register_event(Event.new({
                             start_time: start.getTime(),
                             end_time: end.getTime(),
-                            present: -10,
-                            source: EncString.from_client('ical data'),
-                            owner: 0,
-                            title: title.plain(),
+                            presence: -10,
+                            source: EncString.from_client('ical data').encoded(),
+                            owner: -1,
+                            title: title.encoded(),
                             calendar: this._calendar.id
-                        })
+                        }))
                     }
                 }
                 this._refresh_calendar();
@@ -155,28 +167,28 @@ class CalendarApp extends HTMLElement {
 
         let daily_subdivision = (this.daily_end - this.daily_start) / this.daily_spacing
 
-        this._calendar_object.elements.columns_header.append(require('./calendar_column_header.hbs')())
+        this._calendar_object.elements['columns_header'].append(require('./calendar_column_header.hbs')())
         for (let i = 0; i < 7; i++) {
             let this_day = new Date(this.display_start);
             this_day.setDate(this.display_start.getDate() + i)
-            this._calendar_object.elements.columns_header.append(require('./calendar_column_header.hbs')({title: this_day.toLocaleDateString(undefined, {weekday: 'short'}) + " " + this_day.getDate()}));
+            this._calendar_object.elements['columns_header'].append(require('./calendar_column_header.hbs')({title: this_day.toLocaleDateString(undefined, {weekday: 'short'}) + " " + this_day.getDate()}));
         }
 
         for (let i = 0; i < daily_subdivision; ++i) {
             let time = this.daily_start + i * this.daily_spacing;
-            this._calendar_object.elements.rows_header.append(require('./calendar_row_header.hbs')({time: time_format_from_ms(time)}))
+            this._calendar_object.elements['rows_header'].append(require('./calendar_row_header.hbs')({time: time_format_from_ms(time)}))
         }
 
         for (let i = 0; i < daily_subdivision; ++i) {
 
             const row = document.createElement('div');
-            row.classList.add('calendar-row')
+            row.classList.add('calendar-row');
 
             let start_of_day = new Date(this.display_start.getTime());
             start_of_day.setHours(0, 0, 0, 0);
             for (let j = 0; j < 7; j++) {
 
-                start_of_day.setDate(this.display_start.getDate() + j)
+                start_of_day.setDate(this.display_start.getDate() + j);
 
                 let cell_time_start = new Date(start_of_day.getTime() + this.daily_start + i * this.daily_spacing);
                 let cell_time_end = new Date(start_of_day.getTime() + this.daily_start + (i + 1) * this.daily_spacing);
@@ -196,77 +208,211 @@ class CalendarApp extends HTMLElement {
 
         this.append(this._calendar_object)
         this._modal_container = this._calendar_object.elements.modal_container;
-        for (const event of this.events)
-            this.display_event(event);
-    }
 
-    display_event(config) {
-        const display_start = new Date(this.display_start);
-        display_start.setHours(0, 0, 0, 0);
-        const start = new Date(config.start_time);
-        const end = new Date(config.end_time);
-
-        const event_dail_start = new Date(start);
-        event_dail_start.setHours(0, 0, 0, 0);
-        const daily_span = this.daily_end - this.daily_start;
-        const hmin = Math.trunc((start - display_start) / (1000 * 60 * 60 * 24)) / 7;
-        const hmax = Math.trunc((start - display_start) / (1000 * 60 * 60 * 24) + 1) / 7;
-        if (hmax < 0 || hmin > 1)
-            return;
-
-        let vmin = (start - event_dail_start - this.daily_start) / daily_span;
-        let vmax = (end - event_dail_start - this.daily_start) / daily_span;
-        const event = require('./calendar_event.hbs')({title: new EncString(config.title).plain()}, {})
-
-        function valueToColor(value, min = -10, max = 10) {
-            const clamped = Math.max(min, Math.min(max, value));
-            const percent = (clamped - min) / (max - min);
-            const hue = percent * 120;
-            return `hsl(${hue}, 50%, 70%)`;
+        for (let i = 0; i < 7; i++) {
+            let this_day = new Date(this.display_start);
+            this_day.setDate(this.display_start.getDate() + i);
+            this.display_day_events(this_day);
         }
-
-        function numberToColorHSL(n, total = 10) {
-            const hue = ((n + 97.58) * (398787.4713 / total)) % 360;
-            return `hsl(${hue}, 70%, 50%)`;
-        }
-
-        const user_color = valueToColor(config.presence);
-        event.elements.event_presence.style.backgroundColor = numberToColorHSL(config.owner);
-        event.style.backgroundColor = user_color;
-        event.style.top = `${vmin * 100}%`;
-        event.style.bottom = `${(1 - vmax) * 100}%`;
-        event.style.left = `${hmin * 100}%`;
-        event.style.right = `${(1 - hmax) * 100}%`;
-
-
-        this._calendar_object.elements.rows.append(event)
-    }
-
-    add_event(config) {
-        this.events.push(config);
     }
 
     /**
-     * @param in_calendar {Calendar}
+     * @param try_connect {boolean}
+     * @returns {CalendarUser | null}
+     */
+    async get_connected_user(try_connect= true) {
+
+        if (!try_connect)
+            return this._current_calendar_user;
+
+        // Login if required
+        if (this._calendar.require_account && !APP_CONFIG.connected_user())
+            await Authentication.login();
+
+        if (!APP_CONFIG.connected_user()) {
+            // Try to create an unauthenticated user
+            this._current_calendar_user = await new Promise((success, failure) => {
+                const add_user_form = require('./add_user.hbs')({}, {
+                    'show_user_list_options': () => {
+                        add_user_form.elements.who_are_you_input.focus();
+                        add_user_form.elements.who_are_you_input.value = '';
+                    },
+                    'value_changed': () => {
+                        const value = add_user_form.elements.who_are_you_input.value;
+                        if (!value || value === "") {
+                            add_user_form.elements.who_I_am.style.display = 'none';
+                        } else {
+                            add_user_form.elements.who_I_am.style.display = 'flex';
+                            if (this._calendar.users.has(value)) {
+                                add_user_form.elements.who_I_am.value = `Je suis '${value}'`;
+                            } else {
+                                add_user_form.elements.who_I_am.value = `Ajouter l'utilisateur '${value}'`;
+                            }
+                        }
+                    },
+                    // Try to authenticate
+                    'login': async () => {
+                        await Authentication.login();
+                        this.close_modal();
+                        success(null);
+                    },
+                    'submit': async (event) => {
+                        event.preventDefault();
+                        const value = add_user_form.elements['who_are_you_input'].value;
+                        // The user already exists
+                        if (this._calendar.users.has(value)) {
+                            this.close_modal();
+                            success(this._calendar.users.get(value));
+                        } else {
+                            await fetch_api('calendar/add_user/', 'POST', {
+                                name: EncString.from_client(value),
+                                calendar: this._calendar.id.toString(),
+                            }).then((res)=> {
+                                this.close_modal();
+                                success(new CalendarUser(res));
+                            }).catch(error => {
+                                NOTIFICATION.error(new Message(error).title("Impossible de créer l'utilisateur"));
+                            });
+                        }
+                    },
+                    'close': () => {
+                        this.close_modal();
+                        failure();
+                    }
+                });
+
+                for (const user of this._calendar.users.values()) {
+                    const option = document.createElement('option');
+                    option.value = user.name.plain();
+                    add_user_form.elements.who_are_you_list.append(option);
+                }
+
+                this.open_modal(add_user_form);
+            });
+        }
+
+        if (APP_CONFIG.connected_user()) {
+            // We use an authenticated user
+            if (this._current_calendar_user && this._current_calendar_user.user_id === APP_CONFIG.connected_user().id)
+                return this._current_calendar_user;
+            else {
+                // Try creating a calendar user from authenticated user
+                const res = await fetch_api('calendar/find_or_create_user/', 'POST', {calendar: this._calendar.id.toString()}).catch(error => {
+                    NOTIFICATION.error(new Message(error).title("Impossible de créer un utilisateur authentifié"));
+                    throw new Error(error);
+                });
+                this._current_calendar_user = CalendarUser.new(res);
+            }
+        }
+
+        return this._current_calendar_user;
+    }
+
+    /**
+     * Get day duration in milliseconds
+     * @returns {number}
+     */
+    day_duration() {
+        return this.daily_end - this.daily_start;
+    }
+
+    display_day_events(date) {
+        const day_display_start = new Date(date);
+        day_display_start.setHours(0, 0, 0, 0);
+
+        const events = this.event_pool.get_day_events(day_display_start);
+        const event_indentations = new Map();
+        let num_indentations = 1;
+
+        /** Compute indentations **/
+        for (const event of events) {
+            let indentation = 0;
+            const locked_indentations = new Set();
+            // Find which indentation levels are locked by other events
+            for (const other of events) {
+                if (other === event)
+                    continue;
+
+                const current_value = this.event_pool.get_event(event);
+                const other_value = this.event_pool.get_event(other);
+
+                if ((current_value.start_time < other_value.end_time && current_value.end_time > other_value.end_time) ||
+                    (other_value.start_time < current_value.end_time && other_value.end_time > current_value.end_time)) {
+
+                    if (event_indentations.has(other))
+                        locked_indentations.add(event_indentations.get(other));
+                }
+            }
+
+            // Find the first free indentation level
+            while (locked_indentations.has(indentation)) {
+                ++indentation;
+                if (indentation + 1 > num_indentations)
+                    num_indentations = indentation + 1;
+            }
+
+            event_indentations.set(event, indentation);
+        }
+
+        /** Actually display the events **/
+        for (const event_id of events) {
+            const event = this.event_pool.get_event(event_id);
+            const indentation = event_indentations.get(event_id);
+            // Get first displayed day at 00:00
+            const display_start = new Date(this.display_start);
+            display_start.setHours(0, 0, 0, 0);
+
+            const hmin = (Math.trunc((day_display_start - display_start) / (1000 * 60 * 60 * 24)) + (indentation) / num_indentations) / 7;
+            const hmax = (Math.trunc((day_display_start - display_start) / (1000 * 60 * 60 * 24)) + (indentation + 1) / num_indentations) / 7;
+            let vmin = Math.max(0, (event.start_time - day_display_start - this.daily_start) / this.day_duration());
+            let vmax = Math.min(1, (event.end_time - day_display_start - this.daily_start) / this.day_duration());
+            const event_div = require('./calendar_event.hbs')({title: event.title.plain()}, {})
+
+            function valueToColor(value, min = -10, max = 10) {
+                const clamped = Math.max(min, Math.min(max, value));
+                const percent = (clamped - min) / (max - min);
+                const hue = percent * 120;
+                return `hsl(${hue}, 50%, 70%)`;
+            }
+
+            function numberToColorHSL(n, total = 10) {
+                const hue = ((n + 97.58) * (398787.4713 / total)) % 360;
+                return `hsl(${hue}, 70%, 50%)`;
+            }
+
+            const user_color = valueToColor(event.presence);
+            event_div.elements.event_presence.style.backgroundColor = numberToColorHSL(event.owner);
+            event_div.style.backgroundColor = user_color;
+            event_div.style.top = `${vmin * 100}%`;
+            event_div.style.bottom = `${(1 - vmax) * 100}%`;
+            event_div.style.left = `${hmin * 100}%`;
+            event_div.style.right = `${(1 - hmax) * 100}%`;
+
+            this._calendar_object.elements.rows.append(event_div)
+        }
+    }
+
+    /**
+     * @param in_calendar {Event}
      */
     set_calendar(in_calendar) {
         this._calendar = in_calendar;
 
-        this.events = [];
+        this.event_pool = new EventPool();
         if (this._calendar) {
             fetch_api('event/from-calendar/', 'POST', this._calendar.id.toString()).catch(error => {
                 NOTIFICATION.error(new Message(error).title("Impossible d'obtenir les events"));
                 this._refresh_calendar();
             }).then((res) => {
                 for (const event of res)
-                    this.add_event(event);
+                    this.event_pool.register_event(Event.new(event))
                 this._refresh_calendar();
             });
         }
     }
 
     /**
-     * @returns {Calendar}
+     * @returns {Event}
      */
     calendar() {
         return this._calendar;
@@ -294,82 +440,12 @@ class CalendarApp extends HTMLElement {
         let top = this.mouse_y;
 
         // Retrieve or create user from account
-        if (!this._anonymous_user && APP_CONFIG.connected_user()) {
-            let error = false;
-            const res = await fetch_api('calendar/find_or_create_user/', 'POST', {calendar: this._calendar.id.toString()}).catch(error => {
-                NOTIFICATION.error(new Message(error).title("Impossible d'obtenir l'utilisateur"));
-                error = true;
-            });
-            if (error)
-                return;
-            this._anonymous_user = CalendarUser.new(res);
-        }
-        if (this._calendar.require_account && !APP_CONFIG.connected_user())
-            await Authentication.login();
-        else if (!this._anonymous_user && !APP_CONFIG.connected_user()) {
-            await new Promise((success, failure) => {
-                const form = require('./add_user.hbs')({}, {
-                    show_user_list_options: () => {
-                        form.elements.who_are_you_input.focus();
-                        form.elements.who_are_you_input.value = '';
-                    },
-                    value_changed: () => {
-                        const value = form.elements.who_are_you_input.value;
-                        if (!value || value === "") {
-                            form.elements.who_I_am.style.display = 'none';
-                        } else {
-                            form.elements.who_I_am.style.display = 'flex';
-                            if (this._calendar.users.has(value)) {
-                                form.elements.who_I_am.value = `Je suis '${value}'`;
-                            } else {
-                                form.elements.who_I_am.value = `Ajouter l'utilisateur '${value}'`;
-                            }
-                        }
-                    },
-                    login: async () => {
-                        await Authentication.login();
-                        this.close_modal();
-                        success();
-                    },
-                    submit: async (event) => {
-                        event.preventDefault();
-                        const value = form.elements.who_are_you_input.value;
-                        if (this._calendar.users.has(value)) {
-                            this._anonymous_user = this._calendar.users.get(value);
-                            this.close_modal();
-                            success();
-                            return;
-                        }
-                        let error = false;
-                        await fetch_api('calendar/add_user/', 'POST', {
-                            name: EncString.from_client(value),
-                            calendar: this._calendar.id.toString(),
-                        }).catch(error => {
-                            NOTIFICATION.error(new Message(error).title("Impossible de créer l'utilisateur"));
-                            error = true;
-                            failure();
-                        });
-                        this.close_modal();
-                        if (!error)
-                            success();
-                    },
-                    close: () => {
-                        this.close_modal();
-                        failure();
-                    }
-                });
+        const user = await this.get_connected_user();
 
-                for (const user of this._calendar.users.values()) {
-                    const option = document.createElement('option');
-                    option.value = user.name.plain();
-                    form.elements.who_are_you_list.append(option);
-                }
-
-                this.open_modal(form);
-            })
-        }
-
-        GLOBAL_EVENT_CREATOR = require('./create_event.hbs')({when: this.selection[0].cell_time_start}, {
+        GLOBAL_EVENT_CREATOR = require('./create_event.hbs')({
+            start: this.selection[0].cell_time_start.toISOString().slice(0, 16),
+            end: this.selection[0].cell_time_end.toISOString().slice(0, 16)
+        }, {
             close: () => {
                 GLOBAL_EVENT_CREATOR.remove();
                 GLOBAL_EVENT_CREATOR = null;
@@ -382,11 +458,11 @@ class CalendarApp extends HTMLElement {
                     body.push({
                         calendar: this._calendar.id.toString(),
                         title: EncString.from_client(GLOBAL_EVENT_CREATOR.elements.name.value),
-                        owner: this._anonymous_user.id.toString(),
-                        start: this.selection[0].cell_time_start.getTime(),
-                        end: this.selection[0].cell_time_end.getTime(),
+                        owner: user.id.toString(),
+                        start: new Date(GLOBAL_EVENT_CREATOR.elements.start.value).getTime(),
+                        end: new Date(GLOBAL_EVENT_CREATOR.elements.end.value).getTime(),
                         source: EncString.from_client("Manual placement"),
-                        presence: Number(GLOBAL_EVENT_CREATOR.elements.availability.value)
+                        presence: Number(GLOBAL_EVENT_CREATOR.elements.presence.value)
                     });
                 }
                 let errors = false;
@@ -396,8 +472,8 @@ class CalendarApp extends HTMLElement {
                 });
                 if (!errors)
                     for (const event of res) {
-                        this.add_event(event);
-                        this.display_event(event);
+                        this.event_pool.register_event(Event.new(event))
+                        this._refresh_calendar();
                     }
 
 

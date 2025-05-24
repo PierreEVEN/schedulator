@@ -16,7 +16,7 @@ class EncString {
      */
     constructor(data) {
         if (data)
-            console.assert(typeof data === 'string', "Trying to encode a non string type !");
+            console.assert(typeof data === 'string', `Trying to encode a non string type : '${data}' !`);
         /**
          * @type {string}
          * @private

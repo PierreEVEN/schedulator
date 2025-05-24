@@ -76,11 +76,13 @@
         background-color: #cf9721;
         overflow: hidden;
         font-size: 0.7em;
+        display: flex;
+        align-items: center;
 
         p {
           position: absolute;
-          top: 0;
-          left: 0;
+          margin: 0;
+          line-height: 1em;
         }
 
         .calendar-event-presence {
