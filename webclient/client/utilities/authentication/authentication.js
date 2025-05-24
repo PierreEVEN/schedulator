@@ -24,8 +24,8 @@ const Authentication = {
                     APP_CONFIG.set_connected_user(User.new(result.user));
                     if (APP_CONFIG.error())
                         location.reload();
-                    MODAL.close();
                     success();
+                    MODAL.close();
                 },
                 signup: () => {
                     Authentication.signup().then(success).catch(fail);
@@ -45,7 +45,7 @@ const Authentication = {
     },
     signup: async () => {
         return await new Promise((success, fail) => {
-            const signup_div = require('./signup.hbs')({},  {
+            const signup_div = require('./signup.hbs')({}, {
                 signup: async (event) => {
                     event.preventDefault();
                     await fetch_api('user/create/', 'POST', {
@@ -67,8 +67,8 @@ const Authentication = {
                     });
                     APP_COOKIES.login(login_result.token);
                     APP_CONFIG.set_connected_user(User.new(login_result.user))
-                    MODAL.close();
                     success();
+                    MODAL.close();
                 },
                 login: () => {
                     Authentication.login().then(success).catch(fail);

@@ -48,6 +48,9 @@ class CalendarApp extends HTMLElement {
          */
         this.display_start = new Date(new Date().setMonth(new Date(this.end).getMonth() - 1));
 
+        const days = this.display_start.getDay();
+        this.display_start.setDate(this.display_start.getDate() - (days === 0 ? 6 : days - 1));
+
         this.addEventListener('mousemove', (event) => {
             this.mouse_x = event.clientX;
             this.mouse_y = event.clientY;
@@ -101,29 +104,33 @@ class CalendarApp extends HTMLElement {
                 this._calendar_object.elements['file_input'].click();
             },
             set_input_ics: async (event) => {
-                /**
-                 * @type{string}
-                 */
+
+                const user = await this.get_connected_user();
+
                 const raw_data = await new Promise((resolve, reject) => {
                     const file = event.target.files[0];
-                    if (!file) return;
+                    if (!file) {
+                        return reject("File not found")
+                    }
                     const reader = new FileReader();
                     reader.onload = function (e) {
                         const fileContent = e.target.result;
-                        resolve(fileContent);
+                        resolve({data: fileContent, filename: file.name});
                     };
                     reader.onerror = function (e) {
                         reject("Error reading ics file : " + e);
                     };
                     reader.readAsText(file);
                 });
-                const res = ICAL.parse(raw_data);
+                const res = ICAL.parse(raw_data.data);
                 for (const event of res[2]) {
                     const kind = event[0];
                     if (kind === 'vevent') {
                         let start = null;
                         let end = null;
                         let title = null;
+                        let recur = null;
+                        let exdates = new Set();
                         for (const prop of event[1]) {
                             if (prop[0] === 'dtstart' && (prop[2] === "date-time" || prop[2] === 'date'))
                                 start = new Date(prop[3])
@@ -131,6 +138,17 @@ class CalendarApp extends HTMLElement {
                                 end = new Date(prop[3])
                             else if (prop[0] === 'summary' && prop[2] === "text")
                                 title = EncString.from_client(prop[3])
+                            else if (prop[0] === 'rrule') {
+                                if (prop[2] === 'recur') {
+                                    recur = prop[3];
+                                } else
+                                    console.warn('Unhandled rrule type : ', event);
+                            } else if (prop[0] === 'exdate') {
+                                if (prop[2] === 'date-time') {
+                                    exdates.add(new Date(prop[3]).getTime());
+                                } else
+                                    console.warn('Unhandled exdate value type : ', event);
+                            }
                         }
 
                         if (!start)
@@ -142,15 +160,39 @@ class CalendarApp extends HTMLElement {
                         if (!start || !end || !title)
                             continue;
 
-                        this.event_pool.register_event(Event.new({
-                            start_time: start.getTime(),
-                            end_time: end.getTime(),
-                            presence: -10,
-                            source: EncString.from_client('ical data').encoded(),
-                            owner: -1,
-                            title: title.encoded(),
-                            calendar: this._calendar.id
-                        }))
+                        const reg_event = (date, duration) => {
+                            this.event_pool.register_event(Event.new({
+                                start_time: date,
+                                end_time: date + duration,
+                                presence: -10,
+                                source: EncString.from_client(`import@${raw_data.filename}`).encoded(),
+                                owner: user.id,
+                                title: title.encoded(),
+                                calendar: this._calendar.id
+                            }))
+                        }
+
+                        const duration = end.getTime() - start.getTime();
+                        if (!recur) {
+                            reg_event(start.getTime(), duration)
+                        } else {
+                            const interval = recur.interval || 1;
+                            const until = recur.until ? new Date(recur.until) : this.end;
+                            const count = recur.count || Number.MAX_SAFE_INTEGER;
+
+                            if (recur.freq === 'WEEKLY') {
+
+                            } else if (recur.freq === 'MONTHLY') {
+
+                            } else if (recur.freq === 'YEARLY') {
+
+                            } else if (recur.freq === 'DAILY') {
+
+                            } else {
+                                console.warn(`Unhandled recurrence frequency : ${recur}`);
+                                reg_event(start.getTime(), duration);
+                            }
+                        }
                     }
                 }
                 this._refresh_calendar();
@@ -220,7 +262,7 @@ class CalendarApp extends HTMLElement {
      * @param try_connect {boolean}
      * @returns {CalendarUser | null}
      */
-    async get_connected_user(try_connect= true) {
+    async get_connected_user(try_connect = true) {
 
         if (!try_connect)
             return this._current_calendar_user;
@@ -267,7 +309,7 @@ class CalendarApp extends HTMLElement {
                             await fetch_api('calendar/add_user/', 'POST', {
                                 name: EncString.from_client(value),
                                 calendar: this._calendar.id.toString(),
-                            }).then((res)=> {
+                            }).then((res) => {
                                 this.close_modal();
                                 success(new CalendarUser(res));
                             }).catch(error => {

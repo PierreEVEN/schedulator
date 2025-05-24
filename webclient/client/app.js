@@ -13,15 +13,16 @@ let CURRENT_WIDGET = null;
 function try_update_display_user(connected_user) {
     if (CURRENT_WIDGET)
         CURRENT_WIDGET.remove();
-    CURRENT_WIDGET = document.createElement('calendar-list');
+    CURRENT_WIDGET = null;
 
     if (connected_user) {
-
+        CURRENT_WIDGET = document.createElement('calendar-list');
     } else {
-
     }
-    const container = document.getElementById('page-content');
-    container.append(CURRENT_WIDGET);
+    if (CURRENT_WIDGET) {
+        const container = document.getElementById('page-content');
+        container.append(CURRENT_WIDGET);
+    }
 }
 
 

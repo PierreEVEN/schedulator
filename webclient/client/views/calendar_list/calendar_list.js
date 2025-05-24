@@ -20,6 +20,7 @@ class CalendarList extends HTMLElement {
     async connectedCallback() {
         const res = await fetch_api('calendar/my_calendars/', 'GET').catch(error => {
             NOTIFICATION.error(new Message(error).title("Impossible de récuperer mes calendriers"));
+            throw new Error(error);
         });
         const widget = require('./calendar_list.hbs')({}, {
             create: () => {
@@ -35,13 +36,11 @@ class CalendarList extends HTMLElement {
                             end_daily_hour: time_to_ms(create_div.elements.end_daily_hour.value),
                             require_account: create_div.elements.require_account.checked
                         };
-                        let error = false;
                         const res = await fetch_api('calendar/create/', 'POST', data).catch(error => {
                             NOTIFICATION.error(new Message(error).title("Impossible de créer l'évenement"));
-                            error = true;
+                            throw new Error(error);
                         });
-                        if (!error)
-                            MODAL.close();
+                        MODAL.close();
                         this._add_item(Calendar.new(res));
                     }
                 })
@@ -67,14 +66,11 @@ class CalendarList extends HTMLElement {
                 APP_CONFIG.set_display_calendar(await Calendar.get(calendar.key))
             },
             delete: async () => {
-
-                let error = false;
                 await fetch_api('calendar/delete/', 'POST', {calendar_key: calendar.key.encoded()}).catch(error => {
                     NOTIFICATION.error(new Message(error).title("Impossible de supprimer le calendrier"));
-                    error = true;
+                    throw new Error(error);
                 });
-                if (!error)
-                    row.remove()
+                row.remove()
             }
         })
 
