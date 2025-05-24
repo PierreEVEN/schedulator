@@ -35,11 +35,114 @@ class UserData {
     }
 }
 
+class SortedEvent {
+    /**
+     * @param event {Event}
+     */
+    constructor(event) {
+        this.event = event;
+        this.indentation = 0;
+        this.num_indentations = 0;
+        this.parents = [];
+        this.children = [];
+    }
+
+    /**
+     * @param other {SortedEvent}
+     * @return boolean
+     */
+    collides_with(other) {
+        return (this.event.start_time > other.event.start_time && this.event.start_time < other.event.end_time) ||
+            (other.event.start_time > this.event.start_time && other.event.start_time < this.event.end_time);
+    }
+
+    /**
+     * @param event {SortedEvent}
+     */
+    add_child(event) {
+        this.children.push(event);
+        event.parents.push(this);
+        event.indentation = this.find_level_for_child(event);
+    }
+
+    find_indentation_for(event, test_indentation) {
+        let is_a_hole = true;
+        for (const parent of this.parents) {
+            const value = parent.find_level_for_child(event);
+            if (value === null) {
+                return this.indentation + 1;
+            }
+        }
+
+        for (const parent of this.parents)
+            if (parent.collides_with(event)) {
+                is_a_hole = false;
+                break;
+            }
+        if (is_a_hole)
+    }
+}
+
+
+class DayEventData {
+    constructor() {
+        /**
+         * @type {Map<number, Event>}
+         */
+        this._events = new Map()
+    }
+
+    /**
+     * @return {SortedEvent[]}
+     */
+    get_events_sorted() {
+        /**
+         * @type {SortedEvent[]}
+         */
+        const events = [];
+        for (const [_, event] of this._events)
+            events.push(new SortedEvent(event))
+
+        // Sort events by start date
+        events.sort((a, b) => a.event.start_time - b.event.start_time)
+
+        for (let i = 0; i < events.length; ++i) {
+            for (let j = i + 1; j < events.length; ++j) {
+                let parent = events[i];
+                let child = events[j];
+
+                // If true, we are under the end_time - no possible conflict here
+                if (child.event.start_time > parent.event.end_time)
+                    break;
+
+                parent.add_child(child);
+            }
+        }
+
+        return events;
+    }
+
+    /**
+     * @param event_id {number}
+     * @param event {Event}
+     */
+    register_event(event_id, event) {
+        this._events.set(event_id, event);
+    }
+
+    /**
+     * @param event {number}
+     */
+    remove_event(event) {
+        this._events.delete(event)
+    }
+}
+
 class EventPool {
     constructor() {
         /**
          * <Start of the day's timestamp, list of event ids this day>
-         * @type {Map<number, number[]>}
+         * @type {Map<number, DayEventData>}
          * @private
          */
         this._per_day_events = new Map()
@@ -62,13 +165,15 @@ class EventPool {
     /**
      * Get registered event ids for the given date
      * @param date {Date | number}
-     * @returns {number[]}
+     * @return {{event: Event, indentation: number, num_indentations: number, parent: Object}[]}
      */
     get_day_events(date) {
         let today = new Date(date);
         today.setHours(0, 0, 0, 0);
         const events = this._per_day_events.get(today.getTime());
-        return events || [];
+        if (!events)
+            return [];
+        return events.get_events_sorted();
     }
 
     /**
@@ -101,10 +206,10 @@ class EventPool {
         const event_current_start = new Date(event.start_time);
         while (event_current_start < event.end_time) {
             event_current_start.setHours(0, 0, 0, 0);
-            if (this._per_day_events.has(event_current_start.getTime()))
-                this._per_day_events.get(event_current_start.getTime()).push(id);
-            else
-                this._per_day_events.set(event_current_start.getTime(), [id]);
+            if (!this._per_day_events.has(event_current_start.getTime()))
+                this._per_day_events.set(event_current_start.getTime(), new DayEventData());
+
+            this._per_day_events.get(event_current_start.getTime()).register_event(id, event);
             event_current_start.setDate(event_current_start.getDate() + 1)
         }
 
@@ -135,7 +240,8 @@ class EventPool {
         const event_current_start = new Date(event.start_time);
         while (event_current_start < event.end_time) {
             event_current_start.setHours(0, 0, 0, 0);
-            this._per_day_events.delete(event_current_start.getTime());
+            const per_day_data = this._per_day_events.get(event_current_start.getTime());
+            per_day_data.remove_event(id);
             event_current_start.setDate(event_current_start.getDate() + 1)
         }
     }

@@ -7,7 +7,7 @@ import {CalendarUser} from "../utilities/calendar_user";
 import ICAL from "ical.js";
 import {Event} from "../utilities/event";
 import {get_week_number, time_format_from_ms} from "../utilities/time_utils";
-import {EventPool} from "../views/calendar_list/event_pool";
+import {EventPool} from "./event_pool";
 
 require('./calendar_app.scss');
 
@@ -231,7 +231,6 @@ class CalendarApp extends HTMLElement {
             for (let j = 0; j < 7; j++) {
 
                 start_of_day.setDate(this.display_start.getDate() + j);
-
                 let cell_time_start = new Date(start_of_day.getTime() + this.daily_start + i * this.daily_spacing);
                 let cell_time_end = new Date(start_of_day.getTime() + this.daily_start + (i + 1) * this.daily_spacing);
                 let cell = require('./calendar_cell.hbs')({content: ""});
@@ -362,50 +361,22 @@ class CalendarApp extends HTMLElement {
         const day_display_start = new Date(date);
         day_display_start.setHours(0, 0, 0, 0);
 
+        if (day_display_start.getTime() !== 1745359200000)
+            return;
+
         const events = this.event_pool.get_day_events(day_display_start);
-        const event_indentations = new Map();
-        let num_indentations = 1;
-
-        /** Compute indentations **/
-        for (const event of events) {
-            let indentation = 0;
-            const locked_indentations = new Set();
-            // Find which indentation levels are locked by other events
-            for (const other of events) {
-                if (other === event)
-                    continue;
-
-                const current_value = this.event_pool.get_event(event);
-                const other_value = this.event_pool.get_event(other);
-
-                if ((current_value.start_time < other_value.end_time && current_value.end_time > other_value.end_time) ||
-                    (other_value.start_time < current_value.end_time && other_value.end_time > current_value.end_time)) {
-
-                    if (event_indentations.has(other))
-                        locked_indentations.add(event_indentations.get(other));
-                }
-            }
-
-            // Find the first free indentation level
-            while (locked_indentations.has(indentation)) {
-                ++indentation;
-                if (indentation + 1 > num_indentations)
-                    num_indentations = indentation + 1;
-            }
-
-            event_indentations.set(event, indentation);
-        }
 
         /** Actually display the events **/
-        for (const event_id of events) {
-            const event = this.event_pool.get_event(event_id);
-            const indentation = event_indentations.get(event_id);
+        for (const event_data of events) {
+            const event = event_data.event;
+            const indent = event_data.indentation;
+            const num_indent = event_data.num_indentations;
             // Get first displayed day at 00:00
             const display_start = new Date(this.display_start);
             display_start.setHours(0, 0, 0, 0);
 
-            const hmin = (Math.trunc((day_display_start - display_start) / (1000 * 60 * 60 * 24)) + (indentation) / num_indentations) / 7;
-            const hmax = (Math.trunc((day_display_start - display_start) / (1000 * 60 * 60 * 24)) + (indentation + 1) / num_indentations) / 7;
+            const hmin = (Math.trunc((day_display_start - display_start) / (1000 * 60 * 60 * 24)) + (indent) / num_indent) / 7;
+            const hmax = (Math.trunc((day_display_start - display_start) / (1000 * 60 * 60 * 24)) + (indent + 1) / num_indent) / 7;
             let vmin = Math.max(0, (event.start_time - day_display_start - this.daily_start) / this.day_duration());
             let vmax = Math.min(1, (event.end_time - day_display_start - this.daily_start) / this.day_duration());
             const event_div = require('./calendar_event.hbs')({title: event.title.plain()}, {})
@@ -484,9 +455,22 @@ class CalendarApp extends HTMLElement {
         // Retrieve or create user from account
         const user = await this.get_connected_user();
 
+        let sel_start = this.selection[0].cell_time_start;
+        sel_start = sel_start.getFullYear() +
+            '-' + String(sel_start.getMonth() + 1).padStart(2, '0') +
+            '-' + String(sel_start.getDate()).padStart(2, '0') +
+            'T' + String(sel_start.getHours()).padStart(2, '0') +
+            ':' + String(sel_start.getMinutes()).padStart(2, '0');
+        let sel_end = this.selection[0].cell_time_end;
+        sel_end = sel_end.getFullYear() +
+            '-' + String(sel_end.getMonth() + 1).padStart(2, '0') +
+            '-' + String(sel_end.getDate()).padStart(2, '0') +
+            'T' + String(sel_end.getHours()).padStart(2, '0') +
+            ':' + String(sel_end.getMinutes()).padStart(2, '0');
+
         GLOBAL_EVENT_CREATOR = require('./create_event.hbs')({
-            start: this.selection[0].cell_time_start.toISOString().slice(0, 16),
-            end: this.selection[0].cell_time_end.toISOString().slice(0, 16)
+            start: sel_start,
+            end: sel_end
         }, {
             close: () => {
                 GLOBAL_EVENT_CREATOR.remove();
