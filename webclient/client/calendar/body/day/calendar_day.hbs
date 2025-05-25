@@ -1,0 +1,8 @@
+<div class="calendar-day-header">
+    <h1>{{day}}</h1>
+    <h1 {{#if today}}class="calendar-today"{{/if}}>{{num}}</h1>
+</div>
+<div class="calendar-day-container">
+    <div class="calendar-cells" {{object "cells"}}></div>
+    <div class="calendar-events" {{object "events"}}></div>
+</div>

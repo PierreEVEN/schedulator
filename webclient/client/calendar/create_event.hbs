@@ -1,7 +1,7 @@
 <div class="calendar-create-event">
 
     <form onsubmit="{{ctx 'submit(event)'}}">
-        <button onclick="{{ctx 'close()'}}">X</button>
+        <button onclick="{{ctx 'close(event)'}}" class="modal-close-button">X</button>
         <h2>Ajouter un évenement</h2>
 
         <input type="text" name="name" placeholder="Nom de l'évenement" {{object "name"}} required>

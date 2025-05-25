@@ -1,19 +1,13 @@
-<div class="calendar-app">
-    <div class="calendar-header">
-        <button onclick="{{ctx "previous_week()"}}"><</button>
-        <p>{{title}} : {{month}} {{year}} - Semaine {{week_number}}</p>
-        <button onclick="{{ctx "next_week()"}}">></button>
+<div class="calendar-header">
+    <p>{{month}} {{year}} - Semaine {{week_number}}</p>
+    <button onclick="{{ctx "previous_week()"}}"><</button>
+    <button onclick="{{ctx "today()"}}">today</button>
+    <button onclick="{{ctx "next_week()"}}">></button>
 
-        <input type="file" style="display:none" {{object "file_input"}} onchange="{{ctx "set_input_ics(event)"}}"/>
-        <button onclick="{{ctx "import()"}}">Importer ICS</button>
-        <button>Config</button>
-    </div>
-    <div class="calendar-body">
-        <div class="calendar-column-headers" {{object "columns_header"}}><h1></h1></div>
-        <div class="calendar-rows">
-            <div class="calendar-rows-header" {{object "rows_header"}}></div>
-            <div class="calendar-rows" {{object "rows"}}></div>
-        </div>
-    </div>
-    <div class="calendar-modal-container" {{object "modal_container"}}></div>
+    <input type="file" style="display:none" {{object "file_input"}} onchange="{{ctx "set_input_ics(event)"}}"/>
+    <button onclick="{{ctx "import()"}}">Importer ICS</button>
+    <button>Config</button>
 </div>
+<div class="calendar-body-root" {{object "body"}}>
+</div>
+<div class="calendar-modal-container" {{object "modal_container"}}></div>

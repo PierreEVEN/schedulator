@@ -1,0 +1,39 @@
+$border-default: #3e3e3e;
+
+calendar-body {
+  display: flex;
+  width: 100%;
+  flex-grow: 1;
+  flex-direction: row;
+
+  .calendar-rows-headers {
+    display: flex;
+    flex-direction: column;
+    .calendar-row-header {
+      height: 100%;
+      border-right: solid 1px $border-default;
+      border-left: solid 1px $border-default;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+
+      h1 {
+        margin: 0 5px;
+        border-top: dashed 1px $border-default;
+        font-size: 0.75em;
+        font-weight: 400;
+        flex: 1 1 0;
+        min-width: 0;
+        overflow: hidden;
+      }
+    }
+  }
+
+  .calendar-columns {
+    display: flex;
+    flex-direction: row;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+}

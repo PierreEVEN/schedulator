@@ -51,7 +51,6 @@ module.exports = (data, ctx) => {
         for (const [key, value] of document.__handlebar_custom_loader.__registered_objects_container[container_id]) {
             const found_element = attribute_map.get(value);
             if (!found_element) {
-                console.error(`Failed to register element with id ${key}`);
                 continue;
             }
             elements[key] = found_element;

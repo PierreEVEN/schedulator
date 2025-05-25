@@ -2,13 +2,16 @@
 /**
  * Convert ms to "HH:MM"
  * @param ms {number}
+ * @param with_min {boolean}
  * @returns {string}
  */
-function time_format_from_ms(ms) {
-    const totalSeconds = Math.floor(ms / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const seconds = Math.floor((totalSeconds % 3600) / 60);
-    return `${String(hours).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+function time_format_from_ms(ms, with_min = true) {
+    const total_seconds = Math.floor(ms / 1000);
+    const hours = Math.floor(total_seconds / 3600);
+    if (!with_min)
+        return String(hours).padStart(2, '0');
+    const minutes = Math.floor((total_seconds % 3600) / 60);
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
 /**
@@ -30,4 +33,8 @@ function get_week_number(in_date) {
     );
 }
 
-export {time_format_from_ms, get_week_number}
+const ONE_DAY_MS = 1000 * 60 * 60 * 24;
+const ONE_HOUR_MS = 1000 * 60 * 60;
+const ONE_MIN_MS = 1000 * 60;
+
+export {time_format_from_ms, get_week_number, ONE_DAY_MS, ONE_HOUR_MS, ONE_MIN_MS}

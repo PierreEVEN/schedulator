@@ -1,3 +1,5 @@
+import {EventManager} from "../utilities/event_manager";
+
 class UserData {
     constructor() {
 
@@ -52,15 +54,15 @@ class SortedEvent {
      * @return boolean
      */
     collides_with(other) {
-        return (this.event.start_time > other.event.start_time && this.event.start_time < other.event.end_time) ||
-            (other.event.start_time > this.event.start_time && other.event.start_time < this.event.end_time);
+        return (this.event.start_time >= other.event.start_time && this.event.start_time < other.event.end_time) ||
+            (other.event.start_time >= this.event.start_time && other.event.start_time < this.event.end_time);
     }
 
     /**
      * @param event {SortedEvent}
      */
     add_child(event) {
-        console.assert(event.event.start_time > this.event.start_time);
+        console.assert(event.event.start_time >= this.event.start_time);
 
         // Index colliding items
         const hierarchy = this._get_colliding_hierarchy(event);
@@ -71,9 +73,11 @@ class SortedEvent {
             locked_levels.get(item.indentation).push(item);
         }
 
+        // Find the first indentation available
         while (locked_levels.has(event.indentation))
             ++event.indentation;
 
+        // Attach new element to parents and childrens
         for (const child of locked_levels.get(event.indentation + 1) || []) {
             event.children.push(child);
             child.parents.push(event);
@@ -93,7 +97,7 @@ class SortedEvent {
         const parents = [];
         for (const parent of this.parents)
             for (const inner of parent._get_colliding_hierarchy(test_event))
-            parents.push(inner);
+                parents.push(inner);
         if (this.collides_with(test_event))
             parents.push(this);
         return parents;
@@ -145,7 +149,7 @@ class DayEventData {
                 let child = events[j];
 
                 // If true, we are under the end_time - no possible conflict here
-                if (child.event.start_time > parent.event.end_time)
+                if (child.event.start_time >= parent.event.end_time)
                     break;
 
                 parent.add_child(child);
@@ -198,6 +202,11 @@ class EventPool {
          * @private
          */
         this._per_user_data = new Map();
+
+        /**
+         * @type {EventManager}
+         */
+        this.events = new EventManager();
     }
 
     /**

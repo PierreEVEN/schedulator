@@ -6,32 +6,18 @@ import {Authentication} from "../utilities/authentication/authentication";
 import {CalendarUser} from "../utilities/calendar_user";
 import ICAL from "ical.js";
 import {Event} from "../utilities/event";
-import {get_week_number, time_format_from_ms} from "../utilities/time_utils";
+import {get_week_number, ONE_DAY_MS} from "../utilities/time_utils";
 import {EventPool} from "./event_pool";
+import './body/calendar_body'
 
 require('./calendar_app.scss');
 
 let GLOBAL_EVENT_CREATOR = null;
 
+
 class CalendarApp extends HTMLElement {
     constructor() {
         super();
-
-        /**
-         * Daily start in ms
-         * @type {number}
-         */
-        this.daily_start = 60 * 60 * 1000 * 6; // 6h
-        /**
-         * Daily end in ms
-         * @type {number}
-         */
-        this.daily_end = 60 * 60 * 1000 * 20; // 20h
-        /**
-         * Minimum time interval in ms
-         * @type {number}
-         */
-        this.daily_spacing = 30 * 60 * 1000; // 30 minutes
         /**
          * Start date
          * @type {Date}
@@ -48,6 +34,7 @@ class CalendarApp extends HTMLElement {
          */
         this.display_start = new Date(new Date().setMonth(new Date(this.end).getMonth() - 1));
 
+        this.display_days = 7;
         const days = this.display_start.getDay();
         this.display_start.setDate(this.display_start.getDate() - (days === 0 ? 6 : days - 1));
 
@@ -56,16 +43,10 @@ class CalendarApp extends HTMLElement {
             this.mouse_y = event.clientY;
         });
 
-        if (this.hasAttribute('daily-start'))
-            this.daily_start = Number(this.getAttribute('daily-start'));
-        if (this.hasAttribute('daily-end'))
-            this.daily_end = Number(this.getAttribute('daily-end'));
         if (this.hasAttribute('start'))
             this.start = new Date(this.getAttribute('start'));
         if (this.hasAttribute('end'))
             this.end = new Date(this.getAttribute('end'));
-        if (this.hasAttribute('spacing'))
-            this.daily_spacing = Number(this.getAttribute('spacing'));
 
         /**
          * @type {EventPool}
@@ -83,28 +64,51 @@ class CalendarApp extends HTMLElement {
          * @type {Calendar | null}
          */
         this._calendar = null;
-    }
 
-    connectedCallback() {
-        this.classList.add('calendar-app');
+
+        this._scroll_offset = 0;
+        this._touch_start = 0;
+
+        document.addEventListener('touchstart', (event) => {
+            this._touch_start = event.targetTouches[0].clientX;
+        })
+        document.addEventListener('touchend', (event) => {
+            this._elements.elements.body.style.transform = 'translate(0)';
+        })
+
+        document.addEventListener('touchmove', (event) => {
+            this._elements.elements.body.style.transform = `translate(${event.targetTouches[0].clientX - this._touch_start}px)`;
+        })
+
+        document.addEventListener("wheel", (event) => {
+            this._scroll_offset += event.deltaX;
+            this.display_start.setDate(this.display_start.getDate() + Math.sign(this._scroll_offset) * 7);
+            this._elements.elements.body.style.transform = `translate(${-this._scroll_offset}px)`;
+        })
     }
 
     _refresh_calendar() {
-        if (this._calendar_object)
-            this._calendar_object.remove();
-        this._calendar_object = null;
+        if (this._main_body)
+            this._main_body.remove();
+        const body = document.createElement('calendar-body');
+        body.parent = this;
+        body.display_start = this.display_start;
+        body.set_event_source(this.event_pool);
+        this._main_body = body;
+        this._elements.elements.body.append(body)
+    }
 
-        this._calendar_object = require('./calendar_app.hbs')({
+    connectedCallback() {
+        this._elements = require('./calendar_app.hbs')({
             title: this._calendar.title.plain(),
             week_number: get_week_number(this.display_start),
             year: this.display_start.getFullYear(),
             month: this.display_start.toLocaleDateString(undefined, {month: 'long'})
         }, {
-            import: () => {
-                this._calendar_object.elements['file_input'].click();
+            'import': () => {
+                this._elements.elements['file_input'].click();
             },
-            set_input_ics: async (event) => {
-
+            'set_input_ics': async (event) => {
                 const user = await this.get_connected_user();
 
                 const raw_data = await new Promise((resolve, reject) => {
@@ -123,6 +127,9 @@ class CalendarApp extends HTMLElement {
                     reader.readAsText(file);
                 });
                 const res = ICAL.parse(raw_data.data);
+
+                const body = [];
+
                 for (const event of res[2]) {
                     const kind = event[0];
                     if (kind === 'vevent') {
@@ -164,15 +171,15 @@ class CalendarApp extends HTMLElement {
                             continue;
 
                         const reg_event = (date, duration) => {
-                            this.event_pool.register_event(Event.new({
-                                start_time: date,
-                                end_time: date + duration,
-                                presence: -10,
-                                source: EncString.from_client(`import@${raw_data.filename}`).encoded(),
-                                owner: user.id,
+                            body.push({
+                                calendar: this._calendar.id.toString(),
                                 title: title.encoded(),
-                                calendar: this._calendar.id
-                            }))
+                                owner: user.id.toString(),
+                                start: date,
+                                end: date + duration,
+                                source: EncString.from_client(`import@${raw_data.filename}`).encoded(),
+                                presence: -10
+                            });
                         }
 
                         const duration = end.getTime() - start.getTime();
@@ -215,66 +222,34 @@ class CalendarApp extends HTMLElement {
                         }
                     }
                 }
+                const create_res = await fetch_api('event/create/', 'POST', body).catch(error => {
+                    NOTIFICATION.error(new Message(error).title("Impossible de créer l'évenement"));
+                    throw new Error(error);
+                });
+                for (const event of create_res) {
+                    this.event_pool.register_event(Event.new(event))
+                }
                 this._refresh_calendar();
             },
-            next_week: () => {
-                this.display_start.setDate(this.display_start.getDate() + 7);
+            'next_week': () => {
+                this.display_start.setDate(this.display_start.getDate() + this.display_days);
                 this._refresh_calendar();
             },
-            previous_week: () => {
-                this.display_start.setDate(this.display_start.getDate() - 7)
+            'today': () => {
+                this.display_start = new Date(Date.now());
+                const days = this.display_start.getDay();
+                this.display_start.setDate(this.display_start.getDate() - (days === 0 ? 6 : days - 1));
+                this._refresh_calendar();
+            },
+            'previous_week': () => {
+                this.display_start.setDate(this.display_start.getDate() - this.display_days);
                 this._refresh_calendar();
             }
         });
 
-        let daily_subdivision = (this.daily_end - this.daily_start) / this.daily_spacing
-
-        this._calendar_object.elements['columns_header'].append(require('./calendar_column_header.hbs')())
-        for (let i = 0; i < 7; i++) {
-            let this_day = new Date(this.display_start);
-            this_day.setDate(this.display_start.getDate() + i)
-            this._calendar_object.elements['columns_header'].append(require('./calendar_column_header.hbs')({title: this_day.toLocaleDateString(undefined, {weekday: 'short'}) + " " + this_day.getDate()}));
-        }
-
-        for (let i = 0; i < daily_subdivision; ++i) {
-            let time = this.daily_start + i * this.daily_spacing;
-            this._calendar_object.elements['rows_header'].append(require('./calendar_row_header.hbs')({time: time_format_from_ms(time)}))
-        }
-
-        for (let i = 0; i < daily_subdivision; ++i) {
-
-            const row = document.createElement('div');
-            row.classList.add('calendar-row');
-
-            let start_of_day = new Date(this.display_start.getTime());
-            start_of_day.setHours(0, 0, 0, 0);
-            for (let j = 0; j < 7; j++) {
-
-                start_of_day.setDate(this.display_start.getDate() + j);
-                let cell_time_start = new Date(start_of_day.getTime() + this.daily_start + i * this.daily_spacing);
-                let cell_time_end = new Date(start_of_day.getTime() + this.daily_start + (i + 1) * this.daily_spacing);
-                let cell = require('./calendar_cell.hbs')({content: ""});
-                cell.cell_time_start = cell_time_start;
-                cell.cell_time_end = cell_time_end;
-                cell.onclick = async () => {
-                    this.selection = []
-                    this.selection.push(cell);
-                    await this.spawn_add_event();
-                }
-
-                row.append(cell)
-            }
-            this._calendar_object.elements.rows.append(row);
-        }
-
-        this.append(this._calendar_object)
-        this._modal_container = this._calendar_object.elements.modal_container;
-
-        for (let i = 0; i < 7; i++) {
-            let this_day = new Date(this.display_start);
-            this_day.setDate(this.display_start.getDate() + i);
-            this.display_day_events(this_day);
-        }
+        for (const element of this._elements)
+            this.append(element);
+        this._refresh_calendar();
     }
 
     /**
@@ -282,7 +257,6 @@ class CalendarApp extends HTMLElement {
      * @returns {CalendarUser | null}
      */
     async get_connected_user(try_connect = true) {
-
         if (!try_connect)
             return this._current_calendar_user;
 
@@ -370,59 +344,6 @@ class CalendarApp extends HTMLElement {
     }
 
     /**
-     * Get day duration in milliseconds
-     * @returns {number}
-     */
-    day_duration() {
-        return this.daily_end - this.daily_start;
-    }
-
-    display_day_events(date) {
-        const day_display_start = new Date(date);
-        day_display_start.setHours(0, 0, 0, 0);
-
-        const events = this.event_pool.get_day_events(day_display_start);
-
-        /** Actually display the events **/
-        for (const event_data of events) {
-            const event = event_data.event;
-            const indent = event_data.indentation;
-            const num_indent = event_data.num_indentations;
-            // Get first displayed day at 00:00
-            const display_start = new Date(this.display_start);
-            display_start.setHours(0, 0, 0, 0);
-
-            const hmin = (Math.trunc((day_display_start - display_start) / (1000 * 60 * 60 * 24)) + (indent) / num_indent) / 7;
-            const hmax = (Math.trunc((day_display_start - display_start) / (1000 * 60 * 60 * 24)) + (indent + 1) / num_indent) / 7;
-            let vmin = Math.max(0, (event.start_time - day_display_start - this.daily_start) / this.day_duration());
-            let vmax = Math.min(1, (event.end_time - day_display_start - this.daily_start) / this.day_duration());
-            const event_div = require('./calendar_event.hbs')({title: event.title.plain()}, {})
-
-            function valueToColor(value, min = -10, max = 10) {
-                const clamped = Math.max(min, Math.min(max, value));
-                const percent = (clamped - min) / (max - min);
-                const hue = percent * 120;
-                return `hsl(${hue}, 50%, 70%)`;
-            }
-
-            function numberToColorHSL(n, total = 10) {
-                const hue = ((n + 97.58) * (398787.4713 / total)) % 360;
-                return `hsl(${hue}, 70%, 50%)`;
-            }
-
-            const user_color = valueToColor(event.presence);
-            event_div.elements.event_presence.style.backgroundColor = numberToColorHSL(event.owner);
-            event_div.style.backgroundColor = user_color;
-            event_div.style.top = `${vmin * 100}%`;
-            event_div.style.bottom = `${(1 - vmax) * 100}%`;
-            event_div.style.left = `${hmin * 100}%`;
-            event_div.style.right = `${(1 - hmax) * 100}%`;
-
-            this._calendar_object.elements.rows.append(event_div)
-        }
-    }
-
-    /**
      * @param in_calendar {Event}
      */
     set_calendar(in_calendar) {
@@ -432,7 +353,6 @@ class CalendarApp extends HTMLElement {
         if (this._calendar) {
             fetch_api('event/from-calendar/', 'POST', this._calendar.id.toString()).catch(error => {
                 NOTIFICATION.error(new Message(error).title("Impossible d'obtenir les events"));
-                this._refresh_calendar();
             }).then((res) => {
                 for (const event of res)
                     this.event_pool.register_event(Event.new(event))
@@ -489,7 +409,8 @@ class CalendarApp extends HTMLElement {
             start: sel_start,
             end: sel_end
         }, {
-            close: () => {
+            close: (event) => {
+                event.preventDefault();
                 GLOBAL_EVENT_CREATOR.remove();
                 GLOBAL_EVENT_CREATOR = null;
             },
@@ -508,16 +429,14 @@ class CalendarApp extends HTMLElement {
                         presence: Number(GLOBAL_EVENT_CREATOR.elements.presence.value)
                     });
                 }
-                let errors = false;
                 const res = await fetch_api('event/create/', 'POST', body).catch(error => {
-                    errors = true;
                     NOTIFICATION.error(new Message(error).title("Impossible de créer l'évenement"));
+                    throw new Error(error);
                 });
-                if (!errors)
-                    for (const event of res) {
-                        this.event_pool.register_event(Event.new(event))
-                        this._refresh_calendar();
-                    }
+                for (const event of res) {
+                    this.event_pool.register_event(Event.new(event))
+                }
+                this._refresh_calendar();
 
 
                 GLOBAL_EVENT_CREATOR.remove();
@@ -546,6 +465,4 @@ class CalendarApp extends HTMLElement {
 }
 
 customElements.define("calendar-app", CalendarApp);
-
-
 export {CalendarApp}
