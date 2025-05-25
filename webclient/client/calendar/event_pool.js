@@ -42,7 +42,7 @@ class SortedEvent {
     constructor(event) {
         this.event = event;
         this.indentation = 0;
-        this.num_indentations = 0;
+        this.num_indentations = 1;
         this.parents = [];
         this.children = [];
     }
@@ -60,26 +60,59 @@ class SortedEvent {
      * @param event {SortedEvent}
      */
     add_child(event) {
-        this.children.push(event);
-        event.parents.push(this);
-        event.indentation = this.find_level_for_child(event);
-    }
+        console.assert(event.event.start_time > this.event.start_time);
 
-    find_indentation_for(event, test_indentation) {
-        let is_a_hole = true;
-        for (const parent of this.parents) {
-            const value = parent.find_level_for_child(event);
-            if (value === null) {
-                return this.indentation + 1;
-            }
+        // Index colliding items
+        const hierarchy = this._get_colliding_hierarchy(event);
+        const locked_levels = new Map();
+        for (const item of hierarchy) {
+            if (!locked_levels.has(item.indentation))
+                locked_levels.set(item.indentation, []);
+            locked_levels.get(item.indentation).push(item);
         }
 
+        while (locked_levels.has(event.indentation))
+            ++event.indentation;
+
+        for (const child of locked_levels.get(event.indentation + 1) || []) {
+            event.children.push(child);
+            child.parents.push(event);
+        }
+        for (const parent of locked_levels.get(event.indentation - 1) || []) {
+            event.parents.push(parent);
+            parent.children.push(event);
+        }
+    }
+
+    /**
+     * Get the elements in parents that are at the same level as the tested event
+     * @param test_event {SortedEvent}
+     * @returns {SortedEvent[]}
+     */
+    _get_colliding_hierarchy(test_event) {
+        const parents = [];
         for (const parent of this.parents)
-            if (parent.collides_with(event)) {
-                is_a_hole = false;
-                break;
-            }
-        if (is_a_hole)
+            for (const inner of parent._get_colliding_hierarchy(test_event))
+            parents.push(inner);
+        if (this.collides_with(test_event))
+            parents.push(this);
+        return parents;
+    }
+
+    get_max_indentation_in_children() {
+        let max = this.indentation;
+        for (const child of this.children) {
+            const indentation = child.get_max_indentation_in_children()
+            if (indentation > max)
+                max = indentation
+        }
+        return max;
+    }
+
+    set_num_indentation(value) {
+        this.num_indentations = value;
+        for (const child of this.children)
+            child.set_num_indentation(value);
     }
 }
 
@@ -117,6 +150,11 @@ class DayEventData {
 
                 parent.add_child(child);
             }
+        }
+
+        for (const event of events) {
+            if (event.indentation === 0)
+                event.set_num_indentation(event.get_max_indentation_in_children() + 1);
         }
 
         return events;
@@ -165,7 +203,7 @@ class EventPool {
     /**
      * Get registered event ids for the given date
      * @param date {Date | number}
-     * @return {{event: Event, indentation: number, num_indentations: number, parent: Object}[]}
+     * @return {SortedEvent[]}
      */
     get_day_events(date) {
         let today = new Date(date);

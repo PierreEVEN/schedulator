@@ -126,6 +126,9 @@ class CalendarApp extends HTMLElement {
                 for (const event of res[2]) {
                     const kind = event[0];
                     if (kind === 'vevent') {
+                        /**
+                         * @type {Date}
+                         */
                         let start = null;
                         let end = null;
                         let title = null;
@@ -178,19 +181,36 @@ class CalendarApp extends HTMLElement {
                         } else {
                             const interval = recur.interval || 1;
                             const until = recur.until ? new Date(recur.until) : this.end;
-                            const count = recur.count || Number.MAX_SAFE_INTEGER;
+                            let count = recur.count || Number.MAX_SAFE_INTEGER;
 
                             if (recur.freq === 'WEEKLY') {
-
+                                do {
+                                    start.setDate(start.getDate() + 7 * interval);
+                                    if (!exdates.has(start.getTime()))
+                                        reg_event(start.getTime(), duration);
+                                } while (start < until && --count > 0)
                             } else if (recur.freq === 'MONTHLY') {
-
+                                do {
+                                    start.setMonth(start.getMonth() + interval);
+                                    if (!exdates.has(start.getTime()))
+                                        reg_event(start.getTime(), duration);
+                                } while (start < until && --count > 0)
                             } else if (recur.freq === 'YEARLY') {
-
+                                do {
+                                    start.setUTCFullYear(start.getUTCFullYear() + interval);
+                                    if (!exdates.has(start.getTime()))
+                                        reg_event(start.getTime(), duration);
+                                } while (start < until && --count > 0)
                             } else if (recur.freq === 'DAILY') {
-
+                                do {
+                                    start.setUTCFullYear(start.getUTCFullYear() + interval);
+                                    if (!exdates.has(start.getTime()))
+                                        reg_event(start.getTime(), duration);
+                                } while (start < until && --count > 0)
                             } else {
                                 console.warn(`Unhandled recurrence frequency : ${recur}`);
-                                reg_event(start.getTime(), duration);
+                                if (!exdates.has(start.getTime()))
+                                    reg_event(start.getTime(), duration);
                             }
                         }
                     }
@@ -360,9 +380,6 @@ class CalendarApp extends HTMLElement {
     display_day_events(date) {
         const day_display_start = new Date(date);
         day_display_start.setHours(0, 0, 0, 0);
-
-        if (day_display_start.getTime() !== 1745359200000)
-            return;
 
         const events = this.event_pool.get_day_events(day_display_start);
 
