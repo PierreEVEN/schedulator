@@ -48,8 +48,8 @@ class CalendarApp extends HTMLElement {
          */
         this._main_body = null;
 
-        /*
-        this._scroll_offset = 0;
+
+        this._current_offset = 0;
         this._touch_start = 0;
         document.addEventListener('touchstart', (event) => {
             this._touch_start = event.targetTouches[0].clientX;
@@ -58,13 +58,78 @@ class CalendarApp extends HTMLElement {
             this._elements.body.style.transform = 'translate(0)';
         })
         document.addEventListener('touchmove', (event) => {
-            this._elements.body.style.transform = `translate(${event.targetTouches[0].clientX - this._touch_start}px)`;
+            this._set_scroll_offset(event.targetTouches[0].clientX - this._touch_start);
         })
         document.addEventListener("wheel", (event) => {
-            this._scroll_offset += event.deltaX;
-            this.display_start.setDate(this.display_start.getDate() + Math.sign(this._scroll_offset) * 7);
-            this._elements.body.style.transform = `translate(${-this._scroll_offset}px)`;
-        })*/
+            this._current_offset += event.deltaX * 4;
+            this._set_scroll_offset(-this._current_offset);
+        })
+        document.addEventListener("mousedown", (event) => {
+            console.log("hmm")
+        })
+
+
+        const lerp = (x, y, a) => {
+            if (x > y)
+                return Math.max(x * (1 - a) + y * a, y);
+            else if (y > x)
+                return Math.min(x * (1 - a) + y * a, y);
+            return y;
+        };
+
+        let lastTime;
+
+        const loop = (now) => {
+            requestAnimationFrame(loop);
+
+            if (!lastTime) {
+                lastTime = now;
+            }
+            let elapsed = (now - lastTime) / 1000;
+            lastTime = now;
+            this._current_offset = lerp(this._current_offset, 0, 10 * elapsed)
+            this._set_scroll_offset(-this._current_offset);
+        }
+
+        requestAnimationFrame(loop)
+    }
+
+    _set_scroll_offset(in_new_scroll_offset) {
+        this._elements.body.style.transform = `translate(${in_new_scroll_offset}px)`;
+        if (in_new_scroll_offset > 1 && !this._left_body) {
+            const date = new Date(this._display_date);
+            date.setDate(this._display_date.getDate() - 7);
+            this._left_body = document.createElement('calendar-body');
+            this._left_body.set_display_date(date);
+            this._left_body.set_event_source(this._event_source);
+            this._left_body.style.position = 'absolute';
+            this._left_body.style.width = '100%';
+            this._left_body.style.height = '100%';
+            this._left_body.style.transform = `translate(-100%)`;
+            this._elements.body.append(this._left_body)
+        } else if (in_new_scroll_offset < -1 && !this._right_body) {
+            const date = new Date(this._display_date);
+            date.setDate(this._display_date.getDate() + 7);
+            this._right_body = document.createElement('calendar-body');
+            this._right_body.set_display_date(date);
+            this._right_body.set_event_source(this._event_source);
+            this._right_body.style.position = 'absolute';
+            this._right_body.style.width = '100%';
+            this._right_body.style.height = '100%';
+            this._right_body.style.transform = `translate(100%)`;
+            this._elements.body.append(this._right_body)
+        }
+
+        if (this._left_body && in_new_scroll_offset <=1) {
+            this._left_body.remove();
+            this._left_body = null;
+        }
+
+        if (this._right_body && in_new_scroll_offset >= -1) {
+            this._right_body.remove();
+            this._right_body = null;
+        }
+
     }
 
     connectedCallback() {
