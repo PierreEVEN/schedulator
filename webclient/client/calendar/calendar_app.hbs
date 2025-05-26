@@ -1,10 +1,8 @@
 <div class="calendar-header">
-    <p>{{month}} {{year}} - Semaine {{week_number}}</p>
+    <p {{object "title"}}>{{title}}</p>
     <button onclick="{{ctx "previous_week()"}}"><</button>
     <button onclick="{{ctx "today()"}}">today</button>
     <button onclick="{{ctx "next_week()"}}">></button>
-
-    <input type="file" style="display:none" {{object "file_input"}} onchange="{{ctx "set_input_ics(event)"}}"/>
     <button onclick="{{ctx "import()"}}">Importer ICS</button>
     <button>Config</button>
 </div>

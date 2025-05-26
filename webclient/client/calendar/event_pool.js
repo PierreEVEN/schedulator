@@ -265,6 +265,9 @@ class EventPool {
             this._per_user_data.set(event.owner, new UserData());
         }
         this._per_user_data.get(event.owner).register_event(id, event);
+        this.events.broadcast('add', event).catch((err) => {
+            console.error(err);
+        });
         return id;
     }
 
@@ -291,6 +294,9 @@ class EventPool {
             per_day_data.remove_event(id);
             event_current_start.setDate(event_current_start.getDate() + 1)
         }
+        this.events.broadcast('remove', event).catch((err) => {
+            console.error(err);
+        });
     }
 }
 
