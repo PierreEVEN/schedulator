@@ -298,6 +298,23 @@ class EventPool {
             console.error(err);
         });
     }
+
+    /**
+     * @param events {Event[]}
+     */
+    async create_events(events) {
+        await this.events.broadcast('create-batch', events);
+    }
+
+    /**
+     * @param events {number[]}
+     */
+    async delete_events(events) {
+        await this.events.broadcast('delete-batch', events).catch(console.error);
+        for (const event of events) {
+            this.remove_event(event);
+        }
+    }
 }
 
 export {EventPool}

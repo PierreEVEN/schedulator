@@ -1,17 +1,13 @@
 import Ical from "ical.js";
 import {EncString} from "../encstring";
-import {fetch_api} from "../request";
-import {Message, NOTIFICATION} from "../../views/message_box/notification";
 import {Event} from "../event";
 
 /**
  * @param file {File}
- * @param event_pool {EventPool}
- * @param calendar {Calendar}
- * @param owner {CalendarUser}
- * @returns {Promise<void>}
+ * @param end_date {Date}
+ * @returns {Promise<Event[]>}
  */
-async function import_ics(file, event_pool, calendar, owner) {
+async function import_ics(file, end_date) {
     const raw_data = await new Promise((resolve, reject) => {
         if (!file)
             return reject("File not found")
@@ -73,13 +69,10 @@ async function import_ics(file, event_pool, calendar, owner) {
 
             const register_event_helper = (date, duration) => {
                 events.push({
-                    calendar: calendar.id.toString(),
-                    title: title.encoded(),
-                    owner: owner.id.toString(),
+                    title: title,
                     start: date,
                     end: date + duration,
-                    source: EncString.from_client(`import@${raw_data.filename}`).encoded(),
-                    presence: -10
+                    source: `import@${raw_data.filename}`
                 });
             }
 
@@ -88,7 +81,7 @@ async function import_ics(file, event_pool, calendar, owner) {
                 register_event_helper(start.getTime(), duration)
             } else {
                 const interval = recur.interval || 1;
-                const until = recur.until ? new Date(recur.until) : this.end;
+                const until = recur.until ? new Date(recur.until) : end_date;
                 let count = recur.count || Number.MAX_SAFE_INTEGER;
 
                 if (recur.freq === 'WEEKLY') {
@@ -123,13 +116,7 @@ async function import_ics(file, event_pool, calendar, owner) {
             }
         }
     }
-    const create_res = await fetch_api('event/create/', 'POST', events).catch(error => {
-        NOTIFICATION.error(new Message(error).title("Impossible d'importer le fichier"));
-        throw new Error(error);
-    });
-    for (const event of create_res) {
-        event_pool.register_event(Event.new(event))
-    }
+    return events;
 }
 
 export {import_ics}

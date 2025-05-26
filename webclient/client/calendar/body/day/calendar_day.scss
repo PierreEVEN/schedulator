@@ -50,6 +50,7 @@ calendar-day {
       left: 0;
       right: 0;
       overflow: hidden;
+      pointer-events: none;
 
       .calendar-event {
         position: absolute;
@@ -60,6 +61,7 @@ calendar-day {
         align-items: center;
         border: solid 1px $border-default;
         border-radius: 5px;
+        pointer-events: auto;
 
 
         p {

@@ -104,9 +104,7 @@ class CalendarDay extends HTMLElement {
             cell.cell_time_start = cell_time_start;
             cell.cell_time_end = cell_time_end;
             cell.onclick = async () => {
-                this.parent.selection = []
-                this.parent.selection.push(cell);
-                await this.parent.spawn_add_event();
+
             }
             this._elements[0].elements.cells.append(cell);
         }

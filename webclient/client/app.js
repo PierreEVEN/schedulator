@@ -47,6 +47,17 @@ function try_update_display_calendar(calendar) {
             throw new Error(error);
         }).then(res => {
             const events = new EventPool();
+
+            events.events.add('create-batch', async (events) => {
+                const event_data = [];
+                const create_res = await fetch_api('event/create/', 'POST', event_data).catch(error => {
+                    NOTIFICATION.error(new Message(error).title("Impossible de créer les événements sur le serveur"));
+                    throw new Error(error);
+                });
+                for (const event of create_res)
+                    events.register_event(event);
+            })
+
             for (const event of res)
                 events.register_event(Event.new(event));
 

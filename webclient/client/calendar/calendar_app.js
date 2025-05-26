@@ -16,22 +16,6 @@ class CalendarApp extends HTMLElement {
     constructor() {
         super();
         /**
-         * Start date
-         * @type {Date}
-         * @private
-         */
-        this._start = new Date(new Date().setMonth(new Date(this.end).getMonth() - 3));
-        if (this.hasAttribute('start'))
-            this.start = new Date(this.getAttribute('start'));
-        /**
-         * End date
-         * @type {Date}
-         * @private
-         */
-        this._end = new Date(Date.now());
-        if (this.hasAttribute('end'))
-            this.end = new Date(this.getAttribute('end'));
-        /**
          * Start of the display
          * @type {Date}
          * @private
@@ -91,8 +75,7 @@ class CalendarApp extends HTMLElement {
                 const file_input = document.createElement('input');
                 file_input.type = 'file';
                 file_input.onchange = async (event) => {
-                    const user = await this.get_connected_user();
-                    await import_ics(event.target.files[0], this._event_source, this._calendar, user);
+                    await this._event_source.create_events(await import_ics(event.target['files'][0]));
                 };
                 file_input.click();
             },
