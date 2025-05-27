@@ -179,7 +179,7 @@ class CalendarDay extends HTMLElement {
         const hmax = ((indent + 1) / num_indent) * 0.95;
         let vmin = Math.max(0, (event.start_time - this._date - this._daily_start) / (this._daily_end - this._daily_start));
         let vmax = Math.min(1, (event.end_time - this._date - this._daily_start) / (this._daily_end - this._daily_start));
-        const event_div = require('./calendar_event.hbs')({title: event.title.plain()}, {})
+        const event_div = require('./calendar_event.hbs')({title: event.title.plain()}, {});
 
         event_div.style.backgroundColor = numberToColorHSL(event.owner);
         event_div.style.top = `${vmin * 100}%`;
@@ -187,7 +187,7 @@ class CalendarDay extends HTMLElement {
         event_div.style.left = `${hmin * 100}%`;
         event_div.style.right = `${(1 - hmax) * 100}%`;
 
-        this._elements[0].elements.events.append(event_div)
+        this._elements[0].elements.events.append(event_div);
     }
 
     /**
