@@ -9,6 +9,7 @@ class Selector {
         this.events = new EventManager();
 
         this._per_day_selections = new Map();
+
     }
 
     begin_selection() {

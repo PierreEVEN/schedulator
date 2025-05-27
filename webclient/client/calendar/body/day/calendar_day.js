@@ -1,6 +1,7 @@
 require('./calendar_day.scss')
 const {numberToColorHSL} = require("../../../utilities/colors");
 const {ONE_MIN_MS, ONE_DAY_MS} = require("../../../utilities/time_utils");
+const {POINTER_UTILS} = require("../../pointer_utils");
 
 class CalendarDay extends HTMLElement {
     constructor() {
@@ -79,7 +80,7 @@ class CalendarDay extends HTMLElement {
         const new_date = new Date(date);
         new_date.setHours(0, 0, 0, 0);
         if (this._date.getTime() !== new_date.getTime()) {
-            this._date = new_date;
+            this._date = new Date(new_date);
             this._update_display();
         }
     }
@@ -110,16 +111,40 @@ class CalendarDay extends HTMLElement {
             let cell = require('./calendar_cell.hbs')({content: ""});
             cell.cell_time_start = cell_time_start;
             cell.cell_time_end = cell_time_end;
-            cell.onpointerdown = async () => {
-                console.log("down")
-            }
-            cell.onpointerup = async () => {
-                console.log("up")
-            }
             this._elements[0].elements.cells.append(cell);
         }
 
+        POINTER_UTILS.events.add('move', ({x, y}) => {
+            for (const cell of this._elements[0].elements.cells.children) {
+                const bounds = cell.getBoundingClientRect();
+                if (y > bounds.top && y < bounds.bottom) {
+                    if (this._last_cell_line_hovered === cell)
+                        return;
+                    if (this._last_cell_line_hovered)
+                        this._last_cell_line_hovered.classList.remove('calendar-hover-line');
+                    this._last_cell_line_hovered = cell;
+                    this._last_cell_line_hovered.classList.add('calendar-hover-line');
+                }
+            }
+        })
+
         this._update_events();
+    }
+
+    /**
+     * @param date {Date}
+     * @returns {HTMLElement|null}
+     */
+    get_cell_from_date(date) {
+        const display_start = this._date.getTime() + this._daily_start;
+        if (date.getTime() < display_start)
+            return null;
+        if (date.getTime() > this._date.getTime() + this._daily_end)
+            return null;
+        const elapsed_ms = date.getTime() - display_start;
+        let daily_subdivision = (this._daily_end - this._daily_start) / this._daily_spacing;
+        const index = elapsed_ms / daily_subdivision;
+        return this._elements[0].elements.cells.children[index];
     }
 
     _update_events() {
