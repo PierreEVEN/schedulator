@@ -50,24 +50,47 @@ class CalendarApp extends HTMLElement {
 
 
         this._current_offset = 0;
+        this._speed = 0;
         this._touch_start = 0;
+        this._touch_start_delta = 0;
+        this._holding = false;
         document.addEventListener('touchstart', (event) => {
             this._touch_start = event.targetTouches[0].clientX;
+            this._touch_start_delta = this._current_offset;
+            this._holding = true;
         })
         document.addEventListener('touchend', (_) => {
-            this._elements.body.style.transform = 'translate(0)';
+            this._holding = false;
         })
         document.addEventListener('touchmove', (event) => {
-            this._set_scroll_offset(event.targetTouches[0].clientX - this._touch_start);
+            this._set_scroll_offset(event.targetTouches[0].clientX - this._touch_start + this._touch_start_delta);
         })
         document.addEventListener("wheel", (event) => {
-            this._current_offset += event.deltaX * 4;
-            this._set_scroll_offset(-this._current_offset);
+            this._set_scroll_offset(this._current_offset - event.deltaX * 2);
         })
         document.addEventListener("mousedown", (event) => {
             console.log("hmm")
         })
 
+
+        class DeltaTime {
+            constructor() {
+                this._start = Date.now();
+            }
+
+            tick() {
+                const now = Date.now();
+                this._delta = now - this._start;
+                this._start = now;
+                return this._delta / 1000;
+            }
+
+            delta_seconds() {
+                return this._delta / 1000;
+            }
+        }
+
+        this._delta_time = new DeltaTime();
 
         const lerp = (x, y, a) => {
             if (x > y)
@@ -77,26 +100,71 @@ class CalendarApp extends HTMLElement {
             return y;
         };
 
-        let lastTime;
+        const scroll_loop = () => {
+            requestAnimationFrame(scroll_loop);
 
-        const loop = (now) => {
-            requestAnimationFrame(loop);
+            const delta = this._delta_time.tick();
+            if (!this._holding) {
+                this._current_offset = lerp(this._current_offset, 0, 10 * delta)
+                this._current_offset = Math.min(Math.max(this._current_offset, -this._elements.body.clientWidth), this._elements.body.clientWidth)
+                this._set_scroll_offset(this._current_offset)
 
-            if (!lastTime) {
-                lastTime = now;
             }
-            let elapsed = (now - lastTime) / 1000;
-            lastTime = now;
-            this._current_offset = lerp(this._current_offset, 0, 10 * elapsed)
-            this._set_scroll_offset(-this._current_offset);
         }
 
-        requestAnimationFrame(loop)
+        requestAnimationFrame(scroll_loop)
     }
 
     _set_scroll_offset(in_new_scroll_offset) {
-        this._elements.body.style.transform = `translate(${in_new_scroll_offset}px)`;
-        if (in_new_scroll_offset > 1 && !this._left_body) {
+        this._current_offset = in_new_scroll_offset;
+
+        if (this._current_offset < -this._elements.body.clientWidth * 0.5) {
+            this._speed = 0;
+            this._current_offset += this._elements.body.clientWidth;
+            this._touch_start_delta += this._elements.body.clientWidth;
+            const old = this._main_body;
+            this._main_body = this._right_body;
+            this._right_body = null;
+
+            const date = new Date(this._display_date);
+            date.setDate(this._display_date.getDate() + 7);
+            this.set_display_date(date)
+            this._left_body = old;
+
+            this._speed = 0;
+
+            this._main_body.style.transform = 'translate(0)';
+            this._main_body.style.position = 'relative';
+            this._left_body.style.transform = 'translate(-100%)';
+            this._left_body.style.position = 'absolute';
+            this._left_body.style.width = '100%';
+            this._left_body.style.height = '100%';
+        }
+        else if (this._current_offset > this._elements.body.clientWidth * 0.5) {
+            this._speed = 0;
+            this._current_offset -= this._elements.body.clientWidth;
+            this._touch_start_delta -= this._elements.body.clientWidth;
+            const old = this._main_body;
+            this._main_body = this._left_body;
+            this._left_body = null;
+
+            const date = new Date(this._display_date);
+            date.setDate(this._display_date.getDate() - 7);
+            this.set_display_date(date)
+            this._right_body = old;
+
+            this._speed = 0;
+
+            this._main_body.style.transform = 'translate(0)';
+            this._main_body.style.position = 'relative';
+            this._right_body.style.transform = 'translate(100%)';
+            this._right_body.style.position = 'absolute';
+            this._right_body.style.width = '100%';
+            this._right_body.style.height = '100%';
+        }
+
+        this._elements.body.style.transform = `translate(${this._current_offset}px)`;
+        if (this._current_offset > 1 && !this._left_body) {
             const date = new Date(this._display_date);
             date.setDate(this._display_date.getDate() - 7);
             this._left_body = document.createElement('calendar-body');
@@ -107,7 +175,7 @@ class CalendarApp extends HTMLElement {
             this._left_body.style.height = '100%';
             this._left_body.style.transform = `translate(-100%)`;
             this._elements.body.append(this._left_body)
-        } else if (in_new_scroll_offset < -1 && !this._right_body) {
+        } else if (this._current_offset < -1 && !this._right_body) {
             const date = new Date(this._display_date);
             date.setDate(this._display_date.getDate() + 7);
             this._right_body = document.createElement('calendar-body');
@@ -120,12 +188,12 @@ class CalendarApp extends HTMLElement {
             this._elements.body.append(this._right_body)
         }
 
-        if (this._left_body && in_new_scroll_offset <=1) {
+        if (this._left_body && this._current_offset <=1) {
             this._left_body.remove();
             this._left_body = null;
         }
 
-        if (this._right_body && in_new_scroll_offset >= -1) {
+        if (this._right_body && this._current_offset >= -1) {
             this._right_body.remove();
             this._right_body = null;
         }

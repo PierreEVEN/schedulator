@@ -116,7 +116,7 @@ async function spawn_add_event() {
         'T' + String(sel_end.getHours()).padStart(2, '0') +
         ':' + String(sel_end.getMinutes()).padStart(2, '0');
 
-    GLOBAL_EVENT_CREATOR = require('./create_event.hbs')({
+    GLOBAL_EVENT_CREATOR = require('./calendar/create_event.hbs')({
         start: sel_start,
         end: sel_end
     }, {
