@@ -54,6 +54,13 @@ class CalendarDay extends HTMLElement {
         this._update_display();
     }
 
+    /**
+     * @param selector {Selector}
+     */
+    set_selector(selector) {
+        this._selector = selector;
+    }
+
     connectedCallback() {
         this._update_display();
     }
@@ -103,8 +110,11 @@ class CalendarDay extends HTMLElement {
             let cell = require('./calendar_cell.hbs')({content: ""});
             cell.cell_time_start = cell_time_start;
             cell.cell_time_end = cell_time_end;
-            cell.onclick = async () => {
-
+            cell.onpointerdown = async () => {
+                console.log("down")
+            }
+            cell.onpointerup = async () => {
+                console.log("up")
             }
             this._elements[0].elements.cells.append(cell);
         }
@@ -164,7 +174,7 @@ class CalendarDay extends HTMLElement {
         this._even_pool = event_pool;
 
         this._add_event_cb = event_pool.events.add('add', (_) => {
-
+            
         })
         this._remove_event_cb = event_pool.events.add('remove', (_) => {
 

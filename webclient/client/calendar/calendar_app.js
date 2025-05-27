@@ -9,6 +9,7 @@ import {EventPool} from "./event_pool";
 import './body/calendar_body'
 import {import_ics} from "../utilities/import/ics";
 import {EventManager} from "../utilities/event_manager";
+import {Selector} from "./selector";
 
 require('./calendar_app.scss');
 
@@ -48,6 +49,11 @@ class CalendarApp extends HTMLElement {
          */
         this._main_body = null;
 
+        /**
+         * @type {Selector}
+         * @private
+         */
+        this._selector = new Selector();
 
         this._current_offset = 0;
         this._speed = 0;
@@ -67,9 +73,6 @@ class CalendarApp extends HTMLElement {
         })
         document.addEventListener("wheel", (event) => {
             this._set_scroll_offset(this._current_offset - event.deltaX * 2);
-        })
-        document.addEventListener("mousedown", (event) => {
-            console.log("hmm")
         })
 
 
@@ -168,6 +171,7 @@ class CalendarApp extends HTMLElement {
             const date = new Date(this._display_date);
             date.setDate(this._display_date.getDate() - 7);
             this._left_body = document.createElement('calendar-body');
+            this._left_body.set_selector(this._selector);
             this._left_body.set_display_date(date);
             this._left_body.set_event_source(this._event_source);
             this._left_body.style.position = 'absolute';
@@ -179,6 +183,7 @@ class CalendarApp extends HTMLElement {
             const date = new Date(this._display_date);
             date.setDate(this._display_date.getDate() + 7);
             this._right_body = document.createElement('calendar-body');
+            this._right_body.set_selector(this._selector);
             this._right_body.set_display_date(date);
             this._right_body.set_event_source(this._event_source);
             this._right_body.style.position = 'absolute';
@@ -232,6 +237,7 @@ class CalendarApp extends HTMLElement {
 
         /** CREAT BODY **/
         this._main_body = document.createElement('calendar-body');
+        this._main_body.set_selector(this._selector);
         this._main_body.set_display_date(this._display_date);
         this._main_body.set_event_source(this._event_source);
         this._elements.body.append(this._main_body)

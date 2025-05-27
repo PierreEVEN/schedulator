@@ -48,10 +48,26 @@ class CalendarBody extends HTMLElement {
         this._display_date = new Date(Date.now())
         if (this.hasAttribute('display-date'))
             this._display_date = new Date(this.getAttribute('display-date'));
+
+        /**
+         * @type {Selector}
+         * @private
+         */
+        this._selector = null;
     }
 
     connectedCallback() {
         this._refresh_calendar();
+    }
+
+    /**
+     * @param selector {Selector}
+     */
+    set_selector(selector) {
+        this._selector = selector;
+        if (this.isConnected)
+            for (const element of this._elements['columns'].children)
+                element.set_selector(selector);
     }
 
     /**
@@ -103,6 +119,7 @@ class CalendarBody extends HTMLElement {
             day.set_date(this_day);
             day.set_range(this._daily_start, this._daily_end, this._daily_spacing);
             day.set_event_source(this._event_pool);
+            day.set_selector(this._selector);
             this._elements['columns'].append(day);
         }
     }
