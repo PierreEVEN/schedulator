@@ -9,7 +9,7 @@ import {EventPool} from "./event_pool";
 import './body/calendar_body'
 import {import_ics} from "../utilities/import/ics";
 import {EventManager} from "../utilities/event_manager";
-import {Selector} from "./selector";
+import {Selector} from "./selection/selector";
 
 require('./calendar_app.scss');
 
@@ -372,4 +372,3 @@ class CalendarApp extends HTMLElement {
 }
 
 customElements.define("calendar-app", CalendarApp);
-export {CalendarApp}

@@ -1,0 +1,10 @@
+{{#if has_drag_start}}
+    <div class="calendar-sel-drag" style="top: 0" onpointerdown="{{ctx "down_start()"}}">
+        <div class="calendar-sel-marker"></div>
+    </div>
+{{/if}}
+{{#if has_drag_end}}
+    <div class="calendar-sel-drag" style="bottom: 0" onpointerdown="{{ctx "down_end()"}}">
+        <div class="calendar-sel-marker"></div>
+    </div>
+{{/if}}

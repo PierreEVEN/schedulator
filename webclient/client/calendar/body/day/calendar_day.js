@@ -2,6 +2,7 @@ require('./calendar_day.scss')
 const {numberToColorHSL} = require("../../../utilities/colors");
 const {ONE_MIN_MS, ONE_DAY_MS} = require("../../../utilities/time_utils");
 const {POINTER_UTILS} = require("../../pointer_utils");
+require('../../selection/selection')
 
 class CalendarDay extends HTMLElement {
     constructor() {
@@ -79,6 +80,13 @@ class CalendarDay extends HTMLElement {
                     return;
                 this._update_selection(index);
             })
+            this._selector.events.add('remove', (index) => {
+                const sel = this._selections.get(index);
+                if (sel) {
+                    sel.remove();
+                    this._selections.delete(index);
+                }
+            })
         }
         if (!this.isConnected)
             return;
@@ -90,28 +98,26 @@ class CalendarDay extends HTMLElement {
         if (!this._selector)
             return;
         const selection = this._selector.get(index);
-        if (selection.end <= this._date.getTime() + this._daily_start || selection.start >= this._date.getTime() + this._daily_end) {
+        if (selection.end.getTime() <= this._date.getTime() + this._daily_start || selection.start.getTime() >= this._date.getTime() + this._daily_end) {
             const sel = this._selections.get(index);
             if (sel) {
                 sel.remove();
                 this._selections.delete(index);
             }
+            return;
         }
 
         if (!this._selections.has(index)) {
-            const sel_div = document.createElement('div');
-            sel_div.style.position = 'absolute';
-            sel_div.style.left = '0';
-            sel_div.style.right = '0';
-            sel_div.style.backgroundColor = 'rgba(193,175,95,0.5)';
+            const sel_div = document.createElement('calendar-selection');
+            sel_div.selection_id = index;
             this._elements.cells.append(sel_div);
             this._selections.set(index, sel_div);
         }
 
         const daily_range = this._daily_end - this._daily_start;
 
-        const start = Math.max(0, (selection.start.getTime() - this._date.getTime() - this._daily_start) / daily_range);
-        const end = Math.min(1, (selection.end.getTime() - this._date.getTime() - this._daily_start) / daily_range);
+        const start = Math.max(-1, (selection.start.getTime() - this._date.getTime() - this._daily_start) / daily_range);
+        const end = Math.min(2, (selection.end.getTime() - this._date.getTime() - this._daily_start) / daily_range);
         const div = this._selections.get(index);
         div.style.top = `${start * 100}%`;
         div.style.bottom = `${(1 - end) * 100}%`;
@@ -119,7 +125,6 @@ class CalendarDay extends HTMLElement {
 
     connectedCallback() {
         this._update_display();
-
         if (this._selector)
             for (const key of this._selector.get_selections())
                 this._update_selection(key);
@@ -256,13 +261,11 @@ class CalendarDay extends HTMLElement {
         let vmin = Math.max(0, (event.start_time - this._date - this._daily_start) / (this._daily_end - this._daily_start));
         let vmax = Math.min(1, (event.end_time - this._date - this._daily_start) / (this._daily_end - this._daily_start));
         const event_div = require('./calendar_event.hbs')({title: event.title.plain()}, {});
-
         event_div.style.backgroundColor = numberToColorHSL(event.owner);
         event_div.style.top = `${vmin * 100}%`;
         event_div.style.bottom = `${(1 - vmax) * 100}%`;
         event_div.style.left = `${hmin * 100}%`;
         event_div.style.right = `${(1 - hmax) * 100}%`;
-
         this._elements.events.append(event_div);
     }
 

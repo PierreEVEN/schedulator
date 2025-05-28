@@ -61,6 +61,8 @@ class CalendarBody extends HTMLElement {
 
         this._current_selection = null;
         this.addEventListener('pointerdown', async (event) => {
+            if (!event.target || !event.target.classList.contains('calendar-cell'))
+                return;
             let cell = this.get_cell_from_pointer(event.clientX, event.clientY);
             if (!cell)
                 return;
@@ -72,10 +74,10 @@ class CalendarBody extends HTMLElement {
                 if (!cell)
                     return;
                 const selection = this._selector.get(this._current_selection);
-                let time = cell['cell_time_end'];
-                if (time <= selection.start)
-                    time = cell['cell_time_start'];
-                await this._selector.update_selection_end(this._current_selection, time);
+                await this._selector.update_selection(
+                    this._current_selection,
+                    new Date(Math.min(cell['cell_time_start'].getTime(), selection.initial_start.getTime())),
+                    new Date(Math.max(cell['cell_time_end'].getTime(), selection.initial_end.getTime())));
             }
         });
         this.addEventListener('pointerup', async (_) => {
@@ -91,6 +93,13 @@ class CalendarBody extends HTMLElement {
         if (this.isConnected)
             for (const element of this._elements['columns'].children)
                 element.set_selector(selector);
+    }
+
+    /**
+     * @return {Selector}
+     */
+    selector() {
+        return this._selector;
     }
 
     /**

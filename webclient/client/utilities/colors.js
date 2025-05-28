@@ -8,7 +8,7 @@ function valueToColor(value, min = -10, max = 10) {
 
 function numberToColorHSL(n, total = 10) {
     const hue = ((n + 97.58) * (398787.4713 / total)) % 360;
-    return `hsl(${hue}, 70%, 50%)`;
+    return `hsl(${hue}, 60%, 40%)`;
 }
 
 export {valueToColor, numberToColorHSL}

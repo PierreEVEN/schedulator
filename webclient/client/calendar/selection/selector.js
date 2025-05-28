@@ -1,4 +1,4 @@
-import {EventManager} from "../utilities/event_manager";
+import {EventManager} from "../../utilities/event_manager";
 
 class Selection {
     /**
@@ -56,7 +56,7 @@ class Selector {
     }
 
     /**
-     * @returns {MapIterator<number>}
+     * @returns {IterableIterator<number>}
      */
     get_selections() {
         return this._selections.keys();
@@ -89,11 +89,11 @@ class Selector {
         const selection = this._selections.get(index);
         if (selection.start === selection_start)
             return;
-        if (selection_start <= selection.initial_start)
+        if (selection_start < selection.end)
             selection.start = selection_start;
         else {
-            selection.start = selection.initial_start;
-            selection.end = selection_start;
+            selection.start = selection_start;
+            selection.end = new Date(selection_start.getTime() + (selection.initial_end.getTime() - selection.initial_start.getTime()))
         }
         await this.events.broadcast('update', index);
     }
@@ -106,11 +106,11 @@ class Selector {
         const selection = this._selections.get(index);
         if (selection.end === selection_end)
             return;
-        if (selection_end >= selection.initial_end)
-            selection.end = new Date(Math.max(selection_end.getTime(), selection.initial_end.getTime()));
+        if (selection_end > selection.start)
+            selection.end = selection_end;
         else {
-            selection.start = new Date(Math.min(selection_end.getTime(), selection.initial_start.getTime()));
-            selection.end = selection.initial_end;
+            selection.end = selection_end;
+            selection.start = new Date(selection_end.getTime() - (selection.initial_end.getTime() - selection.initial_start.getTime()))
         }
         await this.events.broadcast('update', index);
     }
@@ -120,9 +120,10 @@ class Selector {
      * @returns {Promise<void>}
      */
     async remove_selection(index) {
-        if (this._selections.has(index))
+        if (this._selections.has(index)) {
             this._selections.delete(index);
-        await this.events.broadcast('remove', index);
+            await this.events.broadcast('remove', index);
+        }
     }
 }
 

@@ -1,0 +1,32 @@
+calendar-selection {
+  display: flex;
+  position: absolute;
+  left: 0;
+  right: 0;
+  background-color: rgba(193,175,95,0.5);
+  overflow: hidden;
+  border-radius: 5px;
+
+  .calendar-sel-drag {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: ns-resize;
+    background-color: rgba(193, 175, 95, 0.5);
+    position: absolute;
+    left: 0;
+    right: 0;
+    max-height: 45%;
+
+    &:hover {
+      background-color: rgba(193, 175, 95, 0.91);
+    }
+
+    .calendar-sel-marker {
+      margin: 1px;
+      border-top: solid 2px rgba(124, 112, 62, 0.91);
+      border-bottom: solid 2px rgba(124, 112, 62, 0.91);
+      padding: 1px 10px;
+    }
+  }
+}

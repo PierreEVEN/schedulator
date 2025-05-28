@@ -1,8 +1,5 @@
-html, body {
-  overscroll-behavior-x: none;
-}
-
 body {
+  touch-action:none;
   display: flex;
   flex-direction: column;
   margin: 0;
