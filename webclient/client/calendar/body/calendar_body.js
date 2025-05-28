@@ -58,6 +58,29 @@ class CalendarBody extends HTMLElement {
 
     connectedCallback() {
         this._refresh_calendar();
+
+        this._current_selection = null;
+        this.addEventListener('pointerdown', async (event) => {
+            let cell = this.get_cell_from_pointer(event.clientX, event.clientY);
+            if (!cell)
+                return;
+            this._current_selection = await this._selector.begin_selection(cell['cell_time_start'], cell['cell_time_end']);
+        })
+        this.addEventListener('pointermove', async (event) => {
+            if (this._current_selection) {
+                let cell = this.get_cell_from_pointer(event.clientX, event.clientY);
+                if (!cell)
+                    return;
+                const selection = this._selector.get(this._current_selection);
+                let time = cell['cell_time_end'];
+                if (time <= selection.start)
+                    time = cell['cell_time_start'];
+                await this._selector.update_selection_end(this._current_selection, time);
+            }
+        });
+        this.addEventListener('pointerup', async (_) => {
+            this._current_selection = null;
+        });
     }
 
     /**
@@ -77,6 +100,7 @@ class CalendarBody extends HTMLElement {
         const new_date = new Date(date)
         const days = new_date.getDay();
         new_date.setDate(new_date.getDate() - (days === 0 ? 6 : days - 1));
+        new_date.setHours(0, 0, 0, 0);
         if (new_date.getTime() === this._display_date.getTime())
             return;
         this._display_date = new_date;
@@ -125,7 +149,7 @@ class CalendarBody extends HTMLElement {
     }
 
     /**
-     * @param in_event_pool {EventPool}
+     * @param in_event_pool {EventPool}_display_date
      */
     set_event_source(in_event_pool) {
         this._event_pool = in_event_pool;
@@ -154,6 +178,34 @@ class CalendarBody extends HTMLElement {
             return;
         for (const element of this._elements['columns'].children)
             element.set_range(this._daily_start, this._daily_end, this._daily_spacing);
+    }
+
+
+    /**
+     * Get the cell HtmlElement that include the given date
+     * @param date {Date}
+     * @returns {HTMLElement|null}
+     */
+    get_cell_from_date(date) {
+        let offset = date.getTime() - this._display_date.getTime();
+        offset /= ONE_DAY_MS;
+        if (offset < 0 || offset > this._display_days)
+            return null;
+        return this._elements['columns'].children[Math.trunc(offset)].get_cell_from_date(date);
+    }
+
+    /**
+     * Get the cell HtmlElement from pointer absolute position
+     * @param x {number}
+     * @param y {number}
+     * @returns {HTMLElement|null}
+     */
+    get_cell_from_pointer(x, y) {
+        const bounds = this._elements['columns'].getBoundingClientRect();
+        if (x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom)
+            return null;
+        const index = Math.trunc((x - bounds.left) / bounds.width * this._display_days);
+        return this._elements['columns'].children[index].get_cell_from_pointer(x, y);
     }
 }
 

@@ -22,6 +22,7 @@ class CalendarDay extends HTMLElement {
          */
         this._daily_spacing = 30 * 60 * 1000; // 30 minutes
         /**
+         * Date from this day @ 00:00
          * @type {Date}
          */
         this._date = new Date(Date.now());
@@ -35,6 +36,12 @@ class CalendarDay extends HTMLElement {
         if (this.hasAttribute('date'))
             this._date = new Date(this.getAttribute('date'));
         this._date.setHours(0, 0, 0, 0);
+
+        /**
+         * @type {Map<number, HTMLElement>}
+         * @private
+         */
+        this._selections = new Map();
     }
 
     /**
@@ -59,11 +66,63 @@ class CalendarDay extends HTMLElement {
      * @param selector {Selector}
      */
     set_selector(selector) {
+        if (this._selector === selector)
+            return;
         this._selector = selector;
+
+        for (const selection of this._selections.values())
+            selection.remove();
+        this._selections.clear();
+        if (this._selector) {
+            this._selector.events.add('update', (index) => {
+                if (!this.isConnected)
+                    return;
+                this._update_selection(index);
+            })
+        }
+        if (!this.isConnected)
+            return;
+        for (const key of this._selector.get_selections())
+            this._update_selection(key);
+    }
+
+    _update_selection(index) {
+        if (!this._selector)
+            return;
+        const selection = this._selector.get(index);
+        if (selection.end <= this._date.getTime() + this._daily_start || selection.start >= this._date.getTime() + this._daily_end) {
+            const sel = this._selections.get(index);
+            if (sel) {
+                sel.remove();
+                this._selections.delete(index);
+            }
+        }
+
+        if (!this._selections.has(index)) {
+            const sel_div = document.createElement('div');
+            sel_div.style.position = 'absolute';
+            sel_div.style.left = '0';
+            sel_div.style.right = '0';
+            sel_div.style.backgroundColor = 'rgba(193,175,95,0.5)';
+            this._elements.cells.append(sel_div);
+            this._selections.set(index, sel_div);
+        }
+
+        const daily_range = this._daily_end - this._daily_start;
+
+        const start = Math.max(0, (selection.start.getTime() - this._date.getTime() - this._daily_start) / daily_range);
+        const end = Math.min(1, (selection.end.getTime() - this._date.getTime() - this._daily_start) / daily_range);
+        const div = this._selections.get(index);
+        div.style.top = `${start * 100}%`;
+        div.style.bottom = `${(1 - end) * 100}%`;
     }
 
     connectedCallback() {
         this._update_display();
+
+        if (this._selector)
+            for (const key of this._selector.get_selections())
+                this._update_selection(key);
     }
 
     disconnectedCallback() {
@@ -96,13 +155,14 @@ class CalendarDay extends HTMLElement {
         const now = new Date(Date.now());
         now.setHours(0, 0, 0, 0);
 
-        this._elements = require('./calendar_day.hbs')({
+        const elements = require('./calendar_day.hbs')({
             today: this._date.getTime() === now.getTime(),
             day: this._date.toLocaleDateString(undefined, {weekday: 'short'}),
             num: this._date.getDate()
         });
-        for (const element of this._elements)
+        for (const element of elements)
             this.append(element);
+        this._elements = elements[0].elements;
 
         let daily_subdivision = (this._daily_end - this._daily_start) / this._daily_spacing;
         for (let i = 0; i < daily_subdivision; ++i) {
@@ -111,11 +171,11 @@ class CalendarDay extends HTMLElement {
             let cell = require('./calendar_cell.hbs')({content: ""});
             cell.cell_time_start = cell_time_start;
             cell.cell_time_end = cell_time_end;
-            this._elements[0].elements.cells.append(cell);
+            this._elements.cells.append(cell);
         }
 
         POINTER_UTILS.events.add('move', ({x, y}) => {
-            for (const cell of this._elements[0].elements.cells.children) {
+            for (const cell of this._elements.cells.children) {
                 const bounds = cell.getBoundingClientRect();
                 if (y > bounds.top && y < bounds.bottom) {
                     if (this._last_cell_line_hovered === cell)
@@ -132,6 +192,7 @@ class CalendarDay extends HTMLElement {
     }
 
     /**
+     * Get the cell HtmlElement that include the given date
      * @param date {Date}
      * @returns {HTMLElement|null}
      */
@@ -142,17 +203,32 @@ class CalendarDay extends HTMLElement {
         if (date.getTime() > this._date.getTime() + this._daily_end)
             return null;
         const elapsed_ms = date.getTime() - display_start;
+        const index = elapsed_ms / this._daily_spacing;
+        return this._elements.cells.children[Math.trunc(index)];
+    }
+
+
+    /**
+     * Get the cell HtmlElement from pointer absolute position
+     * @param x {number}
+     * @param y {number}
+     * @returns {HTMLElement|null}
+     */
+    get_cell_from_pointer(x, y) {
+        const bounds = this._elements.cells.getBoundingClientRect();
+        if (x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom)
+            return null;
         let daily_subdivision = (this._daily_end - this._daily_start) / this._daily_spacing;
-        const index = elapsed_ms / daily_subdivision;
-        return this._elements[0].elements.cells.children[index];
+        const index = Math.trunc((y - bounds.top) / bounds.height * daily_subdivision);
+        return this._elements.cells.children[index];
     }
 
     _update_events() {
         if (!this.isConnected)
             return;
 
-        while (this._elements[0].elements.events.children.length > 0)
-            this._elements[0].elements.events.children[this._elements[0].elements.events.children.length - 1].remove();
+        while (this._elements.events.children.length > 0)
+            this._elements.events.children[this._elements.events.children.length - 1].remove();
 
         if (!this._even_pool)
             return;
@@ -187,7 +263,7 @@ class CalendarDay extends HTMLElement {
         event_div.style.left = `${hmin * 100}%`;
         event_div.style.right = `${(1 - hmax) * 100}%`;
 
-        this._elements[0].elements.events.append(event_div);
+        this._elements.events.append(event_div);
     }
 
     /**
@@ -199,7 +275,7 @@ class CalendarDay extends HTMLElement {
         this._even_pool = event_pool;
 
         this._add_event_cb = event_pool.events.add('add', (_) => {
-            
+
         })
         this._remove_event_cb = event_pool.events.add('remove', (_) => {
 
