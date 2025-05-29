@@ -15,7 +15,6 @@ class Selection {
 
 class Selector {
     constructor() {
-
         /**
          * @type {EventManager}
          */
@@ -28,14 +27,26 @@ class Selector {
          * @private
          */
         this._selections = new Map();
+
+        /**
+         * @type {number|null}
+         * @private
+         */
+        this._editing_selection = null;
     }
+
 
     /**
      * @param selection_start {Date}
      * @param selection_end {Date}
+     * @param additive {boolean}
      * @return {Promise<number>}
      */
-    async begin_selection(selection_start, selection_end) {
+    async begin_selection(selection_start, selection_end, additive) {
+        if (!additive)
+            for (const key of this._selections.keys())
+                await this.remove_selection(key)
+
         let index;
         do {
             index = Math.trunc(Math.random() * Number.MAX_SAFE_INTEGER);
@@ -44,6 +55,7 @@ class Selector {
         this._selections.set(index, new Selection(selection_start, selection_end));
         await this.events.broadcast('create', index);
         await this.events.broadcast('update', index);
+        this._editing_selection = index;
         return index;
     }
 
@@ -78,6 +90,7 @@ class Selector {
             selection.end = selection_start;
             selection.start = selection_end;
         }
+        this._editing_selection = index;
         await this.events.broadcast('update', index);
     }
 
@@ -95,6 +108,7 @@ class Selector {
             selection.start = selection_start;
             selection.end = new Date(selection_start.getTime() + (selection.initial_end.getTime() - selection.initial_start.getTime()))
         }
+        this._editing_selection = index;
         await this.events.broadcast('update', index);
     }
 
@@ -112,6 +126,7 @@ class Selector {
             selection.end = selection_end;
             selection.start = new Date(selection_end.getTime() - (selection.initial_end.getTime() - selection.initial_start.getTime()))
         }
+        this._editing_selection = index;
         await this.events.broadcast('update', index);
     }
 
@@ -120,11 +135,21 @@ class Selector {
      * @returns {Promise<void>}
      */
     async remove_selection(index) {
+        if (this._editing_selection === index)
+            this._editing_selection = null;
         if (this._selections.has(index)) {
             this._selections.delete(index);
             await this.events.broadcast('remove', index);
         }
     }
+
+    /**
+     * @returns {number|null}
+     */
+    editing_selection() {
+        return this._editing_selection;
+    }
 }
+
 
 export {Selector}

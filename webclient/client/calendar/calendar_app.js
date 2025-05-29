@@ -13,6 +13,8 @@ import {Selector} from "./selection/selector";
 
 require('./calendar_app.scss');
 
+const TODO_DISABLE_SCROLL = true;
+
 class CalendarApp extends HTMLElement {
     constructor() {
         super();
@@ -56,7 +58,6 @@ class CalendarApp extends HTMLElement {
         this._selector = new Selector();
 
         this._current_offset = 0;
-        this._speed = 0;
         this._touch_start = 0;
         this._touch_start_delta = 0;
         this._holding = false;
@@ -119,10 +120,12 @@ class CalendarApp extends HTMLElement {
     }
 
     _set_scroll_offset(in_new_scroll_offset) {
+        if (TODO_DISABLE_SCROLL)
+            return; //@TODO : improve scroll ergonomy
+
         this._current_offset = in_new_scroll_offset;
 
         if (this._current_offset < -this._elements.body.clientWidth * 0.5) {
-            this._speed = 0;
             this._current_offset += this._elements.body.clientWidth;
             this._touch_start_delta += this._elements.body.clientWidth;
             const old = this._main_body;
@@ -134,8 +137,8 @@ class CalendarApp extends HTMLElement {
             this.set_display_date(date)
             this._left_body = old;
 
-            this._speed = 0;
-
+            if (!this._main_body)
+                return;
             this._main_body.style.transform = 'translate(0)';
             this._main_body.style.position = 'relative';
             this._left_body.style.transform = 'translate(-100%)';
@@ -144,7 +147,6 @@ class CalendarApp extends HTMLElement {
             this._left_body.style.height = '100%';
         }
         else if (this._current_offset > this._elements.body.clientWidth * 0.5) {
-            this._speed = 0;
             this._current_offset -= this._elements.body.clientWidth;
             this._touch_start_delta -= this._elements.body.clientWidth;
             const old = this._main_body;
@@ -156,8 +158,8 @@ class CalendarApp extends HTMLElement {
             this.set_display_date(date)
             this._right_body = old;
 
-            this._speed = 0;
-
+            if (!this._main_body)
+                return;
             this._main_body.style.transform = 'translate(0)';
             this._main_body.style.position = 'relative';
             this._right_body.style.transform = 'translate(100%)';

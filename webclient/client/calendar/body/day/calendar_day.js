@@ -78,7 +78,7 @@ class CalendarDay extends HTMLElement {
             this._selector.events.add('update', (index) => {
                 if (!this.isConnected)
                     return;
-                this._update_selection(index);
+                this._update_selection(index, true);
             })
             this._selector.events.add('remove', (index) => {
                 const sel = this._selections.get(index);
@@ -91,10 +91,10 @@ class CalendarDay extends HTMLElement {
         if (!this.isConnected)
             return;
         for (const key of this._selector.get_selections())
-            this._update_selection(key);
+            this._update_selection(key, false);
     }
 
-    _update_selection(index) {
+    _update_selection(index, select) {
         if (!this._selector)
             return;
         const selection = this._selector.get(index);
@@ -118,9 +118,13 @@ class CalendarDay extends HTMLElement {
 
         const start = Math.max(-1, (selection.start.getTime() - this._date.getTime() - this._daily_start) / daily_range);
         const end = Math.min(2, (selection.end.getTime() - this._date.getTime() - this._daily_start) / daily_range);
+        /**
+         * @type {CalendarSelection}
+         */
         const div = this._selections.get(index);
         div.style.top = `${start * 100}%`;
         div.style.bottom = `${(1 - end) * 100}%`;
+        div.update(selection.start, selection.end, select);
     }
 
     connectedCallback() {

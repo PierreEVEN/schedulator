@@ -3,6 +3,8 @@
         <div class="calendar-sel-marker"></div>
     </div>
 {{/if}}
+<div class="calendar-selection-time" style="top: 0; left: 0; border-radius: 0 0 20px 0" {{object "time_start"}}></div>
+<div class="calendar-selection-time" style="bottom: 0; right: 0; border-radius: 20px 0 0 0" {{object "time_end"}}></div>
 {{#if has_drag_end}}
     <div class="calendar-sel-drag" style="bottom: 0" onpointerdown="{{ctx "down_end()"}}">
         <div class="calendar-sel-marker"></div>

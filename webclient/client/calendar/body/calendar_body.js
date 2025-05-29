@@ -66,7 +66,7 @@ class CalendarBody extends HTMLElement {
             let cell = this.get_cell_from_pointer(event.clientX, event.clientY);
             if (!cell)
                 return;
-            this._current_selection = await this._selector.begin_selection(cell['cell_time_start'], cell['cell_time_end']);
+            this._current_selection = await this._selector.begin_selection(cell['cell_time_start'], cell['cell_time_end'], event.shiftKey || event.ctrlKey);
         })
         this.addEventListener('pointermove', async (event) => {
             if (this._current_selection) {
