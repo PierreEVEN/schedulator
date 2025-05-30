@@ -39,18 +39,6 @@ calendar-app {
     border-radius: 20px;
   }
 
-  .calendar-modal-container {
-    display: flex;
-    position: absolute;
-    bottom: 0;
-    top: 0;
-    left: 0;
-    right: 0;
-    justify-content: center;
-    align-items: center;
-    pointer-events: none;
-  }
-
   .calendar-create-event {
     .slider-wrapper {
       display: flex;

@@ -11,6 +11,7 @@ import {import_ics} from "../utilities/import/ics";
 import {EventManager} from "../utilities/event_manager";
 import {Selector} from "./selection/selector";
 
+require("./widgets/modal/modal-widgets")
 require('./calendar_app.scss');
 
 const TODO_DISABLE_SCROLL = true;
@@ -145,8 +146,7 @@ class CalendarApp extends HTMLElement {
             this._left_body.style.position = 'absolute';
             this._left_body.style.width = '100%';
             this._left_body.style.height = '100%';
-        }
-        else if (this._current_offset > this._elements.body.clientWidth * 0.5) {
+        } else if (this._current_offset > this._elements.body.clientWidth * 0.5) {
             this._current_offset -= this._elements.body.clientWidth;
             this._touch_start_delta -= this._elements.body.clientWidth;
             const old = this._main_body;
@@ -195,7 +195,7 @@ class CalendarApp extends HTMLElement {
             this._elements.body.append(this._right_body)
         }
 
-        if (this._left_body && this._current_offset <=1) {
+        if (this._left_body && this._current_offset <= 1) {
             this._left_body.remove();
             this._left_body = null;
         }
@@ -363,13 +363,11 @@ class CalendarApp extends HTMLElement {
     }
 
     open_modal(content) {
-        this.close_modal();
-        this._elements['modal_container'].append(content);
+        this._elements['modal_container'].open(content);
     }
 
     close_modal() {
-        for (const child of this._elements['modal_container'].children)
-            child.remove();
+        this._elements['modal_container'].close();
     }
 }
 

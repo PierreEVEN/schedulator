@@ -1,5 +1,6 @@
 require('./selection.scss')
 const {time_format_from_ms, get_day_time} = require("../../utilities/time_utils");
+const {CalendarCreateEventModal} = require("../widgets/create_events/create_events");
 
 class CalendarSelection extends HTMLElement {
     constructor() {
@@ -30,7 +31,7 @@ class CalendarSelection extends HTMLElement {
              */
             const app = event.target.closest('calendar-app');
             if (app) {
-                app.open_modal();
+                app.open_modal(document.createElement('calendar-create-event-modal'));
             }
         }
 
