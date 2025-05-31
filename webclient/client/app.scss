@@ -90,6 +90,11 @@ form {
     top: 10px;
     right: 10px;
   }
+
+  label {
+    display: flex;
+    flex-direction: row;
+  }
 }
 
 a {

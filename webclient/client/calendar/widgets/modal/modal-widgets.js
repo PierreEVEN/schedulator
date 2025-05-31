@@ -23,15 +23,9 @@ class CalendarModalContainer extends HTMLElement {
 }
 customElements.define("calendar-modal-container", CalendarModalContainer, {});
 
-class CalendarModalClose extends HTMLButtonElement {
-
+class CalendarModalClose extends HTMLElement {
     constructor() {
         super();
-    }
-
-    connectedCallback() {
-        HTMLButtonElement.connectedCallback();
-        this.innerText = 'X';
         this.onclick = () => {
             /**
              * @type {CalendarModalContainer}
@@ -42,5 +36,5 @@ class CalendarModalClose extends HTMLButtonElement {
         }
     }
 }
-customElements.define("calendar-modal-close", CalendarModalClose, {extends: 'button'});
+customElements.define("calendar-modal-close", CalendarModalClose);
 

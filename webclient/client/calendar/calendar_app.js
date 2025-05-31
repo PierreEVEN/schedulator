@@ -336,6 +336,13 @@ class CalendarApp extends HTMLElement {
         return this._current_calendar_user;
     }
 
+    /**
+     * @returns {Selector}
+     */
+    selector() {
+        return this._selector;
+    }
+
     set_display_date(in_date) {
         if (in_date.getTime() === this._display_date.getTime())
             return;

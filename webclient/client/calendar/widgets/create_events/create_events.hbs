@@ -2,20 +2,5 @@
 <form onsubmit="{{ctx 'submit(event)'}}">
     <calendar-modal-close></calendar-modal-close>
     <h2>Ajouter un évenement</h2>
-
-    <input type="text" name="name" placeholder="Nom de l'évenement" {{object "name"}} required>
-
-    <label for='start'>
-        <input {{object "start"}} type="datetime-local" name="start" value="{{start}}" id="start" required>
-    </label>
-
-    <label for='end'>
-        <input {{object "end"}} type="datetime-local" name="end" value="{{end}}" id="end" required>
-    </label>
-
-    <span>Indisponible</span>
-    <input type="range" min="-10" max="10" value="-10" id="presence" {{object "presence"}}>
-    <span>Disponible</span>
-
-    <input type="submit" value="Ajouter">
+    <div class="calendar-create-event-events" {{object "event_list"}}></div>
 </form>

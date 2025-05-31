@@ -1,0 +1,19 @@
+<div class="calendar-event-single">
+    <input type="text" name="name" placeholder="Titre" {{object "name"}}>
+
+    <label for='start'>
+        <input {{object "start"}} type="datetime-local" name="start" value="{{start}}" id="start" required>
+    </label>
+
+    <label for='end'>
+        <input {{object "end"}} type="datetime-local" name="end" value="{{end}}" id="end" required>
+    </label>
+
+    <label for='presence'>
+        <span>Indisponible</span>
+        <input type="range" min="-10" max="10" value="-10" id="presence" {{object "presence"}}>
+        <span>Disponible</span>
+    </label>
+
+    <input type="submit" value="Ajouter">
+</div>
