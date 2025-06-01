@@ -20,8 +20,6 @@ class Selector {
          */
         this.events = new EventManager();
 
-        this._per_day_selections = new Map();
-
         /**
          * @type {Map<number, Selection>}
          * @private
@@ -33,6 +31,12 @@ class Selector {
          * @private
          */
         this._editing_selection = null;
+
+        /**
+         * @type {number|null}
+         * @private
+         */
+        this._current_selection = null;
     }
 
 
@@ -56,6 +60,7 @@ class Selector {
         await this.events.broadcast('create', index);
         await this.events.broadcast('update', index);
         this._editing_selection = index;
+        this._current_selection = index;
         return index;
     }
 
@@ -72,6 +77,23 @@ class Selector {
      */
     get_selections() {
         return this._selections.keys();
+    }
+
+    async clear() {
+        for (const key of this._selections.keys()) {
+            await this.remove_selection(key);
+        }
+    }
+
+    /**
+     * @returns {number|null}
+     */
+    current_selection() {
+        return this._current_selection;
+    }
+
+    release_selection() {
+        this._current_selection = null;
     }
 
     /**

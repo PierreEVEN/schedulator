@@ -23,11 +23,11 @@ GLOBAL_EVENTS.add('on_connected_user_changed', (payload) => {
 
 function refresh_connected_user(user) {
     if (user) {
-        header.elements.mode_default.style.display = 'none';
-        header.elements.mode_connected.style.display = 'flex';
+        header.hb_elements.mode_default.style.display = 'none';
+        header.hb_elements.mode_connected.style.display = 'flex';
     } else {
-        header.elements.mode_default.style.display = 'flex';
-        header.elements.mode_connected.style.display = 'none';
+        header.hb_elements.mode_default.style.display = 'flex';
+        header.hb_elements.mode_connected.style.display = 'none';
     }
 }
 refresh_connected_user(APP_CONFIG.connected_user());

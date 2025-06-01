@@ -32,6 +32,7 @@ calendar-selection {
     left: 0;
     right: 0;
     max-height: 45%;
+    z-index: 3;
 
     &:hover {
       background-color: rgba(193, 175, 95, 0.91);

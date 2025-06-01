@@ -5,9 +5,11 @@
   border-radius: 15px;
   display: flex;
   flex-direction: column;
+  max-height: 95dvh;
 
   form {
     display: flex;flex-direction: column;
+    overflow: scroll;
   }
 }
 
@@ -25,8 +27,7 @@ calendar-modal-container {
 
   &.calendar-modal-open {
     pointer-events: auto;
-    background-color: rgba(23, 23, 23, 0.12);
-    backdrop-filter: blur(2px);
+    background-color: rgba(23, 23, 23, 0.8);
   }
 }
 

@@ -1,6 +1,5 @@
 require('./selection.scss')
 const {time_format_from_ms, get_day_time} = require("../../utilities/time_utils");
-const {CalendarCreateEventModal} = require("../widgets/create_events/create_events");
 
 class CalendarSelection extends HTMLElement {
     constructor() {
@@ -56,7 +55,7 @@ class CalendarSelection extends HTMLElement {
             if (this._drag_start || this._drag_end || this._drag_body)
                 await this._update_selection(event)
         })
-        this._owning_body.addEventListener('pointerup', async (event) => {
+        document.addEventListener('pointerup', async (event) => {
             this._drag_start = false;
             this._drag_end = false;
             this._drag_body = false;
@@ -70,7 +69,7 @@ class CalendarSelection extends HTMLElement {
                 this._drag_end = true
             }
         });
-        this._elements = elements[0].elements;
+        this._elements = elements[0].hb_elements;
         for (const element of elements)
             this.append(element);
 

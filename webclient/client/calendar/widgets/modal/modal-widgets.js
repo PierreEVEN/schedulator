@@ -4,6 +4,11 @@ require('./modal-widgets.scss')
 class CalendarModalContainer extends HTMLElement {
     constructor() {
         super();
+
+        this.addEventListener('click', (element) => {
+            if (element.target === this)
+                this.close();
+        })
     }
 
     connectedCallback() {

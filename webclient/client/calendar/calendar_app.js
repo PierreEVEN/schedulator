@@ -233,7 +233,7 @@ class CalendarApp extends HTMLElement {
                 this.set_display_date(date);
             }
         });
-        this._elements = elements.elements;
+        this._elements = elements.hb_elements;
         for (const element of elements)
             this.append(element);
 
@@ -262,19 +262,19 @@ class CalendarApp extends HTMLElement {
             this._current_calendar_user = await new Promise((success, failure) => {
                 const add_user_form = require('./add_user.hbs')({}, {
                     'show_user_list_options': () => {
-                        add_user_form.elements.who_are_you_input.focus();
-                        add_user_form.elements.who_are_you_input.value = '';
+                        add_user_form.hb_elements.who_are_you_input.focus();
+                        add_user_form.hb_elements.who_are_you_input.value = '';
                     },
                     'value_changed': () => {
-                        const value = add_user_form.elements.who_are_you_input.value;
+                        const value = add_user_form.hb_elements.who_are_you_input.value;
                         if (!value || value === "") {
-                            add_user_form.elements.who_I_am.style.display = 'none';
+                            add_user_form.hb_elements.who_I_am.style.display = 'none';
                         } else {
-                            add_user_form.elements.who_I_am.style.display = 'flex';
+                            add_user_form.hb_elements.who_I_am.style.display = 'flex';
                             if (this._calendar.users.has(value)) {
-                                add_user_form.elements.who_I_am.value = `Je suis '${value}'`;
+                                add_user_form.hb_elements.who_I_am.value = `Je suis '${value}'`;
                             } else {
-                                add_user_form.elements.who_I_am.value = `Ajouter l'utilisateur '${value}'`;
+                                add_user_form.hb_elements.who_I_am.value = `Ajouter l'utilisateur '${value}'`;
                             }
                         }
                     },
@@ -286,7 +286,7 @@ class CalendarApp extends HTMLElement {
                     },
                     'submit': async (event) => {
                         event.preventDefault();
-                        const value = add_user_form.elements['who_are_you_input'].value;
+                        const value = add_user_form.hb_elements['who_are_you_input'].value;
                         // The user already exists
                         if (this._calendar.users.has(value)) {
                             this.close_modal();
@@ -312,7 +312,7 @@ class CalendarApp extends HTMLElement {
                 for (const user of this._calendar.users.values()) {
                     const option = document.createElement('option');
                     option.value = user.name.plain();
-                    add_user_form.elements.who_are_you_list.append(option);
+                    add_user_form.hb_elements.who_are_you_list.append(option);
                 }
 
                 this.open_modal(add_user_form);

@@ -28,13 +28,14 @@ class CalendarList extends HTMLElement {
                     create: async (event) => {
                         event.preventDefault();
                         const data = {
-                            title: EncString.from_client(create_div.elements.title.value),
-                            start: new Date(create_div.elements.start.value).getTime(),
-                            end: new Date(create_div.elements.end.value).getTime(),
-                            time_precision: time_to_ms(create_div.elements.time_precision.value),
-                            start_daily_hour: time_to_ms(create_div.elements.start_daily_hour.value),
-                            end_daily_hour: time_to_ms(create_div.elements.end_daily_hour.value),
-                            require_account: create_div.elements.require_account.checked
+                            title: EncString.from_client(create_div.hb_elements.title.value),
+                            start: new Date(create_div.hb_elements.start.value).getTime(),
+                            end: new Date(create_div.hb_elements.end.value).getTime(),
+                            time_precision: time_to_ms(create_div.hb_elements.time_precision.value),
+                            start_daily_hour: time_to_ms(create_div.hb_elements.start_daily_hour.value),
+                            end_daily_hour: time_to_ms(create_div.hb_elements.end_daily_hour.value),
+                            require_account: create_div.hb_elements.require_account.checked,
+                            default_presence: Number(create_div.hb_elements.default_presence.value)
                         };
                         const res = await fetch_api('calendar/create/', 'POST', data).catch(error => {
                             NOTIFICATION.error(new Message(error).title("Impossible de créer l'évenement"));
@@ -45,9 +46,9 @@ class CalendarList extends HTMLElement {
                     }
                 })
                 const today = new Date();
-                create_div.elements.start.value = today.toISOString().split('T')[0];
+                create_div.hb_elements.start.value = today.toISOString().split('T')[0];
                 today.setMonth(today.getMonth() + 1);
-                create_div.elements.end.value = today.toISOString().split('T')[0];
+                create_div.hb_elements.end.value = today.toISOString().split('T')[0];
 
                 MODAL.open(create_div)
             }
@@ -74,7 +75,7 @@ class CalendarList extends HTMLElement {
             }
         })
 
-        this._list_container.elements.calendar_list.append(row)
+        this._list_container.hb_elements.calendar_list.append(row)
     }
 }
 

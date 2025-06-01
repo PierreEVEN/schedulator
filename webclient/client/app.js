@@ -116,7 +116,7 @@ async function spawn_add_event() {
         'T' + String(sel_end.getHours()).padStart(2, '0') +
         ':' + String(sel_end.getMinutes()).padStart(2, '0');
 
-    GLOBAL_EVENT_CREATOR = require('./calendar/create_event.hbs')({
+    GLOBAL_EVENT_CREATOR = (() => {})({
         start: sel_start,
         end: sel_end
     }, {
@@ -132,12 +132,12 @@ async function spawn_add_event() {
             for (const item of this.selection) {
                 body.push({
                     calendar: this._calendar.id.toString(),
-                    title: EncString.from_client(GLOBAL_EVENT_CREATOR.elements.name.value),
+                    title: EncString.from_client(GLOBAL_EVENT_CREATOR.hb_elements.name.value),
                     owner: user.id.toString(),
-                    start: new Date(GLOBAL_EVENT_CREATOR.elements.start.value).getTime(),
-                    end: new Date(GLOBAL_EVENT_CREATOR.elements.end.value).getTime(),
+                    start: new Date(GLOBAL_EVENT_CREATOR.hb_elements.start.value).getTime(),
+                    end: new Date(GLOBAL_EVENT_CREATOR.hb_elements.end.value).getTime(),
                     source: EncString.from_client("Manual placement"),
-                    presence: Number(GLOBAL_EVENT_CREATOR.elements.presence.value)
+                    presence: Number(GLOBAL_EVENT_CREATOR.hb_elements.presence.value)
                 });
             }
             const res = await fetch_api('event/create/', 'POST', body).catch(error => {

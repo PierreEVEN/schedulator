@@ -3,6 +3,7 @@ const {numberToColorHSL} = require("../../../utilities/colors");
 const {ONE_MIN_MS, ONE_DAY_MS} = require("../../../utilities/time_utils");
 const {POINTER_UTILS} = require("../../pointer_utils");
 require('../../selection/selection')
+require('../../widgets/create_events/create_events')
 
 class CalendarDay extends HTMLElement {
     constructor() {
@@ -171,7 +172,7 @@ class CalendarDay extends HTMLElement {
         });
         for (const element of elements)
             this.append(element);
-        this._elements = elements[0].elements;
+        this._elements = elements[0].hb_elements;
 
         let daily_subdivision = (this._daily_end - this._daily_start) / this._daily_spacing;
         for (let i = 0; i < daily_subdivision; ++i) {

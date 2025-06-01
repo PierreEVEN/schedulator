@@ -53,6 +53,10 @@ class Calendar {
          */
         this.require_account = !!data.require_account;
         /**
+         * @type {number}
+         */
+        this.default_presence = Number(data.default_presence);
+        /**
          * @type {Map<String, CalendarUser>}
          */
         this.users = new Map;

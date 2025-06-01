@@ -37,7 +37,7 @@ class AppConfig {
         this._error_code = data.error_code;
 
         addEventListener("popstate", (event) => {
-            if (!this._display_calendar || !event.state || ! event.state._display_calendar || event.state._display_calendar.key !== this._display_calendar.key)
+            if (!this._display_calendar || !event.state || !event.state._display_calendar || event.state._display_calendar.key !== this._display_calendar.key)
                 this.set_display_calendar(event.state ? event.state._display_calendar : null, false);
         })
 
@@ -55,7 +55,7 @@ class AppConfig {
         const old = this._display_calendar;
         this._display_calendar = new_calendar;
         if (with_state)
-        history.pushState({_display_calendar: this._display_calendar}, "", new_calendar ? `/${new_calendar.key.encoded()}/` : '');
+            history.pushState({_display_calendar: this._display_calendar}, "", new_calendar ? `/${new_calendar.key.encoded()}/` : '/');
         GLOBAL_EVENTS.broadcast('on_display_calendar_changed', {old: old, new: new_calendar});
     }
 

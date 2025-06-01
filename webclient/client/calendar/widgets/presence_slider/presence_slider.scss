@@ -1,0 +1,38 @@
+calendar-presence-slider {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+  width: 80%;
+
+  .calendar-presence-bars {
+    display: flex;
+    flex-direction: row;
+    transform: translateY(-10px);
+    margin: 0 15px;
+
+    div {
+      width: 1px;
+      height: 5px;
+      background-color: #646464;
+      margin-left: auto;
+    }
+    :first-child {
+      margin-left: 0;
+    }
+  }
+
+  .calendar-presence-labels {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    width: 100%;
+    font-size: 70%;
+    color: #a0a0a0;
+    transform: translateY(-60px);
+
+    p {
+      position: absolute;
+      margin: 0;
+    }
+  }
+}

@@ -1,19 +1,17 @@
-<div class="calendar-event-single">
-    <input type="text" name="name" placeholder="Titre" {{object "name"}}>
-
-    <label for='start'>
-        <input {{object "start"}} type="datetime-local" name="start" value="{{start}}" id="start" required>
+<details {{#if open}}open{{/if}}>
+    <summary>{{title}}</summary>
+    <label>
+        <p>Titre (optionnel)</p>
+        <input type="text" {{object "name"}}>
     </label>
 
-    <label for='end'>
-        <input {{object "end"}} type="datetime-local" name="end" value="{{end}}" id="end" required>
+    <label>
+        <p>Début</p>
+        <input {{object "start"}} type="datetime-local" name="start" value="{{start}}" required>
     </label>
 
-    <label for='presence'>
-        <span>Indisponible</span>
-        <input type="range" min="-10" max="10" value="-10" id="presence" {{object "presence"}}>
-        <span>Disponible</span>
+    <label>
+        <p>Fin</p>
+        <input {{object "end"}} type="datetime-local" name="end" value="{{end}}" required>
     </label>
-
-    <input type="submit" value="Ajouter">
-</div>
+</details>

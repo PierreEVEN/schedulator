@@ -9,5 +9,6 @@ CREATE TABLE IF NOT EXISTS SCHEMA_NAME.calendars (
         start_daily_hour BIGINT,
         end_daily_hour BIGINT,
         require_account BOOLEAN NOT NULL,
+        default_presence REAL NOT NULL DEFAULT 0,
         FOREIGN KEY(owner_id) REFERENCES SCHEMA_NAME.users(id)
     );

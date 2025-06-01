@@ -1,6 +1,9 @@
-
 <form onsubmit="{{ctx 'submit(event)'}}">
     <calendar-modal-close></calendar-modal-close>
-    <h2>Ajouter un évenement</h2>
+    <h2>Créer des évenements</h2>
+    <label>Présence</label>
+    <calendar-presence-slider value="{{default_presence}}"></calendar-presence-slider>
     <div class="calendar-create-event-events" {{object "event_list"}}></div>
+
+    <input type="submit" value="Créer les évenements">
 </form>

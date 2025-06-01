@@ -59,29 +59,28 @@ class CalendarBody extends HTMLElement {
     connectedCallback() {
         this._refresh_calendar();
 
-        this._current_selection = null;
         this.addEventListener('pointerdown', async (event) => {
             if (!event.target || !event.target.classList.contains('calendar-cell'))
                 return;
             let cell = this.get_cell_from_pointer(event.clientX, event.clientY);
             if (!cell)
                 return;
-            this._current_selection = await this._selector.begin_selection(cell['cell_time_start'], cell['cell_time_end'], event.shiftKey || event.ctrlKey);
+             await this._selector.begin_selection(cell['cell_time_start'], cell['cell_time_end'], event.shiftKey || event.ctrlKey);
         })
         this.addEventListener('pointermove', async (event) => {
-            if (this._current_selection) {
+            if (this.selector().current_selection()) {
                 let cell = this.get_cell_from_pointer(event.clientX, event.clientY);
                 if (!cell)
                     return;
-                const selection = this._selector.get(this._current_selection);
+                const selection = this._selector.get(this.selector().current_selection());
                 await this._selector.update_selection(
-                    this._current_selection,
+                    this.selector().current_selection(),
                     new Date(Math.min(cell['cell_time_start'].getTime(), selection.initial_start.getTime())),
                     new Date(Math.max(cell['cell_time_end'].getTime(), selection.initial_end.getTime())));
             }
         });
-        this.addEventListener('pointerup', async (_) => {
-            this._current_selection = null;
+        document.addEventListener('pointerup', async (_) => {
+            this._selector.release_selection();
         });
     }
 
@@ -125,7 +124,7 @@ class CalendarBody extends HTMLElement {
         const elements = require('./calendar_body.hbs')();
         for (const element of elements)
             this.append(element);
-        this._elements = elements[0].elements;
+        this._elements = elements[0].hb_elements;
 
         let daily_subdivision = (this._daily_end - this._daily_start) / this._daily_spacing
         for (let i = 0; i < daily_subdivision; ++i) {

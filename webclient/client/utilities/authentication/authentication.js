@@ -13,8 +13,8 @@ const Authentication = {
                 login: async (event) => {
                     event.preventDefault();
                     let result = await fetch_api('user/login/', 'POST', {
-                        login: EncString.from_client(signin_div.elements.login.value),
-                        password: EncString.from_client(signin_div.elements.password.value),
+                        login: EncString.from_client(signin_div.hb_elements.login.value),
+                        password: EncString.from_client(signin_div.hb_elements.password.value),
                         device: EncString.from_client(navigator.userAgent)
                     }).catch(error => {
                         NOTIFICATION.error(new Message(error).title("Connexion échouée"));
@@ -49,17 +49,17 @@ const Authentication = {
                 signup: async (event) => {
                     event.preventDefault();
                     await fetch_api('user/create/', 'POST', {
-                        display_name: EncString.from_client(signup_div.elements.login.value),
-                        email: EncString.from_client(signup_div.elements.email.value),
-                        password: EncString.from_client(signup_div.elements.password.value)
+                        display_name: EncString.from_client(signup_div.hb_elements.login.value),
+                        email: EncString.from_client(signup_div.hb_elements.email.value),
+                        password: EncString.from_client(signup_div.hb_elements.password.value)
                     }).catch(error => {
                         NOTIFICATION.error(new Message(error).title("Impossible de créer l'utilisateur"));
                         throw new Error(error);
                     });
 
                     let login_result = await fetch_api('user/login/', 'POST', {
-                        login: EncString.from_client(signup_div.elements.login.value),
-                        password: EncString.from_client(signup_div.elements.password.value),
+                        login: EncString.from_client(signup_div.hb_elements.login.value),
+                        password: EncString.from_client(signup_div.hb_elements.password.value),
                         device: EncString.from_client(navigator.userAgent)
                     }).catch(error => {
                         NOTIFICATION.error(new Message(error).title("Connexion échouée"));
