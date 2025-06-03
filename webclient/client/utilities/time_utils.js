@@ -44,8 +44,20 @@ function get_day_time(date) {
     return date.getTime() - zero.getTime();
 }
 
+/**
+ * @param date {Date}
+ * @returns {string}
+ */
+function date_to_local_time(date) {
+    return date.getFullYear() +
+    '-' + String(date.getMonth() + 1).padStart(2, '0') +
+    '-' + String(date.getDate()).padStart(2, '0') +
+    'T' + String(date.getHours()).padStart(2, '0') +
+    ':' + String(date.getMinutes()).padStart(2, '0');
+}
+
 const ONE_DAY_MS = 1000 * 60 * 60 * 24;
 const ONE_HOUR_MS = 1000 * 60 * 60;
 const ONE_MIN_MS = 1000 * 60;
 
-export {time_format_from_ms, get_week_number, get_day_time, ONE_DAY_MS, ONE_HOUR_MS, ONE_MIN_MS}
+export {time_format_from_ms, get_week_number, get_day_time, date_to_local_time, ONE_DAY_MS, ONE_HOUR_MS, ONE_MIN_MS}

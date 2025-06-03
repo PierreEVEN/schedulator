@@ -114,6 +114,7 @@ class Selector {
         }
         this._editing_selection = index;
         await this.events.broadcast('update', index);
+        await this._update_bounds_for(index);
     }
 
     /**
@@ -132,6 +133,7 @@ class Selector {
         }
         this._editing_selection = index;
         await this.events.broadcast('update', index);
+        await this._update_bounds_for(index);
     }
 
     /**
@@ -150,6 +152,26 @@ class Selector {
         }
         this._editing_selection = index;
         await this.events.broadcast('update', index);
+        await this._update_bounds_for(index);
+    }
+
+    /**
+     * @param index {number}
+     * @private
+     */
+    async _update_bounds_for(index) {
+        const moved_sel = this.get(index);
+        for (const [id, selection] of this._selections) {
+            if (id === index)
+                continue;
+            if (selection.end <= moved_sel.end && selection.start >= moved_sel.start) {
+                await this.remove_selection(id);
+            } else if (selection.start < moved_sel.end && selection.end >= moved_sel.end) {
+                await this.update_selection_start(id, moved_sel.end);
+            } else if (selection.end > moved_sel.start && selection.start <= moved_sel.start) {
+                await this.update_selection_end(id, moved_sel.start);
+            }
+        }
     }
 
     /**

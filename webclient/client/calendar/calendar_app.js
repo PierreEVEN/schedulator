@@ -4,7 +4,7 @@ import {Message, NOTIFICATION} from "../views/message_box/notification";
 import {APP_CONFIG} from "../utilities/app_config";
 import {Authentication} from "../utilities/authentication/authentication";
 import {CalendarUser} from "../utilities/calendar_user";
-import {get_week_number} from "../utilities/time_utils";
+import {get_week_number, ONE_DAY_MS, ONE_MIN_MS} from "../utilities/time_utils";
 import {EventPool} from "./event_pool";
 import './body/calendar_body'
 import {import_ics} from "../utilities/import/ics";
@@ -53,6 +53,33 @@ class CalendarApp extends HTMLElement {
         this._main_body = null;
 
         /**
+         * Daily start in ms
+         * @type {number}
+         * @private
+         */
+        this._daily_start = 60 * 60 * 1000 * 6; // 6h
+        if (this.hasAttribute('daily-start'))
+            this._daily_start = Number(this.getAttribute('daily-start'));
+
+        /**
+         * Daily end in ms
+         * @type {number}
+         * @private
+         */
+        this._daily_end = 60 * 60 * 1000 * 20; // 20h
+        if (this.hasAttribute('daily-end'))
+            this._daily_end = Number(this.getAttribute('daily-end'));
+
+        /**
+         * Minimum time interval in ms
+         * @type {number}
+         * @private
+         */
+        this._daily_spacing = 30 * 60 * 1000; // 30 minutes
+        if (this.hasAttribute('spacing'))
+            this._daily_spacing = Number(this.getAttribute('spacing'));
+
+        /**
          * @type {Selector}
          * @private
          */
@@ -61,14 +88,14 @@ class CalendarApp extends HTMLElement {
         this._current_offset = 0;
         this._touch_start = 0;
         this._touch_start_delta = 0;
-        this._holding = false;
+        this._holding_touch = false;
         document.addEventListener('touchstart', (event) => {
             this._touch_start = event.targetTouches[0].clientX;
             this._touch_start_delta = this._current_offset;
-            this._holding = true;
+            this._holding_touch = true;
         })
         document.addEventListener('touchend', (_) => {
-            this._holding = false;
+            this._holding_touch = false;
         })
         document.addEventListener('touchmove', (event) => {
             this._set_scroll_offset(event.targetTouches[0].clientX - this._touch_start + this._touch_start_delta);
@@ -109,7 +136,7 @@ class CalendarApp extends HTMLElement {
             requestAnimationFrame(scroll_loop);
 
             const delta = this._delta_time.tick();
-            if (!this._holding) {
+            if (!this._holding_touch) {
                 this._current_offset = lerp(this._current_offset, 0, 10 * delta)
                 this._current_offset = Math.min(Math.max(this._current_offset, -this._elements.body.clientWidth), this._elements.body.clientWidth)
                 this._set_scroll_offset(this._current_offset)
@@ -176,6 +203,7 @@ class CalendarApp extends HTMLElement {
             this._left_body.set_selector(this._selector);
             this._left_body.set_display_date(date);
             this._left_body.set_event_source(this._event_source);
+            this._left_body.set_range(this._daily_start, this._daily_end, this._daily_spacing);
             this._left_body.style.position = 'absolute';
             this._left_body.style.width = '100%';
             this._left_body.style.height = '100%';
@@ -188,6 +216,7 @@ class CalendarApp extends HTMLElement {
             this._right_body.set_selector(this._selector);
             this._right_body.set_display_date(date);
             this._right_body.set_event_source(this._event_source);
+            this._right_body.set_range(this._daily_start, this._daily_end, this._daily_spacing);
             this._right_body.style.position = 'absolute';
             this._right_body.style.width = '100%';
             this._right_body.style.height = '100%';
@@ -205,6 +234,30 @@ class CalendarApp extends HTMLElement {
             this._right_body = null;
         }
 
+    }
+
+    /**
+     * @param start {number}
+     * @param end {number}
+     * @param spacing {number}
+     */
+    set_range(start, end, spacing) {
+        console.assert(start !== null && end !== null && spacing !== null);
+        console.assert(start < end);
+        console.assert(spacing >= ONE_MIN_MS * 10 && spacing <= ONE_DAY_MS);
+        if (this._daily_start === start && this._daily_end === end && this._daily_spacing === spacing)
+            return;
+
+        this._daily_start = start;
+        this._daily_end = end;
+        this._daily_spacing = spacing;
+        if (!this.isConnected)
+            return;
+        this._main_body.set_range(start, end, spacing);
+        if (this._right_body)
+            this._right_body.set_range(start, end, spacing);
+        if (this._left_body)
+            this._left_body.set_range(start, end, spacing);
     }
 
     connectedCallback() {
@@ -242,6 +295,7 @@ class CalendarApp extends HTMLElement {
         this._main_body.set_selector(this._selector);
         this._main_body.set_display_date(this._display_date);
         this._main_body.set_event_source(this._event_source);
+        this._main_body.set_range(this._daily_start, this._daily_end, this._daily_spacing);
         this._elements.body.append(this._main_body)
     }
 
@@ -254,7 +308,7 @@ class CalendarApp extends HTMLElement {
             return this._current_calendar_user;
 
         // Login if required
-        if (this._calendar.require_account && !APP_CONFIG.connected_user())
+        if (APP_CONFIG.display_calendar().require_account && !APP_CONFIG.connected_user())
             await Authentication.login();
 
         if (!APP_CONFIG.connected_user()) {
@@ -271,7 +325,7 @@ class CalendarApp extends HTMLElement {
                             add_user_form.hb_elements.who_I_am.style.display = 'none';
                         } else {
                             add_user_form.hb_elements.who_I_am.style.display = 'flex';
-                            if (this._calendar.users.has(value)) {
+                            if (APP_CONFIG.display_calendar().users.has(value)) {
                                 add_user_form.hb_elements.who_I_am.value = `Je suis '${value}'`;
                             } else {
                                 add_user_form.hb_elements.who_I_am.value = `Ajouter l'utilisateur '${value}'`;
@@ -288,13 +342,13 @@ class CalendarApp extends HTMLElement {
                         event.preventDefault();
                         const value = add_user_form.hb_elements['who_are_you_input'].value;
                         // The user already exists
-                        if (this._calendar.users.has(value)) {
+                        if (APP_CONFIG.display_calendar().users.has(value)) {
                             this.close_modal();
-                            success(this._calendar.users.get(value));
+                            success(APP_CONFIG.display_calendar().users.get(value));
                         } else {
                             await fetch_api('calendar/add_user/', 'POST', {
                                 name: EncString.from_client(value),
-                                calendar: this._calendar.id.toString(),
+                                calendar: APP_CONFIG.display_calendar().id.toString(),
                             }).then((res) => {
                                 this.close_modal();
                                 success(new CalendarUser(res));
@@ -309,7 +363,7 @@ class CalendarApp extends HTMLElement {
                     }
                 });
 
-                for (const user of this._calendar.users.values()) {
+                for (const user of APP_CONFIG.display_calendar().users.values()) {
                     const option = document.createElement('option');
                     option.value = user.name.plain();
                     add_user_form.hb_elements.who_are_you_list.append(option);
@@ -325,7 +379,7 @@ class CalendarApp extends HTMLElement {
                 return this._current_calendar_user;
             else {
                 // Try creating a calendar user from authenticated user
-                const res = await fetch_api('calendar/find_or_create_user/', 'POST', {calendar: this._calendar.id.toString()}).catch(error => {
+                const res = await fetch_api('calendar/find_or_create_user/', 'POST', {calendar: APP_CONFIG.display_calendar().id.toString()}).catch(error => {
                     NOTIFICATION.error(new Message(error).title("Impossible de créer un utilisateur authentifié"));
                     throw new Error(error);
                 });
@@ -341,6 +395,13 @@ class CalendarApp extends HTMLElement {
      */
     selector() {
         return this._selector;
+    }
+
+    /**
+     * @returns {EventPool}
+     */
+    event_source() {
+        return this._event_source;
     }
 
     set_display_date(in_date) {

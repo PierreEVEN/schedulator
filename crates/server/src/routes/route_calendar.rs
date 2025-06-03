@@ -67,7 +67,7 @@ async fn create(
     calendar.start_daily_hour = calendar_data.start_daily_hour.clone();
     calendar.end_daily_hour = calendar_data.end_daily_hour.clone();
     calendar.require_account = calendar_data.require_account;
-    calendar.default_presence = (calendar_data.default_presence);
+    calendar.default_presence = calendar_data.default_presence;
     Calendar::push(&mut calendar, &ctx.database).await?;
     Ok(Json(calendar))
 }

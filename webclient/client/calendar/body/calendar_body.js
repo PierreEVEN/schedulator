@@ -65,7 +65,7 @@ class CalendarBody extends HTMLElement {
             let cell = this.get_cell_from_pointer(event.clientX, event.clientY);
             if (!cell)
                 return;
-             await this._selector.begin_selection(cell['cell_time_start'], cell['cell_time_end'], event.shiftKey || event.ctrlKey);
+            await this._selector.begin_selection(cell['cell_time_start'], cell['cell_time_end'], event.shiftKey || event.ctrlKey);
         })
         this.addEventListener('pointermove', async (event) => {
             if (this.selector().current_selection()) {
@@ -136,8 +136,10 @@ class CalendarBody extends HTMLElement {
             } else if (this._daily_spacing / ONE_HOUR_MS === 0.25) {
                 if (time % (ONE_HOUR_MS / 2) === 0.0)
                     value = time_format_from_ms(time, time % ONE_HOUR_MS !== 0);
-            } else if (this._daily_start / ONE_HOUR_MS === 1.0)
+            } else if (this._daily_spacing / ONE_HOUR_MS === 1.0)
                 value = time_format_from_ms(time, false);
+            else
+                value = time_format_from_ms(time, true);
             this._elements['rows_header'].append(require('./calendar_row_header.hbs')({time: value}))
         }
 
@@ -181,7 +183,7 @@ class CalendarBody extends HTMLElement {
 
         this._daily_start = start;
         this._daily_end = end;
-        this.spacing = spacing;
+        this._daily_spacing = spacing;
         if (!this.isConnected)
             return;
         for (const element of this._elements['columns'].children)

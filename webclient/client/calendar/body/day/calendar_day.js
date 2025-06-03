@@ -60,7 +60,7 @@ class CalendarDay extends HTMLElement {
 
         this._daily_start = start;
         this._daily_end = end;
-        this.spacing = spacing;
+        this._daily_spacing = spacing;
         this._update_display();
     }
 
@@ -184,7 +184,7 @@ class CalendarDay extends HTMLElement {
             this._elements.cells.append(cell);
         }
 
-        POINTER_UTILS.events.add('move', ({x, y}) => {
+        POINTER_UTILS.events.add('move', ({_, y}) => {
             for (const cell of this._elements.cells.children) {
                 const bounds = cell.getBoundingClientRect();
                 if (y > bounds.top && y < bounds.bottom) {
@@ -283,10 +283,10 @@ class CalendarDay extends HTMLElement {
         this._even_pool = event_pool;
 
         this._add_event_cb = event_pool.events.add('add', (_) => {
-
+            this._update_events();
         })
         this._remove_event_cb = event_pool.events.add('remove', (_) => {
-
+            this._update_events();
         })
         this._update_events();
     }

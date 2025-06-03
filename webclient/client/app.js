@@ -62,8 +62,12 @@ function try_update_display_calendar(calendar) {
                 events.register_event(Event.new(event));
 
             const container = document.getElementById('page-content');
+            /**
+             * @type {CalendarApp}
+             */
             CURRENT_WIDGET = document.createElement('calendar-app');
             CURRENT_WIDGET.set_event_source(events);
+            CURRENT_WIDGET.set_range(calendar.start_daily_hour, calendar.end_daily_hour, calendar.time_precision);
             container.append(CURRENT_WIDGET);
         });
     } else {

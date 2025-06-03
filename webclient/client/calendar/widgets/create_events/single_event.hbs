@@ -2,16 +2,16 @@
     <summary>{{title}}</summary>
     <label>
         <p>Titre (optionnel)</p>
-        <input type="text" {{object "name"}}>
+        <input type="text" {{object "name"}} onchange="{{ctx "set_title(event)"}}">
     </label>
 
     <label>
         <p>Début</p>
-        <input {{object "start"}} type="datetime-local" name="start" value="{{start}}" required>
+        <input {{object "start"}} type="datetime-local" name="start" value="{{start}}" required onchange="{{ctx "set_start(event)"}}">
     </label>
 
     <label>
         <p>Fin</p>
-        <input {{object "end"}} type="datetime-local" name="end" value="{{end}}" required>
+        <input {{object "end"}} type="datetime-local" name="end" value="{{end}}" required onchange="{{ctx "set_end(event)"}}">
     </label>
 </details>
