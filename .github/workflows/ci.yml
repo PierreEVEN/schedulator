@@ -20,6 +20,7 @@ jobs:
         with:
           prefix-key: "cache-ubuntu"
       - run: cargo build --release
+      - run: mv ./target/release/server ./target/release/schedulator
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
