@@ -1,0 +1,30 @@
+{
+  "addresses": [
+    "127.0.0.1:3000",
+    "192.168.0.10:3000"
+  ],
+  "backend_config": {
+    "postgres": {
+      "username": "postgres",
+      "secret": "schedulator-pswd",
+      "url": "127.0.0.1",
+      "port": 5432,
+      "database": "postgres",
+      "ssl_mode": false,
+      "scheme_name": "schedulator"
+    }
+  },
+  "web_client_config": {
+    "client_path": "./webclient",
+    "debug": true,
+    "check_for_packages_updates": false,
+    "build_webpack": true,
+    "force_secure_requests": false
+  },
+  "tls_config": {
+    "certificate": "/Path/To/certificate.pem",
+    "private_key": "/Path/To/private_key.pem"
+  },
+  "use_tls": false,
+  "admin_user_name": "admin"
+}

@@ -1,5 +1,4 @@
 services:
-
   db:
     image: postgres
     restart: always
@@ -12,12 +11,18 @@ services:
     #    tmpfs:
     #      size: 134217728 # 128*2^20 bytes = 128Mb
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_PASSWORD: schedulator-pswd
 
-  bidibip_v4:
+# adminer:
+#    image: adminer
+#    restart: always
+#    ports:
+#      - 8080:8080
+
+  schedulator:
     build:
       context: .
       dockerfile: scripts/Dockerfile
-    restart: always
+    # restart: always
     volumes:
       - ./saved:/saved

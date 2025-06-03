@@ -51,7 +51,7 @@ impl Default for Config {
             backend_config: BackendConfig {
                 postgres: PostgresConfig {
                     username: "postgres".to_string(),
-                    secret: "password".to_string(),
+                    secret: "postgres".to_string(),
                     url: "127.0.0.1".to_string(),
                     port: 5432,
                     database: "postgres".to_string(),

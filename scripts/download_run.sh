@@ -6,4 +6,4 @@ rm /opt/schedulator/schedulator.zip
 mv /opt/schedulator/schedulator/schedulator /opt/schedulator/schedulator_exe
 rmdir /opt/schedulator/schedulator/
 chmod u+x /opt/schedulator/schedulator_exe
-/opt/schedulator/schedulator_exe /saved/config.json
+/opt/schedulator/schedulator_exe
