@@ -1,8 +1,8 @@
 calendar-presence-slider {
   display: flex;
   flex-direction: column;
-  margin-bottom: 0;
-  width: 80%;
+  padding: 15px 15px 0 10px;
+  margin: 0;
 
   .calendar-presence-bars {
     display: flex;
@@ -16,7 +16,7 @@ calendar-presence-slider {
       background-color: #646464;
       margin-left: auto;
     }
-    :first-child {
+    >:first-child {
       margin-left: 0;
     }
   }

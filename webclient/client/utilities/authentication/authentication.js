@@ -4,7 +4,6 @@ import {APP_COOKIES} from "../cookies";
 import {APP_CONFIG} from "../app_config";
 import {Message, NOTIFICATION} from "../../views/message_box/notification";
 import {User} from "../user";
-import {MODAL} from "../modal/modal";
 
 const Authentication = {
     login: async () => {
@@ -25,7 +24,12 @@ const Authentication = {
                     if (APP_CONFIG.error())
                         location.reload();
                     success();
-                    MODAL.close();
+
+                    /**
+                     * @type {CalendarModalContainer}
+                     */
+                    const global_modal = document.getElementById('global-modal');
+                    global_modal.close();
                 },
                 signup: () => {
                     Authentication.signup().then(success).catch(fail);
@@ -35,7 +39,11 @@ const Authentication = {
                     fail();
                 }
             });
-            MODAL.open(signin_div, {
+            /**
+             * @type {CalendarModalContainer}
+             */
+            const global_modal = document.getElementById('global-modal');
+            global_modal.open(signin_div, {
                 custom_width: '500px', custom_height: '400px', on_close:
                     () => {
                         fail("Authentification annulée");
@@ -68,13 +76,22 @@ const Authentication = {
                     APP_COOKIES.login(login_result.token);
                     APP_CONFIG.set_connected_user(User.new(login_result.user))
                     success();
-                    MODAL.close();
+                    /**
+                     * @type {CalendarModalContainer}
+                     */
+                    const global_modal = document.getElementById('global-modal');
+                    global_modal.close();
                 },
                 login: () => {
                     Authentication.login().then(success).catch(fail);
                 }
             });
-            MODAL.open(signup_div, {
+
+            /**
+             * @type {CalendarModalContainer}
+             */
+            const global_modal = document.getElementById('global-modal');
+            global_modal.open(signup_div, {
                 custom_width: '500px', custom_height: '400px', on_close: () => {
                     fail("Authentification annulée");
                 }

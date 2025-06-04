@@ -1,0 +1,48 @@
+calendar-check-slider {
+  display: inline-block;
+  height: 34px;
+  position: relative;
+  width: 60px;
+
+  div {
+    background-color: #ccc;
+    bottom: 0;
+    cursor: pointer;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: .4s;
+  }
+
+  div:before {
+    background-color: #fff;
+    bottom: 4px;
+    content: "";
+    height: 26px;
+    left: 4px;
+    position: absolute;
+    transition: .4s;
+    width: 26px;
+  }
+
+  input {
+    //display: none;
+  }
+
+  input:checked + div {
+    background-color: #66bb6a;
+  }
+
+  input:checked + div:before {
+    transform: translateX(26px);
+  }
+
+  div {
+    border-radius: 34px;
+  }
+
+  div:before {
+    border-radius: 50%;
+  }
+}

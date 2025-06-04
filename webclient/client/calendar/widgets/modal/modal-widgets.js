@@ -1,5 +1,6 @@
 
 require('./modal-widgets.scss')
+require('../checkslider/checkslider')
 
 class CalendarModalContainer extends HTMLElement {
     constructor() {
@@ -12,17 +13,37 @@ class CalendarModalContainer extends HTMLElement {
     }
 
     connectedCallback() {
-
+        this.modal_box = document.createElement('div');
+        this.modal_box.classList.add('calendar-modal-box');
+        this.append(this.modal_box)
     }
 
-    open(widget) {
+    /**
+     * @typedef {Object} CreateInfos
+     * @property {string|undefined} custom_width
+     * @property {string|undefined} custom_height
+     * @property {string|undefined} modal_class
+     * @property {function} on_close
+     */
+
+    /**
+     * @param widget {HTMLElement}
+     * @param create_infos {CreateInfos|undefined}
+     * @return {HTMLElement}
+     */
+    async open(widget, create_infos = undefined) {
         this.close();
-        this.append(widget);
+        this._create_infos = create_infos;
+        widget.append(document.createElement('calendar-modal-close'));
+        this.modal_box.append(widget);
         this.classList.add('calendar-modal-open');
     }
 
     close() {
-        this.innerHTML = '';
+        if (this._create_infos && this._create_infos.on_close)
+            this._create_infos.on_close();
+        this._create_infos = null;
+        this.modal_box.innerHTML = '';
         this.classList.remove('calendar-modal-open');
     }
 }

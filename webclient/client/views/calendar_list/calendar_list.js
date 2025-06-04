@@ -2,7 +2,6 @@ require('./calendar_list.scss')
 const {fetch_api} = require("../../utilities/request");
 const {EncString} = require("../../utilities/encstring");
 const {NOTIFICATION, Message} = require("../message_box/notification");
-const {MODAL} = require("../../utilities/modal/modal");
 const {APP_CONFIG} = require("../../utilities/app_config");
 const {Calendar} = require("../../utilities/calendar");
 
@@ -41,7 +40,11 @@ class CalendarList extends HTMLElement {
                             NOTIFICATION.error(new Message(error).title("Impossible de créer l'évenement"));
                             throw new Error(error);
                         });
-                        MODAL.close();
+                        /**
+                         * @type {CalendarModalContainer}
+                         */
+                        const global_modal = document.getElementById('global-modal');
+                        global_modal.close();
                         this._add_item(Calendar.new(res));
                     }
                 })
@@ -50,7 +53,11 @@ class CalendarList extends HTMLElement {
                 today.setMonth(today.getMonth() + 1);
                 create_div.hb_elements.end.value = today.toISOString().split('T')[0];
 
-                MODAL.open(create_div)
+                /**
+                 * @type {CalendarModalContainer}
+                 */
+                const global_modal = document.getElementById('global-modal');
+                global_modal.open(create_div)
             }
         });
 

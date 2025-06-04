@@ -1,0 +1,23 @@
+input {
+  background-color: #1d1d1d;
+  border: solid 1px #111111;
+  max-height: 4em;
+  padding: 1rem;
+  color: white;
+  transition-duration: 0.2s;
+
+  &:hover {
+    background-color: #3b3b3b;
+    border: solid 1px #525252;
+  }
+
+  &:active {
+    background-color: #606060;
+    border: solid 1px #676767;
+  }
+
+  &[type="checkbox"] {
+    width: 2rem;
+    height: 2rem;
+  }
+}

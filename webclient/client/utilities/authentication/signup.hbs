@@ -1,20 +1,20 @@
-<div class="modal-root">
+<form onsubmit="{{ctx 'signup(event)'}}" class="calendar-modal">
+    <calendar-modal-close></calendar-modal-close>
     <h1>Créer un compte</h1>
-    <form onsubmit="{{ctx 'signup(event)'}}">
-        <label for='display_name'>
-            <input type="text" name="display_name" placeholder="Nom d'utilisateur" id="username" required {{object "login"}}>
-        </label>
-        <label for='email'>
-            <input type="email" name="email" placeholder="e-mail" id="email" required {{object "email"}}>
-        </label>
-        <label for='password'>
-            <input type="password" name="password" placeholder="Mot de passe" id="password" required {{object "password"}}>
-        </label>
+    <label for='display_name'>
+        <input type="text" name="display_name" placeholder="Nom d'utilisateur" id="username" required {{object
+                "login"}}>
+    </label>
+    <label for='email'>
+        <input type="email" name="email" placeholder="e-mail" id="email" required {{object "email"}}>
+    </label>
+    <label for='password'>
+        <input type="password" name="password" placeholder="Mot de passe" id="password" required {{object "password"}}>
+    </label>
 
-        <input type="submit" value="Créer un compte">
-        <div class='footer'>
-            <p>Déjà membre ?</p> <a href="javascript:{{ctx "login()"}}">Se connecter à votre
-            compte</a>
-        </div>
-    </form>
-</div>
+    <input type="submit" value="Créer un compte">
+    <div class='footer'>
+        <p>Déjà membre ?</p> <a href="javascript:{{ctx "login()"}}">Se connecter à votre
+        compte</a>
+    </div>
+</form>
