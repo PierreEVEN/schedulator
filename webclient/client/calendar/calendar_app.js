@@ -13,6 +13,7 @@ import {Selector} from "./selection/selector";
 
 require("./widgets/modal/modal-widgets")
 require('./calendar_app.scss');
+require('./widgets/datetime_input/datetime_input');
 
 const TODO_DISABLE_SCROLL = true;
 

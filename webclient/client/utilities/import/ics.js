@@ -98,13 +98,13 @@ async function import_ics(file, end_date) {
                     } while (start < until && --count > 0)
                 } else if (recur.freq === 'YEARLY') {
                     do {
-                        start.setUTCFullYear(start.getUTCFullYear() + interval);
+                        start.setFullYear(start.getFullYear() + interval);
                         if (!exclude_dates.has(start.getTime()))
                             register_event_helper(start.getTime(), duration);
                     } while (start < until && --count > 0)
                 } else if (recur.freq === 'DAILY') {
                     do {
-                        start.setUTCFullYear(start.getUTCFullYear() + interval);
+                        start.setFullYear(start.getFullYear() + interval);
                         if (!exclude_dates.has(start.getTime()))
                             register_event_helper(start.getTime(), duration);
                     } while (start < until && --count > 0)

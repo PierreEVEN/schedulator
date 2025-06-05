@@ -1,0 +1,53 @@
+calendar-date-time-input {
+  display: flex;
+  flex-direction: row;
+  background-color: #1d1d1d;
+  color: white;
+
+  button {
+    margin: 0;
+    border: solid 1px transparent;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  div  button:hover {
+    background-color: gray;
+  }
+
+  .calendar-dt-date {
+    display: flex;
+    flex-direction: row;
+    margin: 10px;
+
+    .calendar-dt-year {
+      font-size: 1.2rem;
+      text-align: start;
+      color: #c7c7c7;
+    }
+
+    .calendar-dt-day {
+      font-size: 1.7rem;
+    }
+  }
+  .calendar-dt-time {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 10px;
+
+    p {
+      margin: 0;
+      font-size: 2.4rem;
+    }
+
+
+    .calendar-dt-hour {
+      font-size: 2.4rem;
+    }
+
+    .calendar-dt-minutes {
+      font-size: 2.4rem;
+    }
+  }
+}
