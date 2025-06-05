@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: schedulator-pswd
+    # set shared memory limit when using docker compose
+    shm_size: 128mb
+
+#  adminer:
+#    image: adminer
+#    restart: always
+#    ports:
+#      - 8080:8080
+
+  schedulator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VERSION=LATEST
+    # restart: always
+    volumes:
+      - ./saved:/saved
+    ports:
+      - 3000:3000

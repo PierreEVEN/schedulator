@@ -40,8 +40,7 @@ pub struct Config {
     pub backend_config: BackendConfig,
     pub web_client_config: WebClientConfig,
     pub tls_config: TlsConfig,
-    pub use_tls: bool,
-    pub admin_user_name: Option<String>
+    pub use_tls: bool
 }
 
 impl Default for Config {
@@ -70,8 +69,7 @@ impl Default for Config {
                 certificate: PathBuf::from("/Path/To/certificate.pem"),
                 private_key: PathBuf::from("/Path/To/private_key.pem"),
             },
-            use_tls: true,
-            admin_user_name: Some(String::from("admin")),
+            use_tls: true
         }
     }
 }
