@@ -11,8 +11,8 @@ RUN mkdir /opt/schedulator
 COPY ./download_run.sh /opt/schedulator/
 COPY ./config.json /opt/schedulator/
 
-COPY ./server /opt/schedulator
-RUN chmod u+x /opt/schedulator/server
-
+#COPY ./server /opt/schedulator
+#RUN chmod u+x /opt/schedulator/server
+RUN mkdir /opt/schedulator/migrations
 RUN chmod u+x /opt/schedulator/download_run.sh
 CMD /opt/schedulator/download_run.sh ${schedulator_VERSION} ${VERSION}

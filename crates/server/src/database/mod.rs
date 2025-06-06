@@ -54,12 +54,14 @@ impl Database {
             db,
             schema_name: config.postgres.scheme_name.to_string(),
         };
-        database
-            .migrate(
-                PathBuf::from("./migrations"),
-                config.postgres.scheme_name.as_str(),
-            )
-            .await?;
+        if PathBuf::from("./migrations").exists() {
+            database
+                .migrate(
+                    PathBuf::from("./migrations"),
+                    config.postgres.scheme_name.as_str(),
+                )
+                .await?;
+        }
         Ok(database)
     }
 

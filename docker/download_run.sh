@@ -15,5 +15,4 @@ rm /opt/schedulator/schedulator.zip
 rmdir /opt/schedulator/schedulator/
 
 # Run
-sleep 1000
 /opt/schedulator/schedulator_exe

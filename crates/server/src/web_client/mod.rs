@@ -36,6 +36,9 @@ impl WebClient {
         let base_directory = env::current_dir()?;
         let client = Self::try_create_client(config).await;
         env::set_current_dir(base_directory)?;
+        if !config.client_path.exists() {
+            return Err(Error::msg(format!("Failed to find client at {}", config.client_path.display())))
+        }
         client
     }
 
