@@ -33,7 +33,14 @@ async fn connect(s: &str) -> Result<Client, Error> {
 
 impl Database {
     pub async fn new(config: &BackendConfig) -> Result<Self, Error> {
-        let db = connect(format!("host={} port={} user={} password={} dbname={} sslmode={}", config.postgres.url, config.postgres.port, config.postgres.username, config.postgres.secret, config.postgres.database, if config.postgres.ssl_mode { "enable" } else { "disable" }).as_str()).await?;
+        let db = connect(format!("host={} port={} user={} password={} dbname={} sslmode={}",
+                                 config.postgres.url,
+                                 config.postgres.port,
+                                 config.postgres.username,
+                                 config.postgres.secret,
+                                 config.postgres.database,
+                                 if config.postgres.ssl_mode { "enable" } else { "disable" }).as_str()
+        ).await.or_else(|error| {Err(Error::msg(format!("Failed to connect to postgres database {}:{}@{} : {}", config.postgres.url, config.postgres.port, config.postgres.username, error)))})?;
         let database = Self { db, schema_name: config.postgres.scheme_name.to_string() };
         database.migrate(PathBuf::from("./migrations"), config.postgres.scheme_name.as_str()).await?;
         Ok(database)

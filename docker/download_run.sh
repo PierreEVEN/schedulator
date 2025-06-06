@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VERSION=${1:-LATEST}
+VERSION=${1:-latest}
 
 # Download and extract desired schedulator version
 wget -O /opt/schedulator/schedulator.zip https://github.com/PierreEVEN/schedulator/releases/$VERSION/download/schedulator_linux.zip
