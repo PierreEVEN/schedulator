@@ -4,23 +4,29 @@ services:
     restart: always
     environment:
       POSTGRES_PASSWORD: schedulator-pswd
-    # set shared memory limit when using docker compose
     shm_size: 128mb
+    ports:
+      - "5431:5432"
+    volumes:
+      - schedulator_db:/var/lib/postgresql/data/
+
+  schedulator:
+    links:
+      - db
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VERSION=latest
+
+    # restart: always
+    ports:
+      - "3001:3000"
 
 #  adminer:
 #    image: adminer
 #    restart: always
 #    ports:
 #      - 8080:8080
-
-  schedulator:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - VERSION=latest
-    # restart: always
-    volumes:
-      - ./saved:/saved
-    ports:
-      - 3000:3000
+volumes:
+  schedulator_db: {}

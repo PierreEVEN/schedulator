@@ -1,55 +1,75 @@
+use crate::config::BackendConfig;
+use anyhow::Error;
 use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
-use anyhow::{Error};
 use tokio::net::TcpStream;
-use tokio_postgres::{Client, Config, Connection};
 use tokio_postgres::tls::NoTlsStream;
+use tokio_postgres::{Client, Config, Connection};
 use tracing::info;
-use crate::config::BackendConfig;
 
-pub mod event;
-pub mod calendar;
-pub mod user;
-pub mod calendar_users;
 pub mod auth_token;
+pub mod calendar;
+pub mod calendar_users;
+pub mod event;
+pub mod user;
 
 pub struct Database {
     db: Client,
     pub schema_name: String,
 }
 
-async fn connect_raw(s: &str) -> Result<(Client, Connection<TcpStream, NoTlsStream>), Error> {
-    let socket = TcpStream::connect("127.0.0.1:5432").await?;
-    let config = s.parse::<Config>()?;
-    Ok(config.connect_raw(socket, tokio_postgres::NoTls).await?)
-}
-
-async fn connect(s: &str) -> Result<Client, Error> {
-    let (client, connection) = connect_raw(s).await?;
-    tokio::spawn(connection);
-    Ok(client)
-}
-
 impl Database {
     pub async fn new(config: &BackendConfig) -> Result<Self, Error> {
-        let db = connect(format!("host={} port={} user={} password={} dbname={} sslmode={}",
-                                 config.postgres.url,
-                                 config.postgres.port,
-                                 config.postgres.username,
-                                 config.postgres.secret,
-                                 config.postgres.database,
-                                 if config.postgres.ssl_mode { "enable" } else { "disable" }).as_str()
-        ).await.or_else(|error| {Err(Error::msg(format!("Failed to connect to postgres database {}:{}@{} : {}", config.postgres.url, config.postgres.port, config.postgres.username, error)))})?;
-        let database = Self { db, schema_name: config.postgres.scheme_name.to_string() };
-        database.migrate(PathBuf::from("./migrations"), config.postgres.scheme_name.as_str()).await?;
+        let (db, _) = tokio_postgres::connect(
+            format!(
+                "host={} port={} user={} password={} dbname={}",
+                config.postgres.url,
+                config.postgres.port,
+                config.postgres.username,
+                config.postgres.secret,
+                config.postgres.database,
+            )
+            .as_str(),
+            tokio_postgres::NoTls,
+        )
+        .await
+        .or_else(|error| {
+            Err(Error::msg(format!(
+                "Failed to connect to postgres database postgres://{}@{}:{}-{} : {}",
+                config.postgres.username,
+                config.postgres.url,
+                config.postgres.port,
+                config.postgres.database,
+                error
+            )))
+        })?;
+
+        info!(
+            "Connected to postgres database postgres://{}@{}:{}-{}",
+            config.postgres.username,
+            config.postgres.url,
+            config.postgres.port,
+            config.postgres.database
+        );
+        let database = Self {
+            db,
+            schema_name: config.postgres.scheme_name.to_string(),
+        };
+        database
+            .migrate(
+                PathBuf::from("./migrations"),
+                config.postgres.scheme_name.as_str(),
+            )
+            .await?;
         Ok(database)
     }
 
-
     pub async fn migrate(&self, migrations_dir: PathBuf, schema_name: &str) -> Result<(), Error> {
         let mut entries = vec![];
-        for entry in fs::read_dir(migrations_dir)? { entries.push(entry?); }
+        for entry in fs::read_dir(migrations_dir)? {
+            entries.push(entry?);
+        }
 
         entries.sort_by(|a, b| {
             let a = a.file_name();
@@ -74,14 +94,19 @@ impl Database {
             if path.is_file() && path.extension().and_then(std::ffi::OsStr::to_str) == Some("sql") {
                 let sql = fs::read_to_string(path)?.replace("SCHEMA_NAME", schema_name);
 
-                match self.db
-                    .simple_query(&sql,
-                    ).await {
+                match self.db.simple_query(&sql).await {
                     Ok(_) => {
-                        info!("Successfully executed migrations {}", entry.file_name().to_str().unwrap());
+                        info!(
+                            "Successfully executed migrations {}",
+                            entry.file_name().to_str().unwrap()
+                        );
                     }
                     Err(error) => {
-                        return Err(Error::msg(format!("Failed run migration migrate {} : {}", entry.file_name().to_str().unwrap(), error)));
+                        return Err(Error::msg(format!(
+                            "Failed run migration migrate {} : {}",
+                            entry.file_name().to_str().unwrap(),
+                            error
+                        )));
                     }
                 };
             }

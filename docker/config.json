@@ -7,7 +7,7 @@
     "postgres": {
       "username": "postgres",
       "secret": "schedulator-pswd",
-      "url": "127.0.0.1",
+      "url": "db",
       "port": 5432,
       "database": "postgres",
       "ssl_mode": false,

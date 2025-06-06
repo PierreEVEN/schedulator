@@ -19,6 +19,7 @@ jobs:
         uses: Swatinem/rust-cache@v2.7.3
         with:
           prefix-key: "cache-ubuntu"
+          shared-key: "cache-ubuntu"
       - run: cargo build --release
       - run: mv ./target/release/server ./target/release/schedulator
       - name: Upload artifact
