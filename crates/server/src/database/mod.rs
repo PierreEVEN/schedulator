@@ -3,9 +3,7 @@ use anyhow::Error;
 use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
-use tokio::net::TcpStream;
-use tokio_postgres::tls::NoTlsStream;
-use tokio_postgres::{Client, Config, Connection};
+use tokio_postgres::{Client};
 use tracing::info;
 
 pub mod auth_token;
