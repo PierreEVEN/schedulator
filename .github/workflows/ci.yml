@@ -71,10 +71,10 @@ jobs:
       # Create Linux server zip
       - run: mkdir schedulator/
       - run: mkdir schedulator/migrations/
-      - run: ls -la ./
       - run: ls -la ./artifact_rust_linux
-      - run: ls -la ./schedulator
-      - run: mv ./artifact_rust_linux/schedulator ./schedulator/
+      - run: ls -la ./artifact_rust_linux/target
+      - run: ls -la ./artifact_rust_linux/target/release
+      - run: mv ./artifact_rust_linux/target/release/schedulator ./schedulator/
       - run: mv ./artifact_rust_linux/migrations/* ./schedulator/migrations
       - run: cp -r ./artifact_web_app/* ./schedulator/
       - run: zip -r schedulator_linux.zip ./schedulator/
