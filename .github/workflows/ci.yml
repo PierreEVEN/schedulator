@@ -34,15 +34,15 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@main
-      - working-directory: ./web_client
+      - working-directory: ./webclient
         run: npm install
-      - working-directory: ./web_client
+      - working-directory: ./webclient
         run: npm run prod
       - uses: actions/upload-artifact@main
         with:
           name: webapp-artifact
           retention-days: 1
-          path: ./web_client/public/*
+          path: ./webclient/public/*
 
   package:
     name: Upload release
@@ -73,7 +73,7 @@ jobs:
       - run: mkdir schedulator/migrations/
       - run: mv ./artifact_rust_linux/schedulator ./schedulator/
       - run: mv ./artifact_rust_linux/migrations/* ./schedulator/migrations
-      - run: cp -r ./artifact_web_app/* ./fileshare/
+      - run: cp -r ./artifact_web_app/* ./schedulator/
       - run: zip -r schedulator_linux.zip ./schedulator/
       - run: rm -r ./schedulator/
 
