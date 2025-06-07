@@ -23,14 +23,31 @@ jobs:
           name: artifact-rust-linux
           retention-days: 1
           path: |
+            ./migrations/* 
+            ./docker/* 
             ./target/release/schedulator
             ${{ steps.compile.outputs.BUILT_ARCHIVE }}
             ${{ steps.compile.outputs.BUILT_CHECKSUM }}
 
+  build_web_app:
+    name: Web app
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@main
+      - working-directory: ./web_client
+        run: npm install
+      - working-directory: ./web_client
+        run: npm run prod
+      - uses: actions/upload-artifact@main
+        with:
+          name: webapp-artifact
+          retention-days: 1
+          path: ./web_client/public/*
+
   package:
     name: Upload release
     runs-on: ubuntu-22.04
-    needs: [build_rust_linux]
+    needs: [build_rust_linux, build_web_app]
     steps:
       # Download generated artifacts
       - name: Retrieve artifact Rust/Linux
@@ -39,16 +56,47 @@ jobs:
           name: artifact-rust-linux
           path: ./artifact_rust_linux
 
+      - name: Retrieve artifact Web app
+        uses: actions/download-artifact@main
+        with:
+          name: webapp-artifact
+          path: ./artifact_web_app/public
+
+      # Create Docker setup zip
+      - run: mkdir docker
+      - run: mv ./artifact_rust_linux/docker/* ./docker/
+      - run: zip -r docker.zip ./docker/
+      - run: rm -r ./docker/
+
       # Create Linux server zip
-      - run: mkdir schedulator
+      - run: mkdir schedulator/
+      - run: mkdir schedulator/migrations/
       - run: mv ./artifact_rust_linux/schedulator ./schedulator/
+      - run: mv ./artifact_rust_linux/migrations/* ./schedulator/migrations
+      - run: cp -r ./artifact_web_app/* ./fileshare/
       - run: zip -r schedulator_linux.zip ./schedulator/
-      - run: rm -r ./schedulator
+      - run: rm -r ./schedulator/
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+        run: |
+          gh release create "$tag" \
+              --repo="$GITHUB_REPOSITORY" \
+              --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
+              --generate-notes
+
+      - name: Run Changelog CI
+        uses: saadmk11/changelog-ci@v1.1.2
+        with:
+          changelog_filename: ${{ github.workspace }}-CHANGELOG.md
 
       - name: Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
         with:
+          body_path: ${{ github.workspace }}-CHANGELOG.md
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             schedulator_linux.zip
+            docker.zip
