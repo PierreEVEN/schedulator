@@ -1,11 +1,11 @@
 #!Dockerfile
 
-FROM ubuntu:latest
+FROM alpine:latest
 
 ARG VERSION=latest
 
-RUN apt-get update
-RUN apt-get -y install wget unzip dos2unix
+RUN apk update
+RUN apk add wget unzip dos2unix
 RUN mkdir /opt/schedulator
 RUN mkdir /opt/schedulator/migrations
 

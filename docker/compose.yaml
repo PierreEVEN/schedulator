@@ -1,5 +1,5 @@
 services:
-  db:
+  schedulator-db:
     image: postgres
     restart: unless-stopped
     environment:
@@ -13,7 +13,7 @@ services:
 
   schedulator:
     links:
-      - db
+      - schedulator-db
     build:
       context: .
       dockerfile: scripts/Dockerfile
