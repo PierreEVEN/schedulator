@@ -60,6 +60,7 @@ jobs:
           retention-days: 1
           path: ./webclient/public/*
 
+
   package:
     name: Upload release
     runs-on: ubuntu-22.04
@@ -107,21 +108,21 @@ jobs:
       - run: zip -r schedulator_linux_musl.zip ./schedulator/
       - run: rm -r ./schedulator/
 
-#      # Generate changelog
-#      - run: echo '{"changelog_type":"commit_message", "commit_changelog":true, "comment_changelog":true}' > changelog-ci-config.json
-#      - name: Run Changelog CI
-#        uses: saadmk11/changelog-ci@v1.1.2
-#        continue-on-error: true
-#        with:
-#          config_file: changelog-ci-config.json
-#          release_version: ${{ github.ref_name }}
-#          changelog_filename: CHANGELOG.md
+
+      # Generate changelog
+      - name: "Generate release changelog"
+        uses: janheinrichmerker/action-github-changelog-generator@v2.3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          output: CHANGELOG.md
+
+      - run: cat CHANGELOG.md
 
       # Upload release
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-#          body_path: CHANGELOG.md
+          body_path: CHANGELOG.md
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             schedulator_linux.zip
