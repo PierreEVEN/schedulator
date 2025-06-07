@@ -71,21 +71,14 @@ jobs:
       # Create Linux server zip
       - run: mkdir schedulator/
       - run: mkdir schedulator/migrations/
+      - run: ls -la ./
+      - run: ls -la ./artifact_rust_linux
+      - run: ls -la ./schedulator
       - run: mv ./artifact_rust_linux/schedulator ./schedulator/
       - run: mv ./artifact_rust_linux/migrations/* ./schedulator/migrations
       - run: cp -r ./artifact_web_app/* ./schedulator/
       - run: zip -r schedulator_linux.zip ./schedulator/
       - run: rm -r ./schedulator/
-
-      - name: Create release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref_name }}
-        run: |
-          gh release create "$tag" \
-              --repo="$GITHUB_REPOSITORY" \
-              --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
-              --generate-notes
 
       - name: Run Changelog CI
         uses: saadmk11/changelog-ci@v1.1.2
