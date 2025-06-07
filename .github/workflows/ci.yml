@@ -126,4 +126,4 @@ jobs:
           files: |
             schedulator_linux.zip
             schedulator_linux_musl.zip
-            schedulator_docker.zip
+            schedulator-dockerized.zip
