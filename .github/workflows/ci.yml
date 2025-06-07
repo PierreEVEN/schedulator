@@ -28,7 +28,7 @@ jobs:
             ./target/release/schedulator
             ${{ steps.compile.outputs.BUILT_ARCHIVE }}
             ${{ steps.compile.outputs.BUILT_CHECKSUM }}
-
+  
   build_web_app:
     name: Web app
     runs-on: ubuntu-22.04
@@ -49,6 +49,8 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [build_rust_linux, build_web_app]
     steps:
+      - uses: actions/checkout@v2
+      
       # Download generated artifacts
       - name: Retrieve artifact Rust/Linux
         uses: actions/download-artifact@main
@@ -80,6 +82,7 @@ jobs:
       - run: zip -r schedulator_linux.zip ./schedulator/
       - run: rm -r ./schedulator/
 
+      # Generate changelog
       - name: Run Changelog CI
         uses: saadmk11/changelog-ci@v1.1.2
         with:
