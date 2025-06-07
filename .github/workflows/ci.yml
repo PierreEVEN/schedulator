@@ -30,7 +30,7 @@ jobs:
   build_rust_linux_musl:
     name: Linux Musl - Rust app
     runs-on: ubuntu-22.04
-    container: ghcr.io/blackdex/rust-musl:x86_64-unknown-linux-musl
+    container: ghcr.io/blackdex/rust-musl:x86_64-musl
     steps:
       - uses: actions/checkout@v4
       - run: cargo build --release
