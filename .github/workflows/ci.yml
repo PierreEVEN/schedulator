@@ -34,19 +34,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: cargo build --release
-      - run: mv ./target/release/server ./target/release/schedulator
-      - run: ls ./
-      - run: ls /
-      - run: ls ./target
-      - run: ls ./target/release
-      - run: ls ./target/release/schedulator
+      - run: mv ./target/aarch64-unknown-linux-musl/release/server ./target/aarch64-unknown-linux-musl/release/schedulator
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: artifact-linux_musl
           retention-days: 1
           path: |
-            ./target/release/schedulator
+            ./target/aarch64-unknown-linux-musl/release/schedulator
             ${{ steps.compile.outputs.BUILT_ARCHIVE }}
             ${{ steps.compile.outputs.BUILT_CHECKSUM }}
 
@@ -72,19 +67,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
-      # Download generated artifacts
-      - name: Retrieve artifact Rust/Linux
-        uses: actions/download-artifact@v4
-        with:
-          name: artifact-linux
-          path: ./artifact_rust_linux
-
-      - name: Retrieve artifact Rust/Linux/Musl
-        uses: actions/download-artifact@v4
-        with:
-          name: artifact-linux_musl
-          path: ./artifact_rust_linux_musl
-
+      # Download webapp build artifacts
       - name: Retrieve artifact Web app
         uses: actions/download-artifact@v4
         with:
@@ -96,6 +79,11 @@ jobs:
       - run: zip -r schedulator-dockerized.zip ./schedulator-dockerized/
 
       # Create Linux server zip
+      - name: Retrieve artifact Rust/Linux
+        uses: actions/download-artifact@v4
+        with:
+          name: artifact-linux
+          path: ./artifact_rust_linux
       - run: mkdir schedulator/
       - run: mkdir schedulator/migrations/
       - run: mv ./artifact_rust_linux/schedulator ./schedulator/
@@ -105,12 +93,18 @@ jobs:
       - run: rm -r ./schedulator/
 
       # Create Linux Musl server zip
+      - name: Retrieve artifact Rust/Linux/Musl
+        uses: actions/download-artifact@v4
+        with:
+          name: artifact-linux_musl
+          path: ./artifact_rust_linux_musl
+
       - run: mkdir schedulator/
       - run: mkdir schedulator/migrations/
       - run: mv ./artifact_rust_linux_musl/schedulator ./schedulator/
       - run: cp -r ./migrations/ ./schedulator/migrations/
       - run: cp -r ./artifact_web_app/* ./schedulator/
-      - run: zip -r schedulator_linux.zip ./schedulator/
+      - run: zip -r schedulator_linux_musl.zip ./schedulator/
       - run: rm -r ./schedulator/
 
 #      # Generate changelog
@@ -123,6 +117,7 @@ jobs:
 #          release_version: ${{ github.ref_name }}
 #          changelog_filename: CHANGELOG.md
 
+      # Upload release
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
@@ -130,4 +125,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             schedulator_linux.zip
+            schedulator_linux_musl.zip
             schedulator_docker.zip
