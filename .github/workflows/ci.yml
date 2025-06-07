@@ -60,7 +60,6 @@ jobs:
           retention-days: 1
           path: ./webclient/public/*
 
-
   package:
     name: Upload release
     runs-on: ubuntu-22.04
@@ -108,15 +107,12 @@ jobs:
       - run: zip -r schedulator_linux_musl.zip ./schedulator/
       - run: rm -r ./schedulator/
 
-
       # Generate changelog
       - name: "Generate release changelog"
         uses: janheinrichmerker/action-github-changelog-generator@v2.3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           output: CHANGELOG.md
-
-      - run: cat CHANGELOG.md
 
       # Upload release
       - name: Release
