@@ -10,6 +10,7 @@ services:
     networks:
       schedulator:
         ipv4_address: 172.21.0.2
+    container_name: schedulator-db
 
   schedulator:
     links:
@@ -28,6 +29,7 @@ services:
     volumes:
       - ${FULLCHAIN}:/opt/schedulator_certificates/fullchain.pem # Set this directory to the one containing certificates
       - ${PRIVKEY}:/opt/schedulator_certificates/privkey.pem # Set this directory to the one containing certificates
+    container_name: schedulator-app
 
 volumes:
   schedulator_db: {}

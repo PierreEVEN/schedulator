@@ -30,18 +30,18 @@ jobs:
   build_rust_linux_musl:
     name: Linux Musl - Rust app
     runs-on: ubuntu-22.04
-    container: ghcr.io/blackdex/rust-musl:aarch64-musl-stable
+    container: ghcr.io/blackdex/rust-musl:x86_64-unknown-linux-musl
     steps:
       - uses: actions/checkout@v4
       - run: cargo build --release
-      - run: mv ./target/aarch64-unknown-linux-musl/release/server ./target/aarch64-unknown-linux-musl/release/schedulator
+      - run: mv ./target/x86_64-unknown-linux-musl/release/server ./target/x86_64-unknown-linux-musl/release/schedulator
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: artifact-linux_musl
           retention-days: 1
           path: |
-            ./target/aarch64-unknown-linux-musl/release/schedulator
+            ./target/x86_64-unknown-linux-musl/release/schedulator
             ${{ steps.compile.outputs.BUILT_ARCHIVE }}
             ${{ steps.compile.outputs.BUILT_CHECKSUM }}
 
