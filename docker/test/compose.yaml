@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: schedulator-pswd
+    shm_size: 128mb
+    volumes:
+      - schedulator_db:/var/lib/postgresql/data/
+    networks:
+      schedulator:
+        ipv4_address: 172.21.0.2
+
+  schedulator:
+    links:
+      - db
+    build:
+      context: .
+      dockerfile: scripts/Dockerfile
+      args:
+        - VERSION=${VERSION}
+    networks:
+      schedulator:
+        ipv4_address: 172.21.0.3
+    #restart: unless-stopped
+    ports:
+      - "5100:5100"
+    volumes:
+      - ${FULLCHAIN}:/opt/schedulator_certificates/fullchain.pem # Set this directory to the one containing certificates
+      - ${PRIVKEY}:/opt/schedulator_certificates/privkey.pem # Set this directory to the one containing certificates
+
+volumes:
+  schedulator_db: {}
+
+networks:
+  schedulator:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.21.0.0/16
+      driver: default

@@ -13,25 +13,43 @@ jobs:
     name: Linux - Rust app
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - run: cargo build --release
       - run: mv ./target/release/server ./target/release/schedulator
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: artifact-rust-linux
+          name: artifact-linux
           retention-days: 1
           path: |
             ./target/release/schedulator
             ${{ steps.compile.outputs.BUILT_ARCHIVE }}
             ${{ steps.compile.outputs.BUILT_CHECKSUM }}
-  
+
+  build_rust_linux_musl:
+    name: Linux - Rust app
+    runs-on: ubuntu-22.04
+    container: ghcr.io/blackdex/rust-musl:aarch64-musl-stable
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo build --release
+      - run: mv ./target/release/server ./target/release/schedulator
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-linux_musl
+          retention-days: 1
+          path: |
+            ./target/release/schedulator
+            ${{ steps.compile.outputs.BUILT_ARCHIVE }}
+            ${{ steps.compile.outputs.BUILT_CHECKSUM }}
+
   build_web_app:
     name: Web app
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - working-directory: ./webclient
         run: npm install
       - working-directory: ./webclient
@@ -45,7 +63,7 @@ jobs:
   package:
     name: Upload release
     runs-on: ubuntu-22.04
-    needs: [build_rust_linux, build_web_app]
+    needs: [build_rust_linux, build_web_app, build_rust_linux_musl]
     steps:
       - uses: actions/checkout@v2
       
@@ -53,8 +71,14 @@ jobs:
       - name: Retrieve artifact Rust/Linux
         uses: actions/download-artifact@v4
         with:
-          name: artifact-rust-linux
+          name: artifact-linux
           path: ./artifact_rust_linux
+
+      - name: Retrieve artifact Rust/Linux/Musl
+        uses: actions/download-artifact@v4
+        with:
+          name: artifact-linux_musl
+          path: ./artifact_rust_linux_musl
 
       - name: Retrieve artifact Web app
         uses: actions/download-artifact@v4
@@ -63,13 +87,22 @@ jobs:
           path: ./artifact_web_app/public
 
       # Create Docker setup zip
-      - run: mv docker schedulator_docker
-      - run: zip -r schedulator_docker.zip ./schedulator_docker/
+      - run: mv docker schedulator-dockerized
+      - run: zip -r schedulator-dockerized.zip ./schedulator-dockerized/
 
       # Create Linux server zip
       - run: mkdir schedulator/
       - run: mkdir schedulator/migrations/
       - run: mv ./artifact_rust_linux/schedulator ./schedulator/
+      - run: cp -r ./migrations/ ./schedulator/migrations/
+      - run: cp -r ./artifact_web_app/* ./schedulator/
+      - run: zip -r schedulator_linux.zip ./schedulator/
+      - run: rm -r ./schedulator/
+
+      # Create Linux Musl server zip
+      - run: mkdir schedulator/
+      - run: mkdir schedulator/migrations/
+      - run: mv ./artifact_rust_linux_musl/schedulator ./schedulator/
       - run: cp -r ./migrations/ ./schedulator/migrations/
       - run: cp -r ./artifact_web_app/* ./schedulator/
       - run: zip -r schedulator_linux.zip ./schedulator/
