@@ -78,6 +78,7 @@ jobs:
       - run: echo '{"changelog_type":"commit_message", "commit_changelog":true, "comment_changelog":true}' > changelog-ci-config.json
       - name: Run Changelog CI
         uses: saadmk11/changelog-ci@v1.1.2
+        continue-on-error: true
         with:
           config_file: changelog-ci-config.json
           release_version: ${{ github.ref_name }}
