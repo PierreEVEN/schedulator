@@ -13,7 +13,7 @@ jobs:
     name: Linux - Rust app
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v2
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - run: cargo build --release
       - run: mv ./target/release/server ./target/release/schedulator
@@ -23,8 +23,6 @@ jobs:
           name: artifact-rust-linux
           retention-days: 1
           path: |
-            ./migrations/* 
-            ./docker/* 
             ./target/release/schedulator
             ${{ steps.compile.outputs.BUILT_ARCHIVE }}
             ${{ steps.compile.outputs.BUILT_CHECKSUM }}
@@ -33,12 +31,12 @@ jobs:
     name: Web app
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v2
       - working-directory: ./webclient
         run: npm install
       - working-directory: ./webclient
         run: npm run prod
-      - uses: actions/upload-artifact@main
+      - uses: actions/upload-artifact@v4
         with:
           name: webapp-artifact
           retention-days: 1
@@ -53,31 +51,25 @@ jobs:
       
       # Download generated artifacts
       - name: Retrieve artifact Rust/Linux
-        uses: actions/download-artifact@main
+        uses: actions/download-artifact@v4
         with:
           name: artifact-rust-linux
           path: ./artifact_rust_linux
 
       - name: Retrieve artifact Web app
-        uses: actions/download-artifact@main
+        uses: actions/download-artifact@v4
         with:
           name: webapp-artifact
           path: ./artifact_web_app/public
 
       # Create Docker setup zip
-      - run: mkdir docker
-      - run: mv ./artifact_rust_linux/docker/* ./docker/
       - run: zip -r docker.zip ./docker/
-      - run: rm -r ./docker/
 
       # Create Linux server zip
       - run: mkdir schedulator/
       - run: mkdir schedulator/migrations/
-      - run: ls -la ./artifact_rust_linux
-      - run: ls -la ./artifact_rust_linux/target
-      - run: ls -la ./artifact_rust_linux/target/release
       - run: mv ./artifact_rust_linux/target/release/schedulator ./schedulator/
-      - run: mv ./artifact_rust_linux/migrations/* ./schedulator/migrations
+      - run: cp -r ./migrations/* ./schedulator/migrations
       - run: cp -r ./artifact_web_app/* ./schedulator/
       - run: zip -r schedulator_linux.zip ./schedulator/
       - run: rm -r ./schedulator/
