@@ -281,7 +281,7 @@ pub async fn middleware_remove_trailing_slash(mut request: Request<Body>, next: 
 
     let uri = request.uri_mut();
     let path_str = uri.path();
-    if path_str.ends_with('/') {
+    if path_str.ends_with('/') && path_str.len() > 1 {
         return Ok(axum::response::Redirect::to(&path_str[..path_str.len() - 1]).into_response());
     }
     Ok(next.run(request).await)
