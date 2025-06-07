@@ -5,10 +5,11 @@ services:
     environment:
       POSTGRES_PASSWORD: schedulator-pswd
     shm_size: 128mb
-    ports:
-      - "5431:5432"
     volumes:
       - schedulator_db:/var/lib/postgresql/data/
+    networks:
+      schedulator:
+        ipv4_address: 172.19.0.2
 
   schedulator:
     links:
@@ -18,15 +19,27 @@ services:
       dockerfile: Dockerfile
       args:
         - VERSION=latest
-
+    networks:
+      schedulator:
+        ipv4_address: 172.19.0.3
     # restart: always
     ports:
-      - "3001:3000"
+      - "3000:3000"
 
-#  adminer:
-#    image: adminer
-#    restart: always
-#    ports:
-#      - 8080:8080
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
 volumes:
   schedulator_db: {}
+  
+networks:
+  schedulator:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.19.0.0/16
+      driver: default
+

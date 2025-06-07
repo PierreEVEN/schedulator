@@ -69,7 +69,7 @@ jobs:
       - run: mkdir schedulator/
       - run: mkdir schedulator/migrations/
       - run: mv ./artifact_rust_linux/schedulator ./schedulator/
-      - run: cp -r ./migrations/* ./schedulator/migrations
+      - run: cp -r ./migrations/ ./schedulator/migrations/
       - run: cp -r ./artifact_web_app/* ./schedulator/
       - run: zip -r schedulator_linux.zip ./schedulator/
       - run: rm -r ./schedulator/

@@ -1,7 +1,6 @@
 {
   "addresses": [
-    "127.0.0.1:3000",
-    "192.168.0.10:3000"
+    "172.19.0.3:3000"
   ],
   "backend_config": {
     "postgres": {
@@ -15,10 +14,10 @@
     }
   },
   "web_client_config": {
-    "client_path": "./webclient",
-    "debug": true,
+    "client_path": "/opt/schedulator/schedulator/",
+    "debug": false,
     "check_for_packages_updates": false,
-    "build_webpack": true,
+    "build_webpack": false,
     "force_secure_requests": false
   },
   "tls_config": {

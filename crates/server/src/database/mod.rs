@@ -4,7 +4,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
 use tokio_postgres::{Client};
-use tracing::info;
+use tracing::{error, info, warn};
 
 pub mod auth_token;
 pub mod calendar;
@@ -17,9 +17,12 @@ pub struct Database {
     pub schema_name: String,
 }
 
+unsafe impl Send for Database {}
+unsafe impl Sync for Database {}
+
 impl Database {
     pub async fn new(config: &BackendConfig) -> Result<Self, Error> {
-        let (db, _) = tokio_postgres::connect(
+        let (db, connection) = tokio_postgres::connect(
             format!(
                 "host={} port={} user={} password={} dbname={}",
                 config.postgres.url,
@@ -43,6 +46,12 @@ impl Database {
             )))
         })?;
 
+        tokio::spawn(async move {
+            if let Err(e) = connection.await {
+                error!("Postgres database connection error: {}", e)
+            }
+        });
+
         info!(
             "Connected to postgres database postgres://{}@{}:{}-{}",
             config.postgres.username,
@@ -50,18 +59,29 @@ impl Database {
             config.postgres.port,
             config.postgres.database
         );
+
+        let mut db_init = false;
+        if !db.query("SELECT schema_name FROM information_schema.schemata WHERE lower(schema_name) = lower($1)", &[&config.postgres.scheme_name]).await?.is_empty() {
+            db_init = true;
+        }
+
         let database = Self {
             db,
             schema_name: config.postgres.scheme_name.to_string(),
         };
-        if PathBuf::from("./migrations").exists() {
-            database
-                .migrate(
-                    PathBuf::from("./migrations"),
-                    config.postgres.scheme_name.as_str(),
-                )
-                .await?;
+
+        if !db_init {
+            warn!("Database is not initialized !");
+            let mut entries = vec![];
+            for entry in fs::read_dir("./migrations")? {
+                entries.push(entry?);
+            }
+            entries.sort_by(|a, b| { a.path().cmp(&b.path()) });
+            for entry in entries {
+                database.migrate(entry.path(), &config.postgres.scheme_name).await?;
+            }
         }
+
         Ok(database)
     }
 
@@ -98,17 +118,19 @@ impl Database {
                     Ok(_) => {
                         info!(
                             "Successfully executed migrations {}",
-                            entry.file_name().to_str().unwrap()
+                            entry.file_name().display()
                         );
                     }
                     Err(error) => {
                         return Err(Error::msg(format!(
                             "Failed run migration migrate {} : {}",
-                            entry.file_name().to_str().unwrap(),
+                            entry.file_name().display(),
                             error
                         )));
                     }
                 };
+            } else {
+                warn!("{} is not a '*.sql' file", entry.file_name().display());
             }
         }
 
