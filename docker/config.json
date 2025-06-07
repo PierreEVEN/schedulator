@@ -10,7 +10,8 @@
       "port": 5432,
       "database": "postgres",
       "ssl_mode": false,
-      "scheme_name": "schedulator"
+      "scheme_name": "schedulator",
+      "default_migrations": "/opt/schedulator/schedulator/migrations/"
     }
   },
   "web_client_config": {

@@ -73,7 +73,7 @@ impl Database {
         if !db_init {
             warn!("Database is not initialized !");
             let mut entries = vec![];
-            for entry in fs::read_dir("./migrations")? {
+            for entry in fs::read_dir(PathBuf::from(&config.postgres.default_migrations))? {
                 entries.push(entry?);
             }
             entries.sort_by(|a, b| { a.path().cmp(&b.path()) });

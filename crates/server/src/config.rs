@@ -11,7 +11,8 @@ pub struct PostgresConfig {
     pub port: u16,
     pub database: String,
     pub ssl_mode: bool,
-    pub scheme_name: String
+    pub scheme_name: String,
+    pub default_migrations: String
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -55,7 +56,8 @@ impl Default for Config {
                     port: 5432,
                     database: "postgres".to_string(),
                     ssl_mode: false,
-                    scheme_name: "schedulator".to_string()
+                    scheme_name: "schedulator".to_string(),
+                    default_migrations: "./migrations".to_string(),
                 },
             },
             web_client_config: WebClientConfig {

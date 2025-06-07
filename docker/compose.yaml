@@ -22,15 +22,15 @@ services:
     networks:
       schedulator:
         ipv4_address: 172.19.0.3
-    # restart: always
+    restart: always
     ports:
       - "3000:3000"
 
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8080:8080
+#  adminer:
+#    image: adminer
+#    restart: always
+#    ports:
+#      - 8080:8080
 
 volumes:
   schedulator_db: {}
