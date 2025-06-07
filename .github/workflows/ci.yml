@@ -75,6 +75,7 @@ jobs:
       - run: rm -r ./schedulator/
 
       # Generate changelog
+      - run: '{"changelog_type":'
       - run: echo '{"changelog_type": "commit_message", "commit_changelog": true, "comment_changelog": true}' > changelog-ci-config.json
       - name: Run Changelog CI
         uses: saadmk11/changelog-ci@v1.1.2
