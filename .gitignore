@@ -19,5 +19,6 @@ target/
 Cargo.lock
 /webclient/node_modules
 /webclient/package-lock.json
-/schedulator_logs
-/webclient/public/dist
+/schedulator_logs/
+/webclient/public/dist/
+/docker/certificates/
