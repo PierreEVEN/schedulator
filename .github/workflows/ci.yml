@@ -63,7 +63,8 @@ jobs:
           path: ./artifact_web_app/public
 
       # Create Docker setup zip
-      - run: zip -r docker.zip ./docker/
+      - run: mv docker schedulator_docker
+      - run: zip -r schedulator_docker.zip ./schedulator_docker/
 
       # Create Linux server zip
       - run: mkdir schedulator/
@@ -91,4 +92,4 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             schedulator_linux.zip
-            docker.zip
+            schedulator_docker.zip

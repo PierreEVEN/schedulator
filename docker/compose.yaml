@@ -24,7 +24,9 @@ services:
         ipv4_address: 172.19.0.3
     restart: always
     ports:
-      - "3000:3000"
+      - "6000:6000"
+    volume:
+      - ./certificates:/opt/schedulator_certificates # Set this directory to the one containing certificates
 
 #  adminer:
 #    image: adminer

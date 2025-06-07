@@ -12,7 +12,7 @@ chmod u+x /opt/schedulator/schedulator_exe
 
 # Cleanup
 rm /opt/schedulator/schedulator.zip
-rmdir /opt/schedulator/schedulator/
+rm -r /opt/schedulator/schedulator/
 
 # Run
 /opt/schedulator/schedulator_exe
