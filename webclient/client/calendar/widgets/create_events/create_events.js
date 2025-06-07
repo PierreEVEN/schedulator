@@ -42,7 +42,7 @@ class CalendarCreateEventModal extends HTMLElement {
                     });
                 }
 
-                const res = await fetch_api('event/create/', 'POST', body).catch(error => {
+                const res = await fetch_api('event/create', 'POST', body).catch(error => {
                     NOTIFICATION.error(new Message(error).title("Impossible de créer les évenements"));
                     throw new Error(error);
                 });

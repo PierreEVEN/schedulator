@@ -254,14 +254,9 @@ async fn main() {
     let router = Router::new()
         .nest("/api/", ApiRoutes::create(&ctx).unwrap())
         .merge(WebClient::router(&ctx).unwrap())
-        .layer(middleware::from_fn_with_state(
-            ctx.clone(),
-            print_request_response,
-        ))
-        .layer(middleware::from_fn_with_state(
-            ctx.clone(),
-            middleware_get_request_context,
-        ));
+        .layer(middleware::from_fn(middleware_remove_trailing_slash))
+        .layer(middleware::from_fn_with_state(ctx.clone(), print_request_response))
+        .layer(middleware::from_fn_with_state(ctx.clone(), middleware_get_request_context));
 
     // Create http server
     let mut server = Server::default();
@@ -281,6 +276,16 @@ async fn main() {
 }
 
 pub async fn handle_error() {}
+
+pub async fn middleware_remove_trailing_slash(mut request: Request<Body>, next: Next) -> Result<impl IntoResponse, ServerError> {
+
+    let uri = request.uri_mut();
+    let path_str = uri.path();
+    if path_str.ends_with('/') {
+        return Ok(axum::response::Redirect::to(&path_str[..path_str.len() - 1]).into_response());
+    }
+    Ok(next.run(request).await)
+}
 
 pub async fn middleware_get_request_context(
     jar: CookieJar,

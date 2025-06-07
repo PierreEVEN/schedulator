@@ -16,9 +16,9 @@ pub struct EventRoutes {}
 impl EventRoutes {
     pub fn create(ctx: &Arc<AppCtx>) -> Result<Router, Error> {
         let router = Router::new()
-            .route("/create/", post(create_event).with_state(ctx.clone()))
-            .route("/from-calendar/", post(from_calendar).with_state(ctx.clone()))
-            .route("/delete/", post(delete_event).with_state(ctx.clone()));
+            .route("/create", post(create_event).with_state(ctx.clone()))
+            .route("/from-calendar", post(from_calendar).with_state(ctx.clone()))
+            .route("/delete", post(delete_event).with_state(ctx.clone()));
         Ok(router)
     }
 }

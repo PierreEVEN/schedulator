@@ -118,19 +118,19 @@ impl Database {
                     Ok(_) => {
                         info!(
                             "Successfully executed migrations {}",
-                            entry.file_name().display()
+                            entry.file_name().to_str().unwrap()
                         );
                     }
                     Err(error) => {
                         return Err(Error::msg(format!(
                             "Failed run migration migrate {} : {}",
-                            entry.file_name().display(),
+                            entry.file_name().to_str().unwrap(),
                             error
                         )));
                     }
                 };
             } else {
-                warn!("{} is not a '*.sql' file", entry.file_name().display());
+                warn!("{} is not a '*.sql' file", entry.file_name().to_str().unwrap());
             }
         }
 

@@ -117,9 +117,9 @@ pub struct ApiRoutes {}
 impl ApiRoutes {
     pub fn create(ctx: &Arc<AppCtx>) -> Result<Router<>, Error> {
         let router = Router::new()
-            .nest("/calendar/", CalendarRoutes::create(ctx)?)
-            .nest("/event/", EventRoutes::create(ctx)?)
-            .nest("/user/", UserRoutes::create(ctx)?)
+            .nest("/calendar", CalendarRoutes::create(ctx)?)
+            .nest("/event", EventRoutes::create(ctx)?)
+            .nest("/user", UserRoutes::create(ctx)?)
             .fallback(handler_404);
         Ok(router)
     }

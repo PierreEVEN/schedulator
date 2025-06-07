@@ -11,7 +11,7 @@ const Authentication = {
             let signin_div = require('./signin.hbs')({}, {
                 login: async (event) => {
                     event.preventDefault();
-                    let result = await fetch_api('user/login/', 'POST', {
+                    let result = await fetch_api('user/login', 'POST', {
                         login: EncString.from_client(signin_div.hb_elements.login.value),
                         password: EncString.from_client(signin_div.hb_elements.password.value),
                         device: EncString.from_client(navigator.userAgent)
@@ -56,7 +56,7 @@ const Authentication = {
             const signup_div = require('./signup.hbs')({}, {
                 signup: async (event) => {
                     event.preventDefault();
-                    await fetch_api('user/create/', 'POST', {
+                    await fetch_api('user/create', 'POST', {
                         display_name: EncString.from_client(signup_div.hb_elements.login.value),
                         email: EncString.from_client(signup_div.hb_elements.email.value),
                         password: EncString.from_client(signup_div.hb_elements.password.value)
@@ -65,7 +65,7 @@ const Authentication = {
                         throw new Error(error);
                     });
 
-                    let login_result = await fetch_api('user/login/', 'POST', {
+                    let login_result = await fetch_api('user/login', 'POST', {
                         login: EncString.from_client(signup_div.hb_elements.login.value),
                         password: EncString.from_client(signup_div.hb_elements.password.value),
                         device: EncString.from_client(navigator.userAgent)
@@ -99,7 +99,7 @@ const Authentication = {
         });
     },
     logout: async () => {
-        await fetch_api('user/logout/', 'POST')
+        await fetch_api('user/logout', 'POST')
             .catch(error => NOTIFICATION.error(new Message(error).title("Erreur lors de la déconnexion")));
         APP_COOKIES.logout();
         APP_CONFIG.set_connected_user(null);

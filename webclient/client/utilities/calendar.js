@@ -75,7 +75,7 @@ class Calendar {
      * @returns {Calendar}
      */
     static async get(key) {
-        const res = await fetch_api(`calendar/get/${key.encoded()}/`, 'GET').catch(error => {
+        const res = await fetch_api(`calendar/get/${key.encoded()}`, 'GET').catch(error => {
             NOTIFICATION.error(new Message(error).title("Impossible de télécharger le calendrier"));
         });
         const calendar = Calendar.new(res.calendar);

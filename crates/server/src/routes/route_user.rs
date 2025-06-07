@@ -20,11 +20,11 @@ pub struct UserRoutes {}
 impl UserRoutes {
     pub fn create(ctx: &Arc<AppCtx>) -> Result<Router, Error> {
         let router = Router::new()
-            .route("/create/", post(create_user).with_state(ctx.clone()))
-            .route("/login/", post(login).with_state(ctx.clone()))
-            .route("/auth_tokens/", get(auth_tokens).with_state(ctx.clone()))
-            .route("/logout/", post(logout).with_state(ctx.clone()))
-            .route("/delete/", post(delete_user).with_state(ctx.clone()));
+            .route("/create", post(create_user).with_state(ctx.clone()))
+            .route("/login", post(login).with_state(ctx.clone()))
+            .route("/auth_tokens", get(auth_tokens).with_state(ctx.clone()))
+            .route("/logout", post(logout).with_state(ctx.clone()))
+            .route("/delete", post(delete_user).with_state(ctx.clone()));
         Ok(router)
     }
 }

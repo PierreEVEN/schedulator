@@ -20,13 +20,13 @@ pub struct CalendarRoutes {}
 impl CalendarRoutes {
     pub fn create(ctx: &Arc<AppCtx>) -> Result<Router, Error> {
         let router = Router::new()
-            .route("/create/", post(create).with_state(ctx.clone()))
-            .route("/delete/", post(delete).with_state(ctx.clone()))
-            .route("/my_calendars/", get(my_calendars).with_state(ctx.clone()))
-            .route("/get/{key}/", get(get_calendar).with_state(ctx.clone()))
-            .route("/add_user/", post(add_user).with_state(ctx.clone()))
-            .route("/find_or_create_user/", post(find_or_create_user).with_state(ctx.clone()))
-            .route("/remove_user/", post(remove_user).with_state(ctx.clone()));
+            .route("/create", post(create).with_state(ctx.clone()))
+            .route("/delete", post(delete).with_state(ctx.clone()))
+            .route("/my_calendars", get(my_calendars).with_state(ctx.clone()))
+            .route("/get/{key}", get(get_calendar).with_state(ctx.clone()))
+            .route("/add_user", post(add_user).with_state(ctx.clone()))
+            .route("/find_or_create_user", post(find_or_create_user).with_state(ctx.clone()))
+            .route("/remove_user", post(remove_user).with_state(ctx.clone()));
         Ok(router)
     }
 }

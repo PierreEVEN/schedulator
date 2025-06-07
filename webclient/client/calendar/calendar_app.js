@@ -347,7 +347,7 @@ class CalendarApp extends HTMLElement {
                             this.close_modal();
                             success(APP_CONFIG.display_calendar().users.get(value));
                         } else {
-                            await fetch_api('calendar/add_user/', 'POST', {
+                            await fetch_api('calendar/add_user', 'POST', {
                                 name: EncString.from_client(value),
                                 calendar: APP_CONFIG.display_calendar().id.toString(),
                             }).then((res) => {
@@ -380,7 +380,7 @@ class CalendarApp extends HTMLElement {
                 return this._current_calendar_user;
             else {
                 // Try creating a calendar user from authenticated user
-                const res = await fetch_api('calendar/find_or_create_user/', 'POST', {calendar: APP_CONFIG.display_calendar().id.toString()}).catch(error => {
+                const res = await fetch_api('calendar/find_or_create_user', 'POST', {calendar: APP_CONFIG.display_calendar().id.toString()}).catch(error => {
                     NOTIFICATION.error(new Message(error).title("Impossible de créer un utilisateur authentifié"));
                     throw new Error(error);
                 });

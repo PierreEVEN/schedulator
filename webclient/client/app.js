@@ -42,7 +42,7 @@ function try_update_display_calendar(calendar) {
             CURRENT_WIDGET.remove();
 
 
-        fetch_api('event/from-calendar/', 'POST', calendar.id.toString()).catch(error => {
+        fetch_api('event/from-calendar', 'POST', calendar.id.toString()).catch(error => {
             NOTIFICATION.error(new Message(error).title("Impossible d'obtenir les événements"));
             throw new Error(error);
         }).then(res => {
@@ -50,7 +50,7 @@ function try_update_display_calendar(calendar) {
 
             events.events.add('create-batch', async (events) => {
                 const event_data = [];
-                const create_res = await fetch_api('event/create/', 'POST', event_data).catch(error => {
+                const create_res = await fetch_api('event/create', 'POST', event_data).catch(error => {
                     NOTIFICATION.error(new Message(error).title("Impossible de créer les événements sur le serveur"));
                     throw new Error(error);
                 });
