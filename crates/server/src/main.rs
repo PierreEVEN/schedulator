@@ -176,7 +176,10 @@ async fn main() {
     let subscriber = Registry::default()
         .with(
             // stdout layer, to view everything in the console
-            fmt::layer().compact().with_ansi(true),
+            fmt::layer()
+                .compact()
+                .with_ansi(true)
+                .with_filter(filter::LevelFilter::from_level(Level::INFO)),
         )
         .with(
             // log-error file, to log the errors that arise
@@ -187,7 +190,10 @@ async fn main() {
         )
         .with(
             // log-debug file, to log the debug
-            fmt::layer().with_ansi(false).with_writer(debug_file),
+            fmt::layer()
+                .with_ansi(false)
+                .with_writer(debug_file)
+                .with_filter(filter::LevelFilter::from_level(Level::INFO)),
         );
 
     tracing::subscriber::set_global_default(subscriber).unwrap();
