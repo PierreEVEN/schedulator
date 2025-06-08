@@ -1,34 +1,38 @@
-<form onsubmit="{{ctx 'create(event)'}}" class="calendar-modal">
+<form onsubmit="{{ctx 'create(event)'}}" class="calendar-modal new_calendar">
     <calendar-modal-close></calendar-modal-close>
     <h1>Nouveau calendrier</h1>
     <span>
         <label for='title'>Nom</label>
         <input {{object "title"}} type="text" name="title" placeholder="Titre" id="title" required>
     </span>
-    <span>
-        <label for='start'>Début</label>
-        <input {{object "start"}} type="date" name="start" placeholder="Date de début" id="start" required>
-    </span>
-    <span>
-        <label for='end'>Fin</label>
-        <input {{object "end"}} type="date" name="end" placeholder="Date de fin" id="end" required>
-    </span>
+    <div class="dates">
+        <span>
+            <label for='start'>Début</label>
+            <calendar-date-time-input no_time {{object "start"}} id="start" required></calendar-date-time-input>
+        </span>
+        <p>></p>
+        <span>
+            <label for='end'>Fin</label>
+            <calendar-date-time-input no_time {{object "end"}} id="end" required></calendar-date-time-input>
+        </span>
+    </div>
+    <div class="dates">
+        <span>
+            <label for='start_daily_hour'>Début de journée</label>
+            <calendar-date-time-input no_date {{object "start_daily_hour"}} value="06:00"
+                                      id="start_daily_hour"></calendar-date-time-input>
+        </span>
+        <p>></p>
+        <span>
+            <label for='end_daily_hour'>Fin de journée</label>
+            <calendar-date-time-input no_date {{object "end_daily_hour"}} value="20:00"
+                                      id="end_daily_hour"></calendar-date-time-input>
+        </span>
+    </div>
     <span>
         <label for='time_precision'>Découpage horaire</label>
-        <input {{object "time_precision"}} type="time" name="time_precision" min="00:01" max="24:00" value="00:30"
-                                           placeholder="Précision" id="time_precision" required>
-    </span>
-    <span>
-        <label for='start_daily_hour'>Début de journée</label>
-        <input {{object "start_daily_hour"}} type="time" name="start_daily_hour" min="00:00" max="24:00"
-                                             value="06:00"
-                                             placeholder="Heure minimale quotidienne" id="start_daily_hour"
-                                             required>
-    </span>
-    <span>
-        <label for='end_daily_hour'>Fin de journée</label>
-        <input {{object "end_daily_hour"}} type="time" name="end_daily_hour" min="00:00" max="24:00" value="20:00"
-                                           placeholder="Heure maximale quotidienne" id="end_daily_hour" required>
+        <calendar-date-time-input no_date {{object "time_precision"}} value="00:30"
+                                  id="end_daily_hour"></calendar-date-time-input>
     </span>
     <span>
         <label for='require_account'>Forcer l'utilisation d'un compte</label>

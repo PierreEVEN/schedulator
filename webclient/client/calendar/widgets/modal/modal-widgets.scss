@@ -11,10 +11,22 @@ calendar-modal-container {
   align-items: center;
   z-index: 20;
   pointer-events: none;
+  opacity: 0;
+  transition-duration: 0.2s;
+
+  .calendar-modal-box {
+    scale: 0;
+    transition-duration: 0.2s;
+  }
 
   &.calendar-modal-open {
     pointer-events: auto;
     background-color: rgba(23, 23, 23, 0.8);
+    opacity: 1;
+
+    .calendar-modal-box {
+      scale: 100%;
+    }
   }
 }
 

@@ -1,17 +1,18 @@
 <details {{#if open}}open{{/if}}>
     <summary>{{title}}</summary>
+    <span>
+        <label>
+            <calendar-date-time-input {{object "start"}} value="{{start}}"
+                                                         onchange="{{ctx "set_start(event)"}}"></calendar-date-time-input>
+        </label>
+        <p>></p>
+        <label>
+            <calendar-date-time-input {{object "end"}} value="{{end}}"
+                                                       onchange="{{ctx "set_end(event)"}}"></calendar-date-time-input>
+        </label>
+    </span>
     <label>
         <p>Titre (optionnel)</p>
         <input type="text" {{object "name"}} onchange="{{ctx "set_title(event)"}}">
-    </label>
-
-    <label>
-        <p>Début</p>
-        <input {{object "start"}} type="datetime-local" name="start" value="{{start}}" required onchange="{{ctx "set_start(event)"}}">
-    </label>
-
-    <label>
-        <p>Fin</p>
-        <input {{object "end"}} type="datetime-local" name="end" value="{{end}}" required onchange="{{ctx "set_end(event)"}}">
     </label>
 </details>

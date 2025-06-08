@@ -1,8 +1,11 @@
 calendar-date-time-input {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   background-color: #1d1d1d;
   color: white;
+  padding: 10px;
+  align-items: center;
+  flex-grow: 0;
 
   button {
     margin: 0;
@@ -11,43 +14,62 @@ calendar-date-time-input {
     padding: 0;
   }
 
-  div  button:hover {
+  div button:hover {
+    background-color: gray;
+  }
+
+  .calendar-dt-time {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    font-size: 2.4rem;
+    font-weight: 700;
+    width: fit-content;
+
+    p {
+      margin: 0;
+    }
+
+    .calendar-dt-timeval {
+      font-size: inherit;
+      font-weight: inherit;
+    }
+  }
+
+  .calendar-dt-separator {
+    height: 1px;
+    width: 100%;
     background-color: gray;
   }
 
   .calendar-dt-date {
     display: flex;
-    flex-direction: row;
-    margin: 10px;
+    flex-direction: column;
+    width: fit-content;
+    color: #c7c7c7;
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-wrap: nowrap;
+
 
     .calendar-dt-year {
-      font-size: 1.2rem;
       text-align: start;
-      color: #c7c7c7;
+      font-size: 1.2rem;
+      font-weight: inherit;
+      color: #999999;
     }
 
-    .calendar-dt-day {
-      font-size: 1.7rem;
+    .calendar-dt-date {
+      font-size: inherit;
+      font-weight: inherit;
     }
   }
-  .calendar-dt-time {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    margin: 10px;
+}
 
-    p {
-      margin: 0;
-      font-size: 2.4rem;
-    }
+.calendar-dt-notime {
 
-
-    .calendar-dt-hour {
-      font-size: 2.4rem;
-    }
-
-    .calendar-dt-minutes {
-      font-size: 2.4rem;
-    }
+  .calendar-dt-date {
+    font-size: 1.5rem;
+    color: white;
   }
 }

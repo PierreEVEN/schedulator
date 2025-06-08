@@ -1,7 +1,16 @@
-<div class="calendar-dt-date">
-    <button class="calendar-dt-year">{{year}}</button>
-    <button class="calendar-dt-day">{{day}}</button>
-</div>
-<div class="calendar-dt-time">
-    <button class="calendar-dt-hour">{{hour}}</button><p>:</p><button class="calendar-dt-minutes">{{minutes}}</button>
-</div>
+{{#if has_time}}
+    <div class="calendar-dt-time">
+        <button class="calendar-dt-timeval" {{object "time"}}>{{time}}</button>
+    </div>
+{{/if}}
+{{#if has_sep}}
+<div class="calendar-dt-separator"></div>
+{{/if}}
+{{#if has_date}}
+    <div class="calendar-dt-date">
+        {{#if has_year}}
+            <button class="calendar-dt-year" {{object "year"}}>{{year}}</button>
+        {{/if}}
+        <button class="calendar-dt-date" {{object "date"}}>{{date}}</button>
+    </div>
+{{/if}}

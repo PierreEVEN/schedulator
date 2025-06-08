@@ -15,11 +15,26 @@
     <a href="https://github.com/PierreEVEN/schedulator">view sources</a>
     <div id='user-header-container'></div>
 </div>
-<div style="display: flex">
-    <calendar-date-time-input></calendar-date-time-input>
-</div>
 <div id="page-content"></div>
+
+
+<!--
+<div style="display: flex; align-items: end">
+    <calendar-date-time-input></calendar-date-time-input>
+    <calendar-date-time-input no_date></calendar-date-time-input>
+</div>
+-->
+<div style="display: flex; align-items: end">
+    <!--
+    <calendar-date-time-input no_time></calendar-date-time-input>
+    <calendar-date-time-input no_time has_year></calendar-date-time-input>
+    -->
+    <calendar-date-time-input has_year></calendar-date-time-input>
+</div>
+
+
 <calendar-modal-container id="global-modal"></calendar-modal-container>
+
 </body>
 </html>
 <script src="/public/dist/index.js"></script>

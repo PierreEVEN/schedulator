@@ -49,9 +49,9 @@ class CalendarList extends HTMLElement {
                     }
                 })
                 const today = new Date();
-                create_div.hb_elements.start.value = today.toISOString().split('T')[0];
+                create_div.hb_elements.start.value = new Date(today);
                 today.setMonth(today.getMonth() + 1);
-                create_div.hb_elements.end.value = today.toISOString().split('T')[0];
+                create_div.hb_elements.end.value = today;
 
                 /**
                  * @type {CalendarModalContainer}
