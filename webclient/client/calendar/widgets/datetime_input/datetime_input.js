@@ -17,6 +17,20 @@ class CalendarDateTimeInput extends HTMLElement {
         this.has_year = this.hasAttribute('has_year');
     }
 
+    _open_edit_modal(widget) {
+        this._close_edit_modal();
+        this.modal = document.createElement('div');
+        this.modal.classList.add('calendar-dt-picker-container');
+        this.modal.append(widget);
+        document.body.append(this.modal);
+    }
+
+    _close_edit_modal(widget) {
+        if (this.modal)
+            this.modal.remove();
+        this.modal = null;
+    }
+
     connectedCallback() {
         if (!this.has_time)
             this.classList.add('calendar-dt-notime');
@@ -25,7 +39,12 @@ class CalendarDateTimeInput extends HTMLElement {
             has_time: this.has_time,
             has_year: this.has_year,
             has_sep: this.has_date && this.has_time
-        }, {});
+        }, {
+            edit_time: (event) => {
+                event.preventDefault();
+                this._open_edit_modal(require('./time_picker.hbs')({}, {}))
+            }
+        });
         this._elements = widgets.hb_elements;
         this._update_elements();
         if (widgets.length)

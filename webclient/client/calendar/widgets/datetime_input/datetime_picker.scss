@@ -1,0 +1,22 @@
+.calendar-dt-picker-container {
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.79);
+
+  .calendar-time-picker {
+    width: 500px;
+    height: 500px;
+    background-color: red;
+
+    .calendar-circle {
+      width: 250px;
+      height: 250px;
+      border-radius: 300px;
+      background-color: #00ff04;
+    }
+  }
+}

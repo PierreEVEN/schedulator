@@ -1,6 +1,6 @@
 {{#if has_time}}
     <div class="calendar-dt-time">
-        <button class="calendar-dt-timeval" {{object "time"}}>{{time}}</button>
+        <button class="calendar-dt-timeval" {{object "time"}} onclick="{{ctx "edit_time(event)"}}">{{time}}</button>
     </div>
 {{/if}}
 {{#if has_sep}}
