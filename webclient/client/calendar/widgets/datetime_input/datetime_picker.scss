@@ -6,17 +6,39 @@
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.79);
+  align-items: center;
+  justify-content: center;
 
   .calendar-time-picker {
-    width: 500px;
-    height: 500px;
-    background-color: red;
+    display: flex;
+    flex-direction: column;
+    width: 80dvw;
+    height: fit-content;
+    background-color: #202020;
+    align-items: center;
+    justify-content: center;
 
-    .calendar-circle {
-      width: 250px;
-      height: 250px;
-      border-radius: 300px;
-      background-color: #00ff04;
+    calendar-clock {
+      margin: 20px;
+    }
+
+    .calendar-time-picker-time {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      button {
+        padding: 10px 20px;
+      }
+
+      > button, p {
+        font-size: 3rem;
+        margin: 0;
+      }
+
+      p {
+        padding: 0 10px;
+      }
     }
   }
 }

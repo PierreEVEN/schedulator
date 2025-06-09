@@ -2,8 +2,6 @@
     <div>
         SELECT TIME
     </div>
-    <div class="calendar-clock">
-        <div class="calendar-circle"></div>
-
-    </div>
+    <div class="calendar-time-picker-time"><button onclick="{{ctx "mode_hours()"}}" {{object "hours"}}>{{h}}</button><p>:</p><button onclick="{{ctx "mode_minutes()"}}" {{object "minutes"}}>{{mn}}</button></div>
+    <calendar-clock {{object "clock"}}></calendar-clock>
 </div>

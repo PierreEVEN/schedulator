@@ -1,5 +1,7 @@
 import './datetime_input.scss'
 
+require('./clock/clock')
+
 class CalendarDateTimeInput extends HTMLElement {
     constructor() {
         super();
@@ -42,7 +44,42 @@ class CalendarDateTimeInput extends HTMLElement {
         }, {
             edit_time: (event) => {
                 event.preventDefault();
-                this._open_edit_modal(require('./time_picker.hbs')({}, {}))
+                let hours = 8;
+                let minutes = 45;
+                let mode_hours = true;
+                const time_picker_modal = require('./time_picker.hbs')({h: hours, mn: minutes}, {
+                    mode_hours: () => {
+                        mode_hours = true;
+                        time_picker_modal.hb_elements.clock.max = 12;
+                        time_picker_modal.hb_elements.clock.spacing = 1;
+                        time_picker_modal.hb_elements.clock.has_inner = true;
+                        time_picker_modal.hb_elements.clock.rebuild_clock();
+                        time_picker_modal.hb_elements.clock.value = hours;
+                    },
+                    mode_minutes: () => {
+                        mode_hours = false;
+                        time_picker_modal.hb_elements.clock.max = 60;
+                        time_picker_modal.hb_elements.clock.spacing = 5;
+                        time_picker_modal.hb_elements.clock.has_inner = false;
+                        time_picker_modal.hb_elements.clock.rebuild_clock();
+                        time_picker_modal.hb_elements.clock.value = minutes;
+                    }
+                });
+                time_picker_modal.hb_elements.clock.has_inner = true;
+                time_picker_modal.hb_elements.clock.value = hours;
+
+                this._open_edit_modal(time_picker_modal);
+
+                time_picker_modal.hb_elements.clock.onchange = (event) => {
+                    if (mode_hours) {
+                        hours = event.target.value;
+                        time_picker_modal.hb_elements.hours.innerText = event.target.value;
+                    }
+                    else {
+                        minutes = event.target.value;
+                        time_picker_modal.hb_elements.minutes.innerText = event.target.value;
+                    }
+                }
             }
         });
         this._elements = widgets.hb_elements;
