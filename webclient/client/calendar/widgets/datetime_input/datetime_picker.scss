@@ -5,39 +5,96 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.79);
-  align-items: center;
-  justify-content: center;
+  pointer-events: none;
+  z-index: 100;
 
   .calendar-time-picker {
     display: flex;
     flex-direction: column;
-    width: 80dvw;
-    height: fit-content;
-    background-color: #202020;
+    position: absolute;
     align-items: center;
     justify-content: center;
+    background-color: #202020;
+    pointer-events: auto;
+    border-radius: 10px;
+    padding-bottom: 10px;
 
-    calendar-clock {
-      margin: 20px;
-    }
-
-    .calendar-time-picker-time {
+    .calendar-time-picker-edit {
       display: flex;
-      flex-direction: row;
+      position: relative;
+      flex-direction: column;
+      width: fit-content;
+      height: fit-content;
       align-items: center;
+      justify-content: center;
+      padding-top: 20px;
 
-      button {
-        padding: 10px 20px;
+      calendar-clock {
+        margin: 20px;
+        width: 200px;
+        height: 200px;
       }
 
-      > button, p {
-        font-size: 3rem;
-        margin: 0;
+      .calendar-time-picker-time {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+
+        button {
+          padding: 10px 20px;
+        }
+
+        .calendar-dt-picker-selected {
+          background-color: #365b67;
+        }
+
+        > button, p {
+          font-size: 2.4rem;
+          margin: 0;
+        }
+
+        p {
+          padding: 0 10px;
+        }
+      }
+    }
+  }
+
+  &.calendar-dt-picker-mobile {
+    background-color: rgba(0, 0, 0, 0.79);
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+
+    .calendar-time-picker {
+      .calendar-time-picker-edit {
+        flex-direction: column;
+        position: relative;
       }
 
-      p {
-        padding: 0 10px;
+      @media (orientation: landscape) {
+        .calendar-time-picker-edit {
+          flex-direction: row;
+          padding-left: 20px;
+          padding-top: 0;
+        }
+      }
+
+      calendar-clock {
+        width: calc(min(70dvw, 50dvh) - 40px);
+        height: calc(min(70dvw, 50dvh) - 40px);
+        @media (orientation: landscape) {
+          margin: 20px;
+          width: calc(min(50dvw, 80dvh) - 40px);
+          height: calc(min(50dvw, 80dvh) - 40px);
+        }
+      }
+
+
+      .calendar-time-picker-time {
+        > button, p {
+          font-size: 3rem;
+        }
       }
     }
   }

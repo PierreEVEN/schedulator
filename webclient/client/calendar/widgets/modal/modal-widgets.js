@@ -7,8 +7,9 @@ class CalendarModalContainer extends HTMLElement {
         super();
 
         this.addEventListener('click', (element) => {
-            if (element.target === this)
+            if (element.target === this) {
                 this.close();
+            }
         })
     }
 

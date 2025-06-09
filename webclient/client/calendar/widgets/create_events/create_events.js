@@ -26,11 +26,9 @@ class CalendarCreateEventModal extends HTMLElement {
         console.assert(app_parent, "This widget doesn't belong to a calendar-app")
         const create_events = require('./create_events.hbs')({default_presence: APP_CONFIG.display_calendar().default_presence}, {
             submit: async (event) => {
-                event.preventDefault();
                 const body = [];
                 for (const selection of app_parent.selector().get_selections()) {
                     const sel = app_parent.selector().get(selection);
-
                     body.push({
                         calendar: APP_CONFIG.display_calendar().id.toString(),
                         title: EncString.from_client(this.title_override.get(selection) || ""),
@@ -68,12 +66,10 @@ class CalendarCreateEventModal extends HTMLElement {
 
         for (const selection of app_parent.selector().get_selections()) {
             const data = app_parent.selector().get(selection);
-            const start = date_to_local_time(data.start);
-            const end = date_to_local_time(data.end);
             const widget = require('./single_event.hbs')({
                 title: data.start.toLocaleDateString(locale, options) + " - " + data.end.toLocaleDateString(locale, options),
-                start: start,
-                end: end,
+                start: data.start,
+                end: data.end,
                 open: open
             }, {
                 set_title: (event) => {
@@ -81,11 +77,11 @@ class CalendarCreateEventModal extends HTMLElement {
                 },
                 set_start: async (event) => {
                     await app_parent.selector().update_selection_start(selection, new Date(event.target.value));
-                    widget.hb_elements.end.value = date_to_local_time(data.end);
+                    widget.hb_elements.end.value = data.end;
                 },
                 set_end: async (event) => {
                     await app_parent.selector().update_selection_end(selection, new Date(event.target.value));
-                    widget.hb_elements.start.value = date_to_local_time(data.start);
+                    widget.hb_elements.start.value = data.start;
                 }
             });
             create_events.hb_elements['event_list'].append(widget);

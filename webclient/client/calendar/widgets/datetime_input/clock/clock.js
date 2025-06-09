@@ -34,6 +34,8 @@ class CalendarClock extends HTMLElement {
             this._on_pointer_move(event.clientX, event.clientY);
         }
         document.addEventListener('pointerup', () => {
+            if (!this._drag)
+                return;
             this._drag = false;
             if (this._needle) {
                 this._link.style.transitionDuration = '0.2s';
@@ -41,6 +43,7 @@ class CalendarClock extends HTMLElement {
                 this._indicator.style.transitionDuration = '0.2s';
                 this._display_value = this.value;
                 this._update_needle();
+                this._set_value(this._value, true, true);
             }
         });
 
@@ -48,7 +51,7 @@ class CalendarClock extends HTMLElement {
 
     connectedCallback() {
         if (this.value === undefined)
-            this._set_value(0, true);
+            this._set_value(0, false, true);
         this.rebuild_clock();
     }
 
@@ -57,13 +60,23 @@ class CalendarClock extends HTMLElement {
     }
 
     set value(value) {
-        this._set_value(value, true)
+        this._set_value(value, false, true)
     }
 
-    _set_value(value, force = false) {
+    _set_value(value, from_user = false, apply = false) {
         this._value = value;
-        if (force)
+        if (apply) {
             this._display_value = value;
+        }
+        if (from_user)
+            if (this.onchange)
+                this.onchange({target: this, submit: apply})
+
+        if (!this._needle)
+            return;
+
+        if (value > this.max && this.has_inner)
+            this._inner_mode = true;
 
         if (this._last_highlight)
             this._last_highlight.style.color = 'white';
@@ -78,8 +91,6 @@ class CalendarClock extends HTMLElement {
         if (this._last_highlight)
             this._last_highlight.style.color = 'black';
         this._update_needle();
-        if (this.onchange)
-            this.onchange({target: this})
     }
 
     _on_pointer_move(x, y) {
@@ -94,15 +105,17 @@ class CalendarClock extends HTMLElement {
         if (this._inner_mode) {
             const unscaled_value = angle / Math.PI * 0.5 * (this.inner_max - this.inner_start);
             this._display_value = unscaled_value % (this.inner_max - this.inner_start) + this.inner_start;
-            this._set_value(Math.round(unscaled_value) % (this.inner_max - this.inner_start) + this.inner_start);
+            this._set_value(Math.round(unscaled_value) % (this.inner_max - this.inner_start) + this.inner_start, true, false);
         } else {
             const unscaled_value = angle / Math.PI * 0.5 * (this.max - this.start);
             this._display_value = unscaled_value % (this.max - this.start) + this.start;
-            this._set_value(Math.round(unscaled_value) % (this.max - this.start) + this.start);
+            this._set_value(Math.round(unscaled_value) % (this.max - this.start) + this.start, true, false);
         }
     }
 
     _update_needle() {
+        if (!this.has_inner && this._inner_mode)
+            this._inner_mode = false;
         if (this._needle) {
             if (this._inner_mode) {
                 this._needle.style.rotate = `${(this._display_value - this.inner_start) / (this.inner_max - this.inner_start) * Math.PI * 2}rad`;

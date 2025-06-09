@@ -23,11 +23,6 @@ body {
     }
   }
 
-  @media (orientation: portrait) {
-    .header {
-      display: none;
-    }
-  }
 
   @media (min-aspect-ratio: 2) {
     .header {
