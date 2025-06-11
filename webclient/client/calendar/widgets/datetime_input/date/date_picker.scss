@@ -1,0 +1,45 @@
+calendar-date-picker {
+
+  padding: 1rem;
+
+  .calendar-dp-header {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .calendar-dp-titles {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    width: 100%;
+    text-align: center;
+
+    p {
+      padding: 0;
+      margin: 10px 0;
+    }
+  }
+
+  .calendar-dp-table {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+
+    width: 100%;
+
+    .calendar-dp-select {
+      background-color: #6dc6b1;
+      color: black;
+    }
+
+    button {
+      border: solid 1px transparent;
+      background-color: transparent;
+      padding: 12px 12px;
+      text-align: center;
+
+      &:hover {
+        border: solid 1px;
+        background-color: #464646;
+      }
+    }
+  }
+}

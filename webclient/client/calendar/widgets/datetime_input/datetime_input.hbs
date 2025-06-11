@@ -1,6 +1,6 @@
 {{#if has_time}}
     <div class="calendar-dt-time">
-        <button class="calendar-dt-timeval" {{object "time"}} onpointerdown="{{ctx "edit_time(event, true)"}}" onmousedown="{{ctx "edit_time(event, false)"}}">{{time}}</button>
+        <button class="calendar-dt-timeval" {{object "time"}} onpointerdown="{{ctx "edit_time(event)"}}">{{time}}</button>
     </div>
 {{/if}}
 {{#if has_sep}}
@@ -9,8 +9,8 @@
 {{#if has_date}}
     <div class="calendar-dt-date">
         {{#if has_year}}
-            <button class="calendar-dt-year" {{object "year"}}>{{year}}</button>
+            <button class="calendar-dt-year" {{object "year"}} onpointerdown="{{ctx "edit_year(event)"}}">{{year}}</button>
         {{/if}}
-        <button class="calendar-dt-date" {{object "date"}}>{{date}}</button>
+        <button class="calendar-dt-date" {{object "date"}} onpointerdown="{{ctx "edit_date(event)"}}">{{date}}</button>
     </div>
 {{/if}}

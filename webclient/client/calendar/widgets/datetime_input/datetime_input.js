@@ -2,6 +2,7 @@ import './datetime_input.scss'
 import {ONE_HOUR_MS, ONE_MIN_MS} from "../../../utilities/time_utils";
 
 require('./clock/clock')
+require('./date/date_picker')
 
 class CalendarDateTimeInput extends HTMLElement {
     constructor() {
@@ -61,7 +62,7 @@ class CalendarDateTimeInput extends HTMLElement {
             has_year: this.has_year,
             has_sep: this.has_date && this.has_time
         }, {
-            edit_time: (event, is_touch) => {
+            edit_time: (event) => {
                 event.preventDefault();
                 let hours = this._date_value ? this._date_value.getHours() : Math.trunc(this._ms_value / ONE_HOUR_MS);
                 let minutes = this._date_value ? this._date_value.getMinutes() : Math.trunc(this._ms_value / ONE_MIN_MS);
@@ -122,6 +123,22 @@ class CalendarDateTimeInput extends HTMLElement {
                         time_picker_modal.hb_elements.minutes.innerText = String(event.target.value).padStart(2, '0');
                     }
                 }
+            },
+            edit_date: (event) => {
+                const picker = document.createElement('calendar-date-picker');
+                picker.onset = (event) => {
+                    const date = new Date(this._date_value);
+                    date.setFullYear(event.target.value.getFullYear());
+                    date.setMonth(event.target.value.getMonth());
+                    date.setDate(event.target.value.getDate());
+                    this._set_value(date, true);
+                    this._close_edit_modal();
+                }
+                this._open_edit_modal(picker, event);
+                picker.value = this._date_value;
+            },
+            edit_year: (event) => {
+
             }
         });
         this._elements = widgets.hb_elements;
