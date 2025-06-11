@@ -1,8 +1,8 @@
 import './datetime_input.scss'
 import {ONE_HOUR_MS, ONE_MIN_MS} from "../../../utilities/time_utils";
 
-require('./clock/clock')
 require('./date/date_picker')
+require('./time/time_picker')
 
 class CalendarDateTimeInput extends HTMLElement {
     constructor() {
@@ -34,7 +34,7 @@ class CalendarDateTimeInput extends HTMLElement {
         this.modal.classList.add('calendar-dt-picker-container');
         this.modal.append(widget);
         this.modal.onpointerup = (event) => {
-            if (!event.target.closest('.calendar-time-picker'))
+            if (!event.target.closest('.calendar-datetime-picker'))
                 this._close_edit_modal();
         }
         document.body.append(this.modal);
@@ -47,7 +47,7 @@ class CalendarDateTimeInput extends HTMLElement {
             this.modal.classList.add('calendar-dt-picker-mobile');
     }
 
-    _close_edit_modal(widget) {
+    _close_edit_modal() {
         if (this.modal)
             this.modal.remove();
         this.modal = null;
@@ -63,66 +63,23 @@ class CalendarDateTimeInput extends HTMLElement {
             has_sep: this.has_date && this.has_time
         }, {
             edit_time: (event) => {
-                event.preventDefault();
-                let hours = this._date_value ? this._date_value.getHours() : Math.trunc(this._ms_value / ONE_HOUR_MS);
-                let minutes = this._date_value ? this._date_value.getMinutes() : Math.trunc(this._ms_value / ONE_MIN_MS);
-                let mode_hours = true;
+                const picker = document.createElement('calendar-time-picker');
 
-                const callbacks = {};
-
-                const time_picker_modal = require('./time_picker.hbs')({
-                    h: String(hours).padStart(2, '0'),
-                    mn: String(minutes).padStart(2, '0')
-                }, callbacks);
-                callbacks.mode_hours = () => {
-                    mode_hours = true;
-                    time_picker_modal.hb_elements.clock.max = 12;
-                    time_picker_modal.hb_elements.clock.spacing = 1;
-                    time_picker_modal.hb_elements.clock.has_inner = true;
-                    time_picker_modal.hb_elements.clock.rebuild_clock();
-                    time_picker_modal.hb_elements.clock.value = hours;
-                    time_picker_modal.hb_elements.hours.classList.add('calendar-dt-picker-selected')
-                    time_picker_modal.hb_elements.minutes.classList.remove('calendar-dt-picker-selected')
-                };
-                callbacks.mode_minutes = () => {
-                    mode_hours = false;
-                    time_picker_modal.hb_elements.clock.max = 60;
-                    time_picker_modal.hb_elements.clock.spacing = 5;
-                    time_picker_modal.hb_elements.clock.has_inner = false;
-                    time_picker_modal.hb_elements.clock.rebuild_clock();
-                    time_picker_modal.hb_elements.clock.value = minutes;
-                    time_picker_modal.hb_elements.minutes.classList.add('calendar-dt-picker-selected')
-                    time_picker_modal.hb_elements.hours.classList.remove('calendar-dt-picker-selected')
-                };
-                callbacks.onvalidate = () => {
+                picker.onset = (event) => {
                     if (this._date_value) {
                         const date = new Date(this._date_value);
-                        date.setHours(hours, minutes, 0, 0);
+                        date.setHours(event.target.hour, event.target.minute, 0, 0);
                         this._set_value(date, true);
-                        this._close_edit_modal();
                     } else
-                        this._set_value(this._ms_value = hours * ONE_HOUR_MS + minutes * ONE_MIN_MS, true);
-                };
-                callbacks.oncancel = () => {
+                        this._set_value(this._ms_value = this.hour * ONE_HOUR_MS + this.minute * ONE_MIN_MS, true);
                     this._close_edit_modal();
-                };
-
-                time_picker_modal.hb_elements.clock.has_inner = true;
-
-                this._open_edit_modal(time_picker_modal, event);
-
-                time_picker_modal.hb_elements.clock.value = hours;
-                time_picker_modal.hb_elements.clock.onchange = (event) => {
-                    if (mode_hours) {
-                        hours = event.target.value;
-                        time_picker_modal.hb_elements.hours.innerText = String(event.target.value).padStart(2, '0');
-                        if (event.submit)
-                            callbacks.mode_minutes();
-                    } else {
-                        minutes = event.target.value;
-                        time_picker_modal.hb_elements.minutes.innerText = String(event.target.value).padStart(2, '0');
-                    }
                 }
+                picker.oncancel = () => {
+                    this._close_edit_modal();
+                }
+                this._open_edit_modal(picker, event);
+                picker.hour = this._date_value ? this._date_value.getHours() : Math.trunc(this._ms_value / ONE_HOUR_MS);
+                picker.minute = this._date_value ? this._date_value.getMinutes() : Math.trunc(this._ms_value / ONE_MIN_MS);
             },
             edit_date: (event) => {
                 const picker = document.createElement('calendar-date-picker');

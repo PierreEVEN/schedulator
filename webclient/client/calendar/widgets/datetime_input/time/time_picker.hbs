@@ -1,0 +1,13 @@
+<div class="calendar-time-picker-edit">
+    <div class="calendar-time-picker-time">
+        <button onclick="{{ctx "mode_hours()"}}" {{object "hours"}}
+                class="calendar-dt-picker-selected">{{h}}</button>
+        <p>:</p>
+        <button onclick="{{ctx "mode_minutes()"}}" {{object "minutes"}}>{{mn}}</button>
+    </div>
+    <calendar-clock {{object "clock"}}></calendar-clock>
+</div>
+<div class="calendar-time-picker-buttons">
+    <button onclick="{{ctx "oncancel()"}}">Annuler</button>
+    <button onclick="{{ctx "onvalidate()"}}">Ok</button>
+</div>

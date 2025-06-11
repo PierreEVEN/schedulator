@@ -134,14 +134,14 @@ class CalendarClock extends HTMLElement {
             return;
         this.innerHTML = '';
         this._needle = document.createElement('div');
-        this._needle.classList.add('calendar-clock-needle');
+        this._needle.classList.add('calendar-time-needle');
         this._indicator = document.createElement('div');
-        this._indicator.classList.add('calendar-clock-indicator');
+        this._indicator.classList.add('calendar-time-indicator');
         this._link = document.createElement('div');
-        this._link.classList.add('calendar-clock-link');
+        this._link.classList.add('calendar-time-link');
         this._link.style.bottom = '50%';
         const center = document.createElement('div');
-        center.classList.add('calendar-clock-center');
+        center.classList.add('calendar-time-center');
         this._needle.append(this._indicator);
         this._needle.append(this._link);
         this._needle.append(center);

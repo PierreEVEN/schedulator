@@ -1,23 +1,6 @@
 .calendar-dt-picker-container {
-  display: flex;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 100;
 
-  .calendar-time-picker {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    align-items: center;
-    justify-content: center;
-    background-color: #202020;
-    pointer-events: auto;
-    border-radius: 10px;
-    padding-bottom: 10px;
+  calendar-time-picker {
 
     .calendar-time-picker-edit {
       display: flex;
@@ -66,7 +49,7 @@
     justify-content: center;
     pointer-events: auto;
 
-    .calendar-time-picker {
+    calendar-time-picker{
       .calendar-time-picker-edit {
         flex-direction: column;
         position: relative;

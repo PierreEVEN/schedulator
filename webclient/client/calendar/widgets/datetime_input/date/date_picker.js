@@ -10,7 +10,7 @@ class CalendarDatePicker extends HTMLElement {
     }
 
     connectedCallback() {
-        this.classList.add('calendar-time-picker')
+        this.classList.add('calendar-datetime-picker')
         const widgets = require('./date_picker.hbs')({}, {
             next_month: () => {
                 this._display_date.setMonth(this._display_date.getMonth() + 1);

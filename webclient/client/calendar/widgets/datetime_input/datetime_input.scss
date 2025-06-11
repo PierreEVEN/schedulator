@@ -1,4 +1,4 @@
-@import "datetime_picker";
+@import "time/time_picker";
 
 calendar-date-time-input {
   display: flex;
@@ -73,5 +73,28 @@ calendar-date-time-input {
   .calendar-dt-date {
     font-size: 1.5rem;
     color: white;
+  }
+}
+
+.calendar-dt-picker-container {
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 100;
+
+  .calendar-datetime-picker {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    align-items: center;
+    justify-content: center;
+    background-color: #202020;
+    pointer-events: auto;
+    border-radius: 10px;
+    padding-bottom: 10px;
   }
 }
