@@ -303,6 +303,7 @@ class CalendarDay extends HTMLElement {
                 await this._selector.select_event(event.id);
             }
         });
+        event_div.hb_elements.handle.style.backgroundColor = numberToColorHSL(event.presence);
         event_div.style.backgroundColor = numberToColorHSL(event.owner);
         event_div.style.top = `${vmin * 100}%`;
         event_div.style.bottom = `${(1 - vmax) * 100}%`;

@@ -2,6 +2,10 @@
 
   calendar-time-picker {
 
+    .calendar-time-picker-buttons {
+      display: flex;
+    }
+
     .calendar-time-picker-edit {
       display: flex;
       position: relative;
@@ -50,6 +54,7 @@
     pointer-events: auto;
 
     calendar-time-picker{
+
       .calendar-time-picker-edit {
         flex-direction: column;
         position: relative;

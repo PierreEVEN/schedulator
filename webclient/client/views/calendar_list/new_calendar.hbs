@@ -10,7 +10,10 @@
             <label for='start'>Début</label>
             <calendar-date-time-input no_time {{object "start"}} id="start" required></calendar-date-time-input>
         </span>
-        <p>></p>
+        <span>
+            <label style="visibility: hidden; height: auto">0</label>
+            <p>></p>
+        </span>
         <span>
             <label for='end'>Fin</label>
             <calendar-date-time-input no_time {{object "end"}} id="end" required></calendar-date-time-input>
@@ -22,7 +25,10 @@
             <calendar-date-time-input no_date {{object "start_daily_hour"}} value="06:00"
                                       id="start_daily_hour"></calendar-date-time-input>
         </span>
-        <p>></p>
+        <span>
+            <label style="visibility: hidden; height: auto">0</label>
+            <p>></p>
+        </span>
         <span>
             <label for='end_daily_hour'>Fin de journée</label>
             <calendar-date-time-input no_date {{object "end_daily_hour"}} value="20:00"

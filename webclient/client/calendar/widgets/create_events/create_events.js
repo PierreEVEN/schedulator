@@ -2,7 +2,6 @@ require('./create_events.scss')
 require('../presence_slider/presence_slider')
 const {APP_CONFIG} = require("../../../utilities/app_config");
 const {EncString} = require("../../../utilities/encstring");
-const {date_to_local_time} = require("../../../utilities/time_utils");
 const {fetch_api} = require("../../../utilities/request");
 const {NOTIFICATION, Message} = require("../../../views/message_box/notification");
 const {Event} = require("../../../utilities/event");

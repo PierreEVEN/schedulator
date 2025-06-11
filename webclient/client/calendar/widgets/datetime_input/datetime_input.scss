@@ -5,6 +5,7 @@ calendar-date-time-input {
   flex-direction: column;
   background-color: #1d1d1d;
   color: white;
+  border-radius: 10px;
   padding: 10px;
   align-items: center;
   flex-grow: 0;
@@ -12,8 +13,8 @@ calendar-date-time-input {
   button {
     margin: 0;
     border: solid 1px transparent;
-    border-radius: 0;
     padding: 0;
+    border-radius: 10px;
   }
 
   div button:hover {
@@ -24,8 +25,8 @@ calendar-date-time-input {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    font-size: 2.4rem;
-    font-weight: 700;
+    font-size: 2rem;
+    font-weight: 600;
     width: fit-content;
 
     p {
@@ -49,14 +50,14 @@ calendar-date-time-input {
     flex-direction: column;
     width: fit-content;
     color: #c7c7c7;
-    font-size: 1.2rem;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 500;
     text-wrap: nowrap;
 
 
     .calendar-dt-year {
       text-align: start;
-      font-size: 1.2rem;
+      font-size: 1rem;
       font-weight: inherit;
       color: #999999;
     }
@@ -71,7 +72,7 @@ calendar-date-time-input {
 .calendar-dt-notime {
 
   .calendar-dt-date {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     color: white;
   }
 }
@@ -96,5 +97,7 @@ calendar-date-time-input {
     pointer-events: auto;
     border-radius: 10px;
     padding-bottom: 10px;
+    border: solid 1px #151515;
+    box-shadow: -10px -5px 20px #000;
   }
 }

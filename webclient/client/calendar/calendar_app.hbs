@@ -1,5 +1,8 @@
 <div class="calendar-header">
-    <p {{object "title"}}>{{title}}</p>
+    <div class="calendar-header-title">
+        <p {{object "title"}}>{{title}}</p>
+        <p {{object "week"}}>{{week}}</p>
+    </div>
     <button onclick="{{ctx "previous_week()"}}"><</button>
     <button onclick="{{ctx "today()"}}">Aujourd'hui</button>
     <button onclick="{{ctx "next_week()"}}">></button>

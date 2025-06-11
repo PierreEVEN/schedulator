@@ -1,4 +1,4 @@
-<form onsubmit="{{ctx 'login(event)'}}" class="calendar-modal">
+<form onsubmit="{{ctx 'login(event)'}}" class="calendar-modal login-modal">
     <h1>Connexion</h1>
     <label for='display_name'>
         <input {{object "login"}} type="text" name="display_name" placeholder="Nom d'utilisateur / email" id="username"
@@ -9,9 +9,8 @@
     </label>
 
     <input type="submit" value="Se connecter">
-    <!--
     <a id="forgot-password" href="javascript:{{ctx 'reset_password()'}}">mot de passe oublié</a>
     <div class='footer'>
         <p>Pas encore de compte ?</p> <a href="javascript:{{ctx 'signup()'}};">Créer un compte</a>
-    </div>-->
+    </div>
 </form>

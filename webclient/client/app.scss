@@ -23,7 +23,6 @@ body {
     }
   }
 
-
   @media (min-aspect-ratio: 2) {
     .header {
       font-size: 1em;
@@ -55,7 +54,7 @@ button {
   background-color: #1d1d1d;
   border: solid 1px #111111;
   max-height: 4em;
-  margin: 5px 5px;
+  margin: 0 5px;
   padding: 5px 15px;
   border-radius: 10px;
   color: white;
@@ -77,5 +76,43 @@ a {
 
   &:active {
     color: #375a37;
+  }
+}
+
+select {
+  background-color: transparent;
+  border: solid 1px transparent;
+  color: white;
+  text-align: center;
+  border-radius: 5px;
+  font-weight: 600;
+  height: 50px;
+
+  option {
+    width: 100%;
+    text-align: center;
+    font-weight: 800;
+    padding: 20px;
+    margin: 20px;
+  }
+
+  &:hover {
+    background-color: #3b3b3b;
+    border: solid 1px #525252;
+  }
+
+  &:active {
+    background-color: #606060;
+    border: solid 1px #676767;
+  }
+}
+
+button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  img {
+    object-fit: contain;
+    height: 25px;
   }
 }

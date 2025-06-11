@@ -1,17 +1,35 @@
-#modal-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
+
+.login-modal {
   display: flex;
   align-items: center;
-  justify-content: center;
 
-  pointer-events: none;
+  input {
+    margin-bottom: 20px;
+    &[type="text"] {
+      width: 100%;
+    }
+  }
 
-  .modal-root {
-    pointer-events: auto;
-    background-color: darkgray;
+  #forgot-password {
+    margin-bottom: 20px;
+    align-self: center;
+  }
+
+  .footer {
+
+    margin-top: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: end;
+
+    a {
+      font-size: 0.8rem;
+    }
+
+    p {
+      font-size: 0.8rem;
+      color: gray;
+      margin: 0 10px
+    }
   }
 }

@@ -8,6 +8,7 @@ import {fetch_api} from "./utilities/request";
 import {Message, NOTIFICATION} from "./views/message_box/notification";
 import {Event} from "./utilities/event";
 import {EncString} from "./utilities/encstring";
+import {Authentication} from "./utilities/authentication/authentication";
 
 require('./app.scss');
 require('./calendar/calendar_app');
@@ -28,6 +29,7 @@ function try_update_display_user(connected_user) {
     }
     if (CURRENT_WIDGET) {
         const container = document.getElementById('page-content');
+        container.innerHTML = '';
         container.append(CURRENT_WIDGET);
     }
 }
@@ -87,7 +89,15 @@ GLOBAL_EVENTS.add('on_display_calendar_changed', (payload) => {
 
 try_update_display_calendar(APP_CONFIG.display_calendar());
 
-document.getElementById('global-title').onclick = (event) => {
+document.getElementById('global-signup').onclick = async () => {
+    await Authentication.signup();
+}
+
+document.getElementById('global-signin').onclick = async () => {
+    await Authentication.login();
+}
+
+document.getElementById('global-title').onpointerdown = (event) => {
     event.preventDefault();
     APP_CONFIG.set_display_calendar(null);
 }

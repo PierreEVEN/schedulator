@@ -264,7 +264,8 @@ class CalendarApp extends HTMLElement {
 
     connectedCallback() {
         const elements = require('./calendar_app.hbs')({
-            title: this._make_title()
+            title: `${this._display_date.toLocaleDateString(undefined, {month: 'long', year: "numeric"})}`,
+            week: `Semaine ${get_week_number(this._display_date)}`
         }, {
             'ctx_menu': () => {
                 const file_input = document.createElement('input');
@@ -433,7 +434,8 @@ class CalendarApp extends HTMLElement {
         if (!this.isConnected)
             return;
 
-        this._elements.title.innerText = this._make_title();
+        this._elements.title.innerText = `${this._display_date.toLocaleDateString(undefined, {month: 'long', year: "numeric"})}`;
+        this._elements.week.innerText = `Semaine ${get_week_number(this._display_date)}`;
 
         if (this._main_body)
             this._main_body.set_display_date(this._display_date);
@@ -446,10 +448,6 @@ class CalendarApp extends HTMLElement {
         this._event_source = event_pool;
         if (this._main_body)
             this._main_body.set_event_source(this._event_source);
-    }
-
-    _make_title() {
-        return `${this._display_date.toLocaleDateString(undefined, {month: 'long'})} ${this._display_date.getFullYear()} - Semaine ${get_week_number(this._display_date)}`
     }
 
     open_modal(content) {

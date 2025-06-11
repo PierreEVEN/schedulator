@@ -17,6 +17,23 @@ calendar-app {
     align-items: center;
     position: relative;
 
+    .calendar-header-title {
+      display: flex;
+      margin: 0 auto;
+      align-items: start;
+      justify-content: center;
+
+      p{
+        margin: 0 0 0 15px;
+        text-wrap: nowrap;
+        font-weight: 600;
+      }
+
+      @media (orientation: portrait) {
+        flex-direction: column;
+      }
+    }
+
     p {
       flex-grow: 1;
       width: auto;
@@ -56,13 +73,6 @@ calendar-app {
 
     .slider-wrapper input[type=range] {
       flex: 1;
-    }
-  }
-
-  button {
-    display: flex;
-    img {
-      object-fit: contain;
     }
   }
 }

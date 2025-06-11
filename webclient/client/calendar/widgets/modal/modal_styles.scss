@@ -17,6 +17,7 @@
       flex-grow: 1;
       height: 100%;
     }
+
     > :nth-child(2) {
       flex-grow: 1;
     }
@@ -35,6 +36,12 @@
     padding: 1rem;
     color: white;
     transition-duration: 0.2s;
+    border-radius: 5px;
+
+    &[type='submit'] {
+      margin: 15px;
+      box-shadow: -5px 5px 5px #000;
+    }
 
     &:hover {
       background-color: #3b3b3b;

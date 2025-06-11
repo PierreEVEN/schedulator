@@ -95,9 +95,10 @@ class SortedEvent {
      */
     _get_colliding_hierarchy(test_event) {
         const parents = [];
-        for (const parent of this.parents)
+        for (const parent of this.parents) {
             for (const inner of parent._get_colliding_hierarchy(test_event))
                 parents.push(inner);
+        }
         if (this.collides_with(test_event))
             parents.push(this);
         return parents;

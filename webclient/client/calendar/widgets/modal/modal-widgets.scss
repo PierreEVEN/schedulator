@@ -17,6 +17,9 @@ calendar-modal-container {
   .calendar-modal-box {
     scale: 0;
     transition-duration: 0.2s;
+
+    border: solid 1px #151515;
+    box-shadow: -10px -5px 20px #000;
   }
 
   &.calendar-modal-open {

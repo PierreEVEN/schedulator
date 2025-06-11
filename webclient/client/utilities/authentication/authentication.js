@@ -5,6 +5,8 @@ import {APP_CONFIG} from "../app_config";
 import {Message, NOTIFICATION} from "../../views/message_box/notification";
 import {User} from "../user";
 
+require('./authentication.scss')
+
 const Authentication = {
     login: async () => {
         return await new Promise((success, fail) => {

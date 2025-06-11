@@ -83,7 +83,7 @@ async fn login(State(ctx): State<Arc<AppCtx>>, request: Request) -> Result<impl 
 
     let payload = Json::<UserCredentials>::from_request(request, &ctx).await?;
 
-    let user = User::from_credentials(&ctx.database, &payload.login, &payload.password).await.map_err(|err| {ServerError::msg(StatusCode::UNAUTHORIZED, format!("Connection failed : invalid credentials {err}"))})?;
+    let user = User::from_credentials(&ctx.database, &payload.login, &payload.password).await.map_err(|err| {ServerError::msg(StatusCode::NOT_FOUND, format!("Connection failed : invalid credentials {err}"))})?;
     let auth_token = User::generate_auth_token(&user, &ctx.database, &match &payload.device {
         None => { EncString::from("Unknown device") }
         Some(device) => { device.clone() }

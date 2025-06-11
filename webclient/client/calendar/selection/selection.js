@@ -25,6 +25,7 @@ class CalendarSelection extends HTMLElement {
 
         this.oncontextmenu = (event) => {
             event.preventDefault();
+
             /**
              * @type {CalendarApp}
              */

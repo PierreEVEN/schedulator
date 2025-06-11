@@ -11,30 +11,25 @@
 
 <body data-app_config='{}'>
 <div class="header">
-    <h1 id="global-title">Schedulator</h1>
+    <h1 id="global-title" style="cursor: pointer;">Schedulator</h1>
     <a href="https://github.com/PierreEVEN/schedulator">view sources</a>
     <div id='user-header-container'></div>
 </div>
 <div id="page-content">
 
-
-    <!--
-    <div style="display: flex; align-items: end">
-        <calendar-date-time-input></calendar-date-time-input>
-        <calendar-date-time-input no_date></calendar-date-time-input>
+    <div style="display: flex; align-items: center; flex-grow: 1; flex-direction: column; margin-top: 20dvh">
+        <h2>Pas encore de compte ?</h2>
+        <div style="display: flex; flex-direction: row; margin-bottom: 50px">
+            <button id="global-signup" style="padding: 30px">Créer un compte</button>
+            <button id="global-signin" style="padding: 30px">Connexion</button>
+        </div>
     </div>
-    -->
-    <div style="display: flex; align-items: start; flex-grow: 1">
-        <!--
-        <calendar-date-time-input no_time></calendar-date-time-input>
-        <calendar-date-time-input no_time has_year></calendar-date-time-input>
-        -->
+
+    <div style="display: flex; justify-content: center; flex-grow: 1">
         <calendar-date-time-input has_year></calendar-date-time-input>
     </div>
 
 </div>
-
-
 
 
 <calendar-modal-container id="global-modal"></calendar-modal-container>
