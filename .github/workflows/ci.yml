@@ -107,18 +107,18 @@ jobs:
       - run: zip -r schedulator_linux_musl.zip ./schedulator/
       - run: rm -r ./schedulator/
 
-      # Generate changelog
-      - name: "Generate release changelog"
-        uses: janheinrichmerker/action-github-changelog-generator@v2.3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          output: CHANGELOG.md
+#      # Generate changelog
+#      - name: "Generate release changelog"
+#        uses: janheinrichmerker/action-github-changelog-generator@v2.3
+#        with:
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#          output: CHANGELOG.md
 
       # Upload release
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          body_path: CHANGELOG.md
+#          body_path: CHANGELOG.md
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             schedulator_linux.zip
