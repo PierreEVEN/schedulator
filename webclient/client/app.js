@@ -89,13 +89,15 @@ GLOBAL_EVENTS.add('on_display_calendar_changed', (payload) => {
 
 try_update_display_calendar(APP_CONFIG.display_calendar());
 
-document.getElementById('global-signup').onclick = async () => {
-    await Authentication.signup();
-}
+if (document.getElementById('global-signup'))
+    document.getElementById('global-signup').onclick = async () => {
+        await Authentication.signup();
+    }
 
-document.getElementById('global-signin').onclick = async () => {
-    await Authentication.login();
-}
+if (document.getElementById('global-signin'))
+    document.getElementById('global-signin').onclick = async () => {
+        await Authentication.login();
+    }
 
 document.getElementById('global-title').onpointerdown = (event) => {
     event.preventDefault();
