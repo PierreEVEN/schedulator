@@ -63,6 +63,10 @@ calendar-day {
         border-radius: 5px;
         pointer-events: auto;
 
+        &.calendar-event-selected {
+          filter: contrast(400%) hue-rotate(10deg);
+          border: 2px solid gray;
+        }
 
         p {
           position: absolute;

@@ -3,7 +3,7 @@
 VERSION=${1:-latest}
 
 # Download and extract desired schedulator version
-wget -O /opt/schedulator/schedulator.zip https://github.com/PierreEVEN/schedulator/releases/$VERSION/download/schedulator_linux_musl.zip
+wget -O /opt/schedulator/schedulator.zip https://github.com/PierreEVEN/schedulator/releases/$VERSION/download/schedulator_linux_musl.zip  > /opt/schedulator/update.log 2>&1
 unzip /opt/schedulator/schedulator.zip -d /opt
 
 # Install

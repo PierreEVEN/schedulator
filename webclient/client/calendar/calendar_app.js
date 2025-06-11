@@ -10,6 +10,7 @@ import './body/calendar_body'
 import {import_ics} from "../utilities/import/ics";
 import {EventManager} from "../utilities/event_manager";
 import {Selector} from "./selection/selector";
+import {Event} from "../utilities/event";
 
 require("./widgets/modal/modal-widgets")
 require('./calendar_app.scss');
@@ -265,11 +266,31 @@ class CalendarApp extends HTMLElement {
         const elements = require('./calendar_app.hbs')({
             title: this._make_title()
         }, {
-            'import': () => {
+            'ctx_menu': () => {
                 const file_input = document.createElement('input');
                 file_input.type = 'file';
                 file_input.onchange = async (event) => {
-                    await this._event_source.create_events(await import_ics(event.target['files'][0]));
+
+                    const user = (await this.get_connected_user()).id.toString();
+                    const body = [];
+                    for (const element of await import_ics(event.target['files'][0])) {
+                        body.push({
+                            calendar: APP_CONFIG.display_calendar().id.toString(),
+                            title: element.title,
+                            owner: user,
+                            start: element.start,
+                            end: element.end,
+                            source: element.source,
+                            presence: Number(-10)
+                        });
+                    }
+                    const res = await fetch_api('event/create', 'POST', body).catch(error => {
+                        NOTIFICATION.error(new Message(error).title("Impossible de créer les évenements"));
+                        throw new Error(error);
+                    });
+                    for (const event of res) {
+                        this.event_source().register_event(Event.new(event))
+                    }
                 };
                 file_input.click();
             },

@@ -37,6 +37,12 @@ class Selector {
          * @private
          */
         this._current_selection = null;
+
+        /**
+         * @type {Set<number>}
+         * @private
+         */
+        this._selected_events = new Set();
     }
 
 
@@ -83,6 +89,41 @@ class Selector {
         for (const key of this._selections.keys()) {
             await this.remove_selection(key);
         }
+    }
+
+    /**
+     * @param id {number}
+     */
+    async select_event(id) {
+        await this.clear_selected_events();
+        if (this._selected_events.has(id)) {
+            await this.deselect_event(id);
+        } else {
+            this._selected_events.add(id);
+            await this.events.broadcast('select-event', id);
+        }
+    }
+
+    /**
+     * @param id {number}
+     */
+    async deselect_event(id) {
+        if (this._selected_events.has(id)) {
+            this._selected_events.delete(id);
+            await this.events.broadcast('deselect-event', id);
+        }
+    }
+
+    async clear_selected_events() {
+        for (const event of this._selected_events)
+            await this.deselect_event(event);
+    }
+
+    /**
+     * @return {Set<number>}
+     */
+    get_selected_events() {
+        return this._selected_events;
     }
 
     /**

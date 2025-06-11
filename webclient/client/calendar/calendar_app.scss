@@ -58,4 +58,11 @@ calendar-app {
       flex: 1;
     }
   }
+
+  button {
+    display: flex;
+    img {
+      object-fit: contain;
+    }
+  }
 }

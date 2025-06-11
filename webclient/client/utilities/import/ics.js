@@ -1,11 +1,10 @@
 import Ical from "ical.js";
 import {EncString} from "../encstring";
-import {Event} from "../event";
 
 /**
  * @param file {File}
  * @param end_date {Date}
- * @returns {Promise<Event[]>}
+ * @returns {Promise<object[]>}
  */
 async function import_ics(file, end_date) {
     const raw_data = await new Promise((resolve, reject) => {
@@ -65,14 +64,12 @@ async function import_ics(file, end_date) {
                 console.warn('Invalid title : ', event)
             if (!start || !end || !title)
                 continue;
-
-
             const register_event_helper = (date, duration) => {
                 events.push({
                     title: title,
                     start: date,
                     end: date + duration,
-                    source: `import@${raw_data.filename}`
+                    source: EncString.from_client(`import@${raw_data.filename}`)
                 });
             }
 

@@ -30,9 +30,9 @@ class CalendarList extends HTMLElement {
                             title: EncString.from_client(create_div.hb_elements.title.value),
                             start: new Date(create_div.hb_elements.start.value).getTime(),
                             end: new Date(create_div.hb_elements.end.value).getTime(),
-                            time_precision: time_to_ms(create_div.hb_elements.time_precision.value),
-                            start_daily_hour: time_to_ms(create_div.hb_elements.start_daily_hour.value),
-                            end_daily_hour: time_to_ms(create_div.hb_elements.end_daily_hour.value),
+                            time_precision: Number(create_div.hb_elements.time_precision.value),
+                            start_daily_hour: Number(create_div.hb_elements.start_daily_hour.value),
+                            end_daily_hour: Number(create_div.hb_elements.end_daily_hour.value),
                             require_account: create_div.hb_elements.require_account.checked,
                             default_presence: Number(create_div.hb_elements.default_presence.value)
                         };

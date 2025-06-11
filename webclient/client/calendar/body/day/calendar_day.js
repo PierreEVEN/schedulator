@@ -43,6 +43,12 @@ class CalendarDay extends HTMLElement {
          * @type {Map<number, HTMLElement>}
          * @private
          */
+        this._event_divs = new Map();
+
+        /**
+         * @type {Map<number, HTMLElement>}
+         * @private
+         */
         this._selections = new Map();
     }
 
@@ -70,22 +76,48 @@ class CalendarDay extends HTMLElement {
     set_selector(selector) {
         if (this._selector === selector)
             return;
+
+        if (this._selector) {
+            this._update_event_cb.remove();
+            this._remove_event_cb.remove();
+            this._select_event_cb.remove();
+            this._deselect_event_cb.remove();
+        }
+
         this._selector = selector;
 
         for (const selection of this._selections.values())
             selection.remove();
         this._selections.clear();
         if (this._selector) {
-            this._selector.events.add('update', (index) => {
+            this._update_event_cb = this._selector.events.add('update', (index) => {
                 if (!this.isConnected)
                     return;
                 this._update_selection(index, true);
             })
-            this._selector.events.add('remove', (index) => {
+            this._remove_event_cb = this._selector.events.add('remove', (index) => {
                 const sel = this._selections.get(index);
                 if (sel) {
                     sel.remove();
                     this._selections.delete(index);
+                }
+            })
+            for (const event of this._selector.get_selected_events()) {
+                const div = this._event_divs.get(event);
+                if (div) {
+                    div.classList.add('calendar-event-selected');
+                }
+            }
+            this._select_event_cb = this._selector.events.add('select-event', (event) => {
+                const div = this._event_divs.get(event);
+                if (div) {
+                    div.classList.add('calendar-event-selected');
+                }
+            })
+            this._deselect_event_cb = this._selector.events.add('deselect-event', (event) => {
+                const div = this._event_divs.get(event);
+                if (div) {
+                    div.classList.remove('calendar-event-selected');
                 }
             })
         }
@@ -242,6 +274,7 @@ class CalendarDay extends HTMLElement {
 
         if (!this._even_pool)
             return;
+        this._event_divs.clear();
         for (const event of this._even_pool.get_day_events(this._date))
             this._add_event(event);
     }
@@ -265,12 +298,17 @@ class CalendarDay extends HTMLElement {
         const hmax = ((indent + 1) / num_indent) * 0.95;
         let vmin = Math.max(0, (event.start_time - this._date - this._daily_start) / (this._daily_end - this._daily_start));
         let vmax = Math.min(1, (event.end_time - this._date - this._daily_start) / (this._daily_end - this._daily_start));
-        const event_div = require('./calendar_event.hbs')({title: event.title.plain()}, {});
+        const event_div = require('./calendar_event.hbs')({title: event.title.plain()}, {
+            select: async () => {
+                await this._selector.select_event(event.id);
+            }
+        });
         event_div.style.backgroundColor = numberToColorHSL(event.owner);
         event_div.style.top = `${vmin * 100}%`;
         event_div.style.bottom = `${(1 - vmax) * 100}%`;
         event_div.style.left = `${hmin * 100}%`;
         event_div.style.right = `${(1 - hmax) * 100}%`;
+        this._event_divs.set(event.id, event_div);
         this._elements.events.append(event_div);
     }
 

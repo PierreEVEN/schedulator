@@ -64,14 +64,13 @@ class CalendarDateTimeInput extends HTMLElement {
         }, {
             edit_time: (event) => {
                 const picker = document.createElement('calendar-time-picker');
-
                 picker.onset = (event) => {
                     if (this._date_value) {
                         const date = new Date(this._date_value);
                         date.setHours(event.target.hour, event.target.minute, 0, 0);
                         this._set_value(date, true);
                     } else
-                        this._set_value(this._ms_value = this.hour * ONE_HOUR_MS + this.minute * ONE_MIN_MS, true);
+                        this._set_value(event.target.hour * ONE_HOUR_MS + event.target.minute * ONE_MIN_MS, true);
                     this._close_edit_modal();
                 }
                 picker.oncancel = () => {
@@ -79,7 +78,7 @@ class CalendarDateTimeInput extends HTMLElement {
                 }
                 this._open_edit_modal(picker, event);
                 picker.hour = this._date_value ? this._date_value.getHours() : Math.trunc(this._ms_value / ONE_HOUR_MS);
-                picker.minute = this._date_value ? this._date_value.getMinutes() : Math.trunc(this._ms_value / ONE_MIN_MS);
+                picker.minute = this._date_value ? this._date_value.getMinutes() : Math.trunc(this._ms_value / ONE_MIN_MS) - Math.trunc(this._ms_value / ONE_HOUR_MS) * ONE_HOUR_MS / ONE_MIN_MS;
             },
             edit_date: (event) => {
                 const picker = document.createElement('calendar-date-picker');
