@@ -9,6 +9,7 @@ use rand::distr::{Alphanumeric, SampleString};
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 use lettre::{Message, SmtpTransport, Transport};
+use lettre::message::MultiPart;
 use lettre::transport::smtp::authentication::Credentials;
 use tracing::info;
 use crate::config::EMailerConfig;
@@ -73,18 +74,18 @@ impl ResetPasswords {
             .from(format!("Schedulator <{}>", config.source_address).parse().unwrap())
             .to(format!("{} <{}>", username.clone(), user.email.plain()?).parse().unwrap())
             .subject("Reset Schedulator password")
-            .body(String::from(format!("You have asked for a password reinitialization.\n\nThis reset code expire in 15 minutes.\n<b>{code}</b>\n\n\nPlease inform us if it wasn't you.")))?;
+            .multipart(MultiPart::alternative_plain_html(
+                String::from("You have asked for a password reinitialization."),
+                String::from(format!("This reset code expire in 15 minutes.\n<b>{code}</b>\n\n\nPlease inform us if this wasn't you.")),
+            ))?;
 
         // Open a remote connection to gmail
         let mut builder = SmtpTransport::relay(&config.smtp_server)?;
         if let Some((login, password)) = &config.smtp_auth {
             builder = builder.credentials(Credentials::new(login.clone(), password.clone()));
         }
-        
         builder.build().send(&email)?;
-
         info!("Successfully sent reset password email to {}", user.email.plain()?);
-
         Ok(())
     }
 

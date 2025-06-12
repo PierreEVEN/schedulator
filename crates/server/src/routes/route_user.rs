@@ -53,7 +53,9 @@ async fn forgot_password_create(
             ServerError::msg(StatusCode::NOT_FOUND, format!("User not found : {}", err))
         })?;
 
-    println!("{} users with login {}", users.len(), &payload.encoded());
+    if users.is_empty() {
+        return Err(ServerError::msg(StatusCode::NOT_FOUND, "User not found"));
+    }
 
     for user in users {
         ResetPasswords::create(&ctx.database, &ctx.config.backend_config.emailer, user.id())
@@ -68,14 +70,14 @@ async fn forgot_password_check(
     #[derive(Serialize, Deserialize)]
     pub struct Payload {
         pub user: EncString,
-        pub code: String,
+        pub code: EncString,
     }
     let payload = Json::<Payload>::from_request(request, &ctx).await?;
     let users = User::from_login(&ctx.database, &payload.user, &payload.user)
         .await
         .map_err(|err| ServerError::msg(StatusCode::NOT_FOUND, err))?;
     for user in users {
-        match ResetPasswords::from_user(&ctx.database, user.id(), &payload.code).await {
+        match ResetPasswords::from_user(&ctx.database, user.id(), &payload.code.plain()?).await {
             Ok(_) => return Ok(()),
             Err(_) => {}
         }
@@ -89,7 +91,7 @@ async fn forgot_password_update(
     #[derive(Serialize, Deserialize)]
     pub struct Payload {
         pub login: EncString,
-        pub code: String,
+        pub code: EncString,
         pub new_password: EncString,
     }
     let payload = Json::<Payload>::from_request(request, &ctx).await?;
@@ -97,7 +99,7 @@ async fn forgot_password_update(
         .await
         .map_err(|err| ServerError::msg(StatusCode::NOT_FOUND, err))?;
     for user in users {
-        match ResetPasswords::from_user(&ctx.database, user.id(), &payload.code).await {
+        match ResetPasswords::from_user(&ctx.database, user.id(), &payload.code.plain()?).await {
             Ok(item) => {
                 item.reset_password(&ctx.database, &payload.new_password)
                     .await?;
