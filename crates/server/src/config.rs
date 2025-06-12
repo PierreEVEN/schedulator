@@ -12,7 +12,14 @@ pub struct PostgresConfig {
     pub database: String,
     pub ssl_mode: bool,
     pub scheme_name: String,
-    pub default_migrations: String
+    pub default_migrations: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+pub struct EMailerConfig {
+    pub source_address: String,
+    pub smtp_server: String,
+    pub smtp_auth: Option<(String, String)>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -21,7 +28,7 @@ pub struct WebClientConfig {
     pub debug: bool,
     pub check_for_packages_updates: bool,
     pub build_webpack: bool,
-    pub force_secure_requests: bool
+    pub force_secure_requests: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -33,6 +40,7 @@ pub struct TlsConfig {
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct BackendConfig {
     pub postgres: PostgresConfig,
+    pub emailer: EMailerConfig,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -41,7 +49,7 @@ pub struct Config {
     pub backend_config: BackendConfig,
     pub web_client_config: WebClientConfig,
     pub tls_config: TlsConfig,
-    pub use_tls: bool
+    pub use_tls: bool,
 }
 
 impl Default for Config {
@@ -59,6 +67,11 @@ impl Default for Config {
                     scheme_name: "schedulator".to_string(),
                     default_migrations: "./migrations".to_string(),
                 },
+                emailer: EMailerConfig {
+                    source_address: "noreply@schedulator.com".to_string(),
+                    smtp_server: "mail.schedulator.com".to_string(),
+                    smtp_auth: None,
+                },
             },
             web_client_config: WebClientConfig {
                 client_path: PathBuf::from("./webclient"),
@@ -71,7 +84,7 @@ impl Default for Config {
                 certificate: PathBuf::from("/Path/To/certificate.pem"),
                 private_key: PathBuf::from("/Path/To/private_key.pem"),
             },
-            use_tls: true
+            use_tls: true,
         }
     }
 }
@@ -80,10 +93,14 @@ impl Config {
     pub fn from_file(path: PathBuf) -> Result<Self, Error> {
         if path.exists() {
             Ok(serde_json::from_str(&fs::read_to_string(path)?)?)
-        }
-        else {
-            fs::write(path.clone(), serde_json::to_string_pretty(&Config::default())?)?;
-            Err(Error::msg("Created a new config file. Please fill in information first"))
+        } else {
+            fs::write(
+                path.clone(),
+                serde_json::to_string_pretty(&Config::default())?,
+            )?;
+            Err(Error::msg(
+                "Created a new config file. Please fill in information first",
+            ))
         }
     }
 }

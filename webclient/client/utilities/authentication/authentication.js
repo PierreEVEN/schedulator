@@ -50,9 +50,12 @@ const Authentication = {
                 signup: () => {
                     Authentication.signup().then(success).catch(fail);
                 },
-                reset_password: () => {
-                    NOTIFICATION.error(new Message("Unhandled event").title("La réinitialisation de mot de passe n'est pas encore possible"));
-                    fail();
+                reset_password: async () => {
+
+                    await fetch_api('user/forgot-password-create', 'POST', EncString.from_client("spam@evenpierre.fr")).catch(error => {
+                        NOTIFICATION.error(new Message(error).title("Impossible de réinitialiser le mot de passe"));
+                        throw new Error(error);
+                    });
                 }
             });
             /**

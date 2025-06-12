@@ -1,4 +1,4 @@
-use std::fmt::Formatter;
+use crate::database::auth_token::AuthToken;
 use crate::database::calendar::Calendar;
 use crate::database::Database;
 use crate::types::database_ids::{DatabaseId, DatabaseIdTrait, PasswordHash, UserId};
@@ -6,14 +6,13 @@ use crate::types::enc_string::EncString;
 use crate::{query_fmt, query_object, query_objects};
 use anyhow::Error;
 use postgres_from_row::FromRow;
-use rand::random;
-use std::time::{SystemTime, UNIX_EPOCH};
 use rand::distr::{Alphanumeric, SampleString};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use rand::random;
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
-use crate::database::auth_token::AuthToken;
-
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::fmt::Formatter;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Default, Clone, FromRow)]
 pub struct User {
@@ -72,11 +71,11 @@ impl<'de> Deserialize<'de> for User {
                 let mut user = User::default();
                 while let Some(key) = map.next_key()? {
                     match key {
-                        "id" => { user.id = map.next_value()? }
+                        "id" => user.id = map.next_value()?,
                         "email" => {
                             user.email = map.next_value()?;
                         }
-                        "display_name" => { user.display_name = map.next_value()? }
+                        "display_name" => user.display_name = map.next_value()?,
                         _ => {}
                     }
                 }
@@ -88,30 +87,73 @@ impl<'de> Deserialize<'de> for User {
     }
 }
 
-
 impl User {
     pub async fn from_id(db: &Database, id: &UserId) -> Result<User, Error> {
-        match query_object!(db, User, "SELECT * FROM SCHEMA_NAME.users WHERE id = $1", id) {
-            None => { Err(Error::msg("User not found")) }
-            Some(user) => { Ok(user) }
+        match query_object!(
+            db,
+            User,
+            "SELECT * FROM SCHEMA_NAME.users WHERE id = $1",
+            id
+        ) {
+            None => Err(Error::msg("User not found")),
+            Some(user) => Ok(user),
         }
     }
 
     pub async fn from_url_name(db: &Database, name: &EncString) -> Result<User, Error> {
-        match query_object!(db, User, "SELECT * FROM SCHEMA_NAME.users WHERE LOWER(name) = LOWER($1)", name) {
-            None => { Err(Error::msg("User not found")) }
-            Some(user) => { Ok(user) }
+        match query_object!(
+            db,
+            User,
+            "SELECT * FROM SCHEMA_NAME.users WHERE LOWER(name) = LOWER($1)",
+            name
+        ) {
+            None => Err(Error::msg("User not found")),
+            Some(user) => Ok(user),
         }
     }
 
-    pub async fn exists(db: &Database, display_name: &EncString, email: &EncString) -> Result<bool, Error> {
-        Ok(!query_objects!(db, User, r#"SELECT * FROM SCHEMA_NAME.users WHERE display_name = $1 OR email = $2"#, display_name, email).is_empty())
+    pub async fn exists(
+        db: &Database,
+        display_name: &EncString,
+        email: &EncString,
+    ) -> Result<bool, Error> {
+        Ok(!query_objects!(
+            db,
+            User,
+            r#"SELECT * FROM SCHEMA_NAME.users WHERE display_name = $1 OR email = $2"#,
+            display_name,
+            email
+        )
+        .is_empty())
     }
 
-    pub async fn from_credentials(db: &Database, display_name: &EncString, password: &EncString) -> Result<User, Error> {
-        let user = query_object!(db, User, r#"SELECT * FROM SCHEMA_NAME.users WHERE display_name = $1 OR email = $1"#, display_name.encoded())
-            .ok_or(Error::msg("User not found"))
-            .map_err(|err| Error::msg(format!("Failed to query credentials for user : {}", err)))?;
+    pub async fn from_login(
+        db: &Database,
+        display_name: &EncString,
+        email: &EncString,
+    ) -> Result<Vec<User>, Error> {
+        Ok(query_objects!(
+            db,
+            User,
+            r#"SELECT * FROM SCHEMA_NAME.users WHERE display_name = $1 OR email = $2"#,
+            display_name,
+            email
+        ))
+    }
+
+    pub async fn from_credentials(
+        db: &Database,
+        display_name: &EncString,
+        password: &EncString,
+    ) -> Result<User, Error> {
+        let user = query_object!(
+            db,
+            User,
+            r#"SELECT * FROM SCHEMA_NAME.users WHERE display_name = $1 OR email = $1"#,
+            display_name.encoded()
+        )
+        .ok_or(Error::msg("User not found"))
+        .map_err(|err| Error::msg(format!("Failed to query credentials for user : {}", err)))?;
         if user.password_hash.verify(password)? {
             Ok(user)
         } else {
@@ -123,11 +165,21 @@ impl User {
         User::from_id(db, &AuthToken::find(db, authtoken).await?.owner).await
     }
 
-    pub async fn generate_auth_token(user: &User, db: &Database, device: &EncString) -> Result<AuthToken, Error> {
+    pub async fn generate_auth_token(
+        user: &User,
+        db: &Database,
+        device: &EncString,
+    ) -> Result<AuthToken, Error> {
         let mut token: String;
         loop {
             token = Alphanumeric.sample_string(&mut rand::rng(), 64);
-            if query_fmt!(db, "SELECT token FROM SCHEMA_NAME.authtoken WHERE token = $1", token).is_empty() {
+            if query_fmt!(
+                db,
+                "SELECT token FROM SCHEMA_NAME.authtoken WHERE token = $1",
+                token
+            )
+            .is_empty()
+            {
                 break;
             }
         }
@@ -137,14 +189,30 @@ impl User {
         let exp_date = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64;
 
         query_fmt!(db, "INSERT INTO SCHEMA_NAME.authtoken (owner, token, device, expdate) VALUES ($1, $2, $3, $4)", user.id(), enc_token, device, exp_date);
-        query_object!(db, AuthToken, "SELECT * from SCHEMA_NAME.authtoken WHERE token = $1", enc_token).ok_or(Error::msg("Failed to add authentication token"))
+        query_object!(
+            db,
+            AuthToken,
+            "SELECT * from SCHEMA_NAME.authtoken WHERE token = $1",
+            enc_token
+        )
+        .ok_or(Error::msg("Failed to add authentication token"))
     }
 
-    pub async fn create_or_reset_password(user: &mut User, db: &Database, password_hash: &PasswordHash) -> Result<(), Error> {
+    pub async fn create_or_reset_password(
+        user: &mut User,
+        db: &Database,
+        password_hash: &PasswordHash,
+    ) -> Result<(), Error> {
         if !user.id().is_valid() {
             loop {
                 user.set_id(UserId::from(random::<DatabaseId>().abs()))?;
-                if query_fmt!(db, "SELECT id FROM SCHEMA_NAME.users WHERE id = $1", *user.id()).is_empty() {
+                if query_fmt!(
+                    db,
+                    "SELECT id FROM SCHEMA_NAME.users WHERE id = $1",
+                    *user.id()
+                )
+                .is_empty()
+                {
                     break;
                 }
             }
@@ -157,12 +225,18 @@ impl User {
         if user.display_name.is_empty() {
             return Err(Error::msg("Invalid name"));
         }
-        query_fmt!(db, "INSERT INTO SCHEMA_NAME.users
+        query_fmt!(
+            db,
+            "INSERT INTO SCHEMA_NAME.users
                         (id, email, password_hash, display_name) VALUES
                         ($1, $2, $3, $4)
                         ON CONFLICT(id) DO UPDATE SET
                         id = $1, email = $2, password_hash = $3, display_name = $4;",
-            user.id(), user.email, user.password_hash, user.display_name);
+            user.id(),
+            user.email,
+            user.password_hash,
+            user.display_name
+        );
         Ok(())
     }
 
@@ -173,7 +247,11 @@ impl User {
         for token in AuthToken::from_user(db, user.id()).await? {
             AuthToken::delete(&token, db).await?;
         }
-        query_fmt!(db, r#"DELETE FROM SCHEMA_NAME.users WHERE id = $1;"#, user.id());
+        query_fmt!(
+            db,
+            r#"DELETE FROM SCHEMA_NAME.users WHERE id = $1;"#,
+            user.id()
+        );
         Ok(())
     }
 }

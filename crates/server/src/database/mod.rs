@@ -11,6 +11,7 @@ pub mod calendar;
 pub mod calendar_users;
 pub mod event;
 pub mod user;
+pub mod reset_passwords;
 
 pub struct Database {
     db: Client,
