@@ -9,7 +9,7 @@ use rand::distr::{Alphanumeric, SampleString};
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 use lettre::{Message, SmtpTransport, Transport};
-use lettre::message::MultiPart;
+use lettre::message::{Mailbox, MultiPart};
 use lettre::transport::smtp::authentication::Credentials;
 use tracing::info;
 use crate::config::EMailerConfig;
@@ -71,8 +71,8 @@ impl ResetPasswords {
 
 
         let email = Message::builder()
-            .from(format!("Schedulator <{}>", config.source_address).parse().unwrap())
-            .to(format!("{} <{}>", username.clone(), user.email.plain()?).parse().unwrap())
+            .from(Mailbox::new(Some("Schedulator".to_string()), config.source_address.parse()?))
+            .to(Mailbox::new(Some(username.clone()), user.email.plain()?.parse()?))
             .subject("Reset Schedulator password")
             .multipart(MultiPart::alternative_plain_html(
                 String::from("You have asked for a password reinitialization."),
