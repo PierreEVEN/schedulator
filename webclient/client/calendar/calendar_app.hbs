@@ -7,7 +7,7 @@
     <button onclick="{{ctx "today()"}}">Aujourd'hui</button>
     <button onclick="{{ctx "next_week()"}}">></button>
     <button>Connection</button>
-    <button  onclick="{{ctx "ctx_menu()"}}"><img src="/public/images/icons/icons8-ellipsis-90.png" alt="calendar menu"></button>
+    <button  onclick="{{ctx "ctx_menu(event)"}}"><img src="/public/images/icons/icons8-ellipsis-90.png" alt="calendar menu"></button>
 </div>
 <div class="calendar-body-root" {{object "body"}}></div>
 <calendar-modal-container {{object "modal_container"}}></calendar-modal-container>

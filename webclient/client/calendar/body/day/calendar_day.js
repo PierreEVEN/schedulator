@@ -4,6 +4,9 @@ const {ONE_MIN_MS, ONE_DAY_MS} = require("../../../utilities/time_utils");
 const {POINTER_UTILS} = require("../../pointer_utils");
 require('../../selection/selection')
 require('../../widgets/create_events/create_events')
+const {CalendarContextMenuOption} = require("../../widgets/context_menu/context_menu");
+const {fetch_api} = require("../../../utilities/request");
+const {NOTIFICATION, Message} = require("../../../views/message_box/notification");
 
 class CalendarDay extends HTMLElement {
     constructor() {
@@ -303,6 +306,19 @@ class CalendarDay extends HTMLElement {
                 await this._selector.select_event(event.id);
             }
         });
+        event_div.oncontextmenu = async (event_menu) => {
+            if (!this._selector.is_event_selected(event.id))
+                await this._selector.select_event(event.id);
+            document.createElement('calendar-context-menu')
+                .add_option(new CalendarContextMenuOption('Supprimer', "Supprimer l'événement").onclick(async () => {
+                    await fetch_api('event/delete', 'POST', [event.id.toString()]).catch(error => {
+                        NOTIFICATION.error(new Message(error).title("Impossible de supprimer les évenements"));
+                        throw new Error(error);
+                    });
+                    this._even_pool.remove_event(event.id);
+                }))
+                .spawn(event_menu);
+        }
         event_div.hb_elements.handle.style.backgroundColor = numberToColorHSL(event.presence);
         event_div.style.backgroundColor = numberToColorHSL(event.owner);
         event_div.style.top = `${vmin * 100}%`;

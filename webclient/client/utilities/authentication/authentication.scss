@@ -5,9 +5,13 @@
 
   input {
     margin-bottom: 20px;
-    &[type="text"] {
+    &[type="text"], &[type="password"], &[type="email"] {
       width: 100%;
     }
+  }
+
+  label {
+    width: 100%;
   }
 
   #forgot-password {

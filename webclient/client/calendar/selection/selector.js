@@ -104,6 +104,15 @@ class Selector {
         }
     }
 
+
+    /**
+     * @param id {number}
+     * @return {boolean}
+     */
+    is_event_selected(id) {
+        return this._selected_events.has(id);
+    }
+
     /**
      * @param id {number}
      */

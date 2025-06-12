@@ -1,0 +1,37 @@
+
+#calendar-context-menu-container {
+  position: absolute;
+  width: 100dvw;
+  height: 100dvh;
+  overflow: hidden;
+  pointer-events: none;
+
+  calendar-context-menu {
+    position: relative;
+    background-color: #1d1d1d;
+    pointer-events: auto;
+    width: fit-content;
+    height: fit-content;
+    display: flex;
+    border-radius: 10px;
+    border: solid 1px #151515;
+    box-shadow: -10px -5px 20px #000;
+    flex-direction: column;
+
+    button {
+      background-color: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 10px;
+      border-bottom: solid 1px #030303;
+
+      &:hover {
+        background-color: rgba(80, 80, 80, 0.57);
+      }
+
+      &:active {
+        background-color: rgba(52, 52, 52, 0.57);
+      }
+    }
+  }
+}

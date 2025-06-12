@@ -11,6 +11,7 @@ import {import_ics} from "../utilities/import/ics";
 import {EventManager} from "../utilities/event_manager";
 import {Selector} from "./selection/selector";
 import {Event} from "../utilities/event";
+import {CalendarContextMenuOption} from "./widgets/context_menu/context_menu";
 
 require("./widgets/modal/modal-widgets")
 require('./calendar_app.scss');
@@ -267,33 +268,41 @@ class CalendarApp extends HTMLElement {
             title: `${this._display_date.toLocaleDateString(undefined, {month: 'long', year: "numeric"})}`,
             week: `Semaine ${get_week_number(this._display_date)}`
         }, {
-            'ctx_menu': () => {
-                const file_input = document.createElement('input');
-                file_input.type = 'file';
-                file_input.onchange = async (event) => {
+            'ctx_menu': (event) => {
+                document.createElement('calendar-context-menu')
+                    .add_option(new CalendarContextMenuOption("Importer un ICS", "Importer un fichier ICS")
+                        .onclick(async () => {
+                            const file_input = document.createElement('input');
+                            file_input.type = 'file';
+                            file_input.onchange = async (event) => {
 
-                    const user = (await this.get_connected_user()).id.toString();
-                    const body = [];
-                    for (const element of await import_ics(event.target['files'][0])) {
-                        body.push({
-                            calendar: APP_CONFIG.display_calendar().id.toString(),
-                            title: element.title,
-                            owner: user,
-                            start: element.start,
-                            end: element.end,
-                            source: element.source,
-                            presence: Number(-10)
-                        });
-                    }
-                    const res = await fetch_api('event/create', 'POST', body).catch(error => {
-                        NOTIFICATION.error(new Message(error).title("Impossible de créer les évenements"));
-                        throw new Error(error);
-                    });
-                    for (const event of res) {
-                        this.event_source().register_event(Event.new(event))
-                    }
-                };
-                file_input.click();
+                                const user = (await this.get_connected_user()).id.toString();
+                                const body = [];
+                                for (const element of await import_ics(event.target['files'][0])) {
+                                    body.push({
+                                        calendar: APP_CONFIG.display_calendar().id.toString(),
+                                        title: element.title,
+                                        owner: user,
+                                        start: element.start,
+                                        end: element.end,
+                                        source: element.source,
+                                        presence: Number(-10)
+                                    });
+                                }
+                                const res = await fetch_api('event/create', 'POST', body).catch(error => {
+                                    NOTIFICATION.error(new Message(error).title("Impossible de créer les évenements"));
+                                    throw new Error(error);
+                                });
+                                for (const event of res) {
+                                    this.event_source().register_event(Event.new(event))
+                                }
+                            };
+                            file_input.click();
+                        }))
+                    .add_option(new CalendarContextMenuOption("Paramètres", "Régler les paramètres de ce calendrier"))
+                    .add_option(new CalendarContextMenuOption("Disponibilités", "Chercher les disponibilités"))
+                    .add_option(new CalendarContextMenuOption("Affichage", "Options d'affichage"))
+                    .spawn(event);
             },
             'next_week': () => {
                 const date = new Date(this._display_date);
@@ -434,7 +443,10 @@ class CalendarApp extends HTMLElement {
         if (!this.isConnected)
             return;
 
-        this._elements.title.innerText = `${this._display_date.toLocaleDateString(undefined, {month: 'long', year: "numeric"})}`;
+        this._elements.title.innerText = `${this._display_date.toLocaleDateString(undefined, {
+            month: 'long',
+            year: "numeric"
+        })}`;
         this._elements.week.innerText = `Semaine ${get_week_number(this._display_date)}`;
 
         if (this._main_body)
