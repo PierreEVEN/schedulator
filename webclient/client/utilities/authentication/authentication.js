@@ -18,7 +18,21 @@ const Authentication = {
                         password: EncString.from_client(signin_div.hb_elements.password.value),
                         device: EncString.from_client(navigator.userAgent)
                     }).catch(error => {
-                        NOTIFICATION.error(new Message(error).title("Connexion échouée"));
+                        const msg = new Message(error)._text.split(':');
+                        signin_div.hb_elements.error.innerText = msg[msg.length - 1];
+                        signin_div.hb_elements.error.animate([
+                            {},
+                            {
+                                backgroundColor: '#B6492D41',
+                            },
+                            {}
+                        ], {
+                            iterations: 3,
+                            duration: 200,
+                        })
+                        signin_div.hb_elements.password.value = '';
+                        signin_div.hb_elements.login.focus();
+                        console.error(error);
                         throw new Error(error);
                     });
                     APP_COOKIES.login(result.token);
@@ -63,7 +77,20 @@ const Authentication = {
                         email: EncString.from_client(signup_div.hb_elements.email.value),
                         password: EncString.from_client(signup_div.hb_elements.password.value)
                     }).catch(error => {
-                        NOTIFICATION.error(new Message(error).title("Impossible de créer l'utilisateur"));
+                        const msg = new Message(error)._text.split(':');
+                        signup_div.hb_elements.error.innerText = msg[msg.length - 1];
+                        signup_div.hb_elements.error.animate([
+                            {},
+                            {
+                                backgroundColor: '#B6492D41',
+                            },
+                            {}
+                        ], {
+                            iterations: 3,
+                            duration: 200,
+                        })
+                        signup_div.hb_elements.login.focus();
+                        console.error(error);
                         throw new Error(error);
                     });
 

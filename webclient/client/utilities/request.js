@@ -40,7 +40,7 @@ async function fetch_api(path, method = 'GET', body = null, custom_token = null)
                 return text;
             }
         } else {
-            NOTIFICATION.error(new Message(await result.text()).title("Connexion échouée"));
+            throw {message: await result.text(), code: result.status};
         }
     }
     throw {message: `Connexion annulée`, code: result.status}

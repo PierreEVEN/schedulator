@@ -11,7 +11,7 @@
     <label for='password'>
         <input type="password" name="password" placeholder="Mot de passe" id="password" required {{object "password"}}>
     </label>
-
+    <p class="authentication-error" {{object "error"}}></p>
     <input type="submit" value="Créer un compte">
     <div class='footer'>
         <p>Déjà membre ?</p> <a href="javascript:{{ctx "login()"}}">Se connecter à votre

@@ -3,6 +3,12 @@
   display: flex;
   align-items: center;
 
+  .authentication-error {
+    color: #b6492d;
+    border-radius: 5px;
+    margin: 0;
+  }
+
   input {
     margin-bottom: 20px;
     &[type="text"], &[type="password"], &[type="email"] {
