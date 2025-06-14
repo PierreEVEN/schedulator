@@ -270,6 +270,7 @@ class CalendarApp extends HTMLElement {
         }, {
             'ctx_menu': (event) => {
                 document.createElement('calendar-context-menu')
+                    .add_option(new CalendarContextMenuOption("Partager", "Copier un le lien vers le calendrier dans le presse-papier"))
                     .add_option(new CalendarContextMenuOption("Importer un ICS", "Importer un fichier ICS")
                         .onclick(async () => {
                             const file_input = document.createElement('input');

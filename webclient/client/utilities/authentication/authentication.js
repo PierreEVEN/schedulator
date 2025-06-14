@@ -39,7 +39,7 @@ const Authentication = {
                         console.error(error);
                         throw new Error(error);
                     });
-                    APP_COOKIES.login(result.token);
+                    await APP_COOKIES.login(result.token, signin_div.hb_elements.stay_connected.checked);
                     APP_CONFIG.set_connected_user(User.new(result.user));
                     if (APP_CONFIG.error())
                         location.reload();
@@ -105,7 +105,7 @@ const Authentication = {
                                                 document.getElementById('global-modal').close();
                                                 throw new Error(error);
                                             });
-                                            APP_COOKIES.login(result.token);
+                                            await APP_COOKIES.login(result.token, signin_div.hb_elements.stay_connected.checked);
                                             APP_CONFIG.set_connected_user(User.new(result.user));
                                             document.getElementById('global-modal').close();
                                         }
@@ -158,7 +158,7 @@ const Authentication = {
                         NOTIFICATION.error(new Message(error).title("Connexion échouée"));
                         throw new Error(error);
                     });
-                    APP_COOKIES.login(login_result.token);
+                    await APP_COOKIES.login(login_result.token, signup_div.hb_elements.stay_connected.checked);
                     APP_CONFIG.set_connected_user(User.new(login_result.user))
                     success();
                     /**

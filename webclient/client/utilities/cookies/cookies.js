@@ -5,7 +5,7 @@ const dayjs = require('dayjs')
 const utc = require("dayjs/plugin/utc");
 dayjs.extend(utc);
 
-require('./ask_for_cookies.scss')
+require('./cookies.scss')
 
 class CookieString {
     constructor(data) {
@@ -50,6 +50,8 @@ class CookieString {
 }
 
 class AppCookies {
+    _stay_connected;
+
     constructor() {
         const cookies = new CookieString(document.cookie);
         this._authtoken = cookies.read("authtoken");
@@ -57,21 +59,22 @@ class AppCookies {
             this._authtoken_exp = cookies.read("authtoken-exp");
 
         this._allow_cookies = Boolean(cookies.read("allow-cookies"));
+        this._stay_connected = cookies.read("stay-connected");
 
         if (!this._allow_cookies) {
-            const cookies_div = require("./ask_for_cookies.hbs")({}, {
+            this._cookies_div = require("./cookies_div.hbs")({}, {
                 enable: () => {
                     this._allow_cookies = true;
                     this.save_cookies();
-                    cookies_div.remove();
+                    this._cookies_div.remove();
                 },
                 skip: () => {
                     this._allow_cookies = false;
                     this.save_cookies();
-                    cookies_div.remove();
+                    this._cookies_div.remove();
                 }
             });
-            document.body.append(cookies_div);
+            document.body.append(this._cookies_div);
         }
 
         this.save_cookies();
@@ -90,9 +93,29 @@ class AppCookies {
 
     /**
      * @param authentication_token {Object}
+     * @param stay_connected {boolean}
      */
-    login(authentication_token) {
+    async login(authentication_token, stay_connected) {
         if (authentication_token && authentication_token.token) {
+            if (!this._allow_cookies && stay_connected) {
+                this._allow_cookies = await new Promise((resolve) => {
+                    document.getElementById('global-modal').open(require('./ask_for_cookies.hbs')({}, {
+                        validate: () => {
+                            if (this._cookies_div)
+                                this._cookies_div.remove();
+                            resolve(true);
+                        },
+                        reject: () => {
+                            resolve(false);
+                        }
+                    }), {
+                        on_close: () => {
+                            resolve(false);
+                        }
+                    });
+                });
+            }
+            this._stay_connected = stay_connected;
             this._authtoken = authentication_token.token;
             this._authtoken_exp = authentication_token.expiration_date;
             this.save_cookies();
@@ -117,13 +140,16 @@ class AppCookies {
         else
             return cookies.save();
 
-        if (this._authtoken)
+        cookies.set("stay-connected", this._stay_connected);
+        if (this._stay_connected) {
+            if (this._authtoken)
+                if (this._authtoken_exp)
+                    cookies.set("authtoken", this._authtoken, this._authtoken_exp)
+                else
+                    cookies.set("authtoken", this._authtoken, dayjs().unix() + 1000 * 60 * 60 * 24 * 30)
             if (this._authtoken_exp)
-                cookies.set("authtoken", this._authtoken, this._authtoken_exp)
-            else
-                cookies.set("authtoken", this._authtoken, dayjs().unix() + 1000 * 60 * 60 * 24 * 30)
-        if (this._authtoken_exp)
-            cookies.set("authtoken-exp", this._authtoken_exp);
+                cookies.set("authtoken-exp", this._authtoken_exp);
+        }
 
         cookies.save();
     }
