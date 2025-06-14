@@ -21,8 +21,9 @@ class CalendarDateTimeInput extends HTMLElement {
         this.has_year = this.hasAttribute('has_year');
 
         document.addEventListener('pointerup', (event) => {
-            const parent = event.target.closest('calendar-date-time-input');
-            const modal = event.target.closest('.calendar-dt-picker-container');
+
+            const parent = event.target.closest ? event.target.closest('calendar-date-time-input') : null;
+            const modal = event.target.closest ? event.target.closest('.calendar-dt-picker-container') : null;
             if (modal !== this.modal && parent !== this)
                 this._close_edit_modal();
         })
@@ -34,7 +35,7 @@ class CalendarDateTimeInput extends HTMLElement {
         this.modal.classList.add('calendar-dt-picker-container');
         this.modal.append(widget);
         this.modal.onpointerup = (event) => {
-            if (!event.target.closest('.calendar-datetime-picker'))
+            if (!event.target.closest || !event.target.closest('.calendar-datetime-picker'))
                 this._close_edit_modal();
         }
         document.body.append(this.modal);
