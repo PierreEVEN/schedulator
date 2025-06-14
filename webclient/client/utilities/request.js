@@ -1,5 +1,5 @@
 import {APP_CONFIG} from "./app_config";
-import {APP_COOKIES} from "./cookies";
+import {APP_COOKIES} from "./cookies/cookies";
 import {Authentication} from "./authentication/authentication";
 import {Message, NOTIFICATION} from "../views/message_box/notification";
 

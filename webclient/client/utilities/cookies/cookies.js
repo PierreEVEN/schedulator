@@ -1,9 +1,11 @@
-import {APP_CONFIG} from "./app_config";
-import {Message, NOTIFICATION} from "../views/message_box/notification";
+import {APP_CONFIG} from "../app_config";
+import {Message, NOTIFICATION} from "../../views/message_box/notification";
 
 const dayjs = require('dayjs')
 const utc = require("dayjs/plugin/utc");
 dayjs.extend(utc);
+
+require('./ask_for_cookies.scss')
 
 class CookieString {
     constructor(data) {
@@ -51,9 +53,26 @@ class AppCookies {
     constructor() {
         const cookies = new CookieString(document.cookie);
         this._authtoken = cookies.read("authtoken");
-        this._last_uri = document.documentURI;
         if (this._authtoken)
             this._authtoken_exp = cookies.read("authtoken-exp");
+
+        this._allow_cookies = Boolean(cookies.read("allow-cookies"));
+
+        if (!this._allow_cookies) {
+            const cookies_div = require("./ask_for_cookies.hbs")({}, {
+                enable: () => {
+                    this._allow_cookies = true;
+                    this.save_cookies();
+                    cookies_div.remove();
+                },
+                skip: () => {
+                    this._allow_cookies = false;
+                    this.save_cookies();
+                    cookies_div.remove();
+                }
+            });
+            document.body.append(cookies_div);
+        }
 
         this.save_cookies();
     }
@@ -92,13 +111,20 @@ class AppCookies {
     save_cookies() {
         const cookies = new CookieString();
 
+        // Don't save if not allowed on current browser
+        if (this._allow_cookies)
+            cookies.set("allow-cookies", this._allow_cookies);
+        else
+            return cookies.save();
+
         if (this._authtoken)
             if (this._authtoken_exp)
                 cookies.set("authtoken", this._authtoken, this._authtoken_exp)
             else
                 cookies.set("authtoken", this._authtoken, dayjs().unix() + 1000 * 60 * 60 * 24 * 30)
         if (this._authtoken_exp)
-            cookies.set("authtoken-exp", this._authtoken_exp)
+            cookies.set("authtoken-exp", this._authtoken_exp);
+
         cookies.save();
     }
 }

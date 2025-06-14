@@ -1,6 +1,6 @@
 import {fetch_api} from "../request";
 import {EncString} from "../encstring";
-import {APP_COOKIES} from "../cookies";
+import {APP_COOKIES} from "../cookies/cookies";
 import {APP_CONFIG} from "../app_config";
 import {Message, NOTIFICATION} from "../../views/message_box/notification";
 import {User} from "../user";
