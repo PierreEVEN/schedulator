@@ -463,8 +463,13 @@ class CalendarApp extends HTMLElement {
             this._main_body.set_event_source(this._event_source);
     }
 
-    open_modal(content) {
-        this._elements['modal_container'].open(content);
+    /**
+     * @param content {HTMLElement}
+     * @param options {CreateInfos|undefined}
+     * @return {HTMLElement}
+     */
+    open_modal(content, options) {
+        this._elements['modal_container'].open(content, options);
     }
 
     close_modal() {

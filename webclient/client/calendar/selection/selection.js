@@ -31,7 +31,7 @@ class CalendarSelection extends HTMLElement {
              */
             const app = event.target.closest('calendar-app');
             if (app) {
-                app.open_modal(document.createElement('calendar-create-event-modal'));
+                app.open_modal(document.createElement('calendar-create-event-modal'), {relative_event: event});
             }
         }
 

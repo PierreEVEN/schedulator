@@ -14,12 +14,25 @@ calendar-modal-container {
   opacity: 0;
   transition-duration: 0.2s;
 
+
   .calendar-modal-box {
     scale: 0;
     transition-duration: 0.2s;
 
     border: solid 1px #151515;
     box-shadow: -10px -5px 20px #000;
+  }
+
+  &.calendar-modal-relative {
+    transition-duration: unset;
+    .calendar-modal-box {
+      transition-duration: unset;
+      position: absolute;
+      right: auto;
+      bottom: auto;
+      width: fit-content;
+      height: fit-content;
+    }
   }
 
   &.calendar-modal-open {
