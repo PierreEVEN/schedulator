@@ -50,7 +50,6 @@ const Authentication = {
                     Authentication.signup().then(success).catch(fail);
                 },
                 reset_password: async () => {
-
                     let reset_passwd_div = require('./reset_passwd_login.hbs')({}, {
                         reset: async (event) => {
                             event.preventDefault();
