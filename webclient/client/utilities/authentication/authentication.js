@@ -50,7 +50,6 @@ const Authentication = {
                     Authentication.signup().then(success).catch(fail);
                 },
                 reset_password: async () => {
-
                     let reset_passwd_div = require('./reset_passwd_login.hbs')({}, {
                         reset: async (event) => {
                             event.preventDefault();
@@ -121,11 +120,7 @@ const Authentication = {
                     document.getElementById('global-modal').open(reset_passwd_div);
                 }
             });
-            /**
-             * @type {CalendarModalContainer}
-             */
-            const global_modal = document.getElementById('global-modal');
-            global_modal.open(signin_div, {on_close:
+            document.getElementById('global-modal').open(signin_div, {on_close:
                     () => {
                         fail("Authentification annulée");
                     }
@@ -164,8 +159,7 @@ const Authentication = {
                     /**
                      * @type {CalendarModalContainer}
                      */
-                    const global_modal = document.getElementById('global-modal');
-                    global_modal.close();
+                    document.getElementById('global-modal').close();
                 },
                 login: () => {
                     Authentication.login().then(success).catch(fail);
@@ -175,8 +169,7 @@ const Authentication = {
             /**
              * @type {CalendarModalContainer}
              */
-            const global_modal = document.getElementById('global-modal');
-            global_modal.open(signup_div, { on_close: () => {
+            document.getElementById('global-modal').open(signup_div, { on_close: () => {
                     fail("Authentification annulée");
                 }
             });

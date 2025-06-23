@@ -74,7 +74,7 @@ impl Server {
                     config.tls_config.certificate.clone(),
                     config.tls_config.private_key.clone(),
                 )
-                .await
+                    .await
                 {
                     Ok(config) => config,
                     Err(err) => {
@@ -113,8 +113,8 @@ impl Server {
                         },
                         router,
                     )
-                    .await
-                    .unwrap();
+                        .await
+                        .unwrap();
                 }
             }))
         }
@@ -146,7 +146,7 @@ async fn main() {
             error_file,
             format!("schedulator_logs/error_{}.log", last_write_time),
         )
-        .unwrap();
+            .unwrap();
     }
 
     if fs::exists(log_file).unwrap() {
@@ -159,7 +159,7 @@ async fn main() {
             log_file,
             format!("schedulator_logs/logs_{}.log", last_write_time),
         )
-        .unwrap();
+            .unwrap();
     }
 
     let err_file = OpenOptions::new()
@@ -278,7 +278,6 @@ async fn main() {
 pub async fn handle_error() {}
 
 pub async fn middleware_remove_trailing_slash(mut request: Request<Body>, next: Next) -> Result<impl IntoResponse, ServerError> {
-
     let uri = request.uri_mut();
     let path_str = uri.path();
     if path_str.ends_with('/') && path_str.len() > 1 {
@@ -408,7 +407,7 @@ async fn print_request_response(
                             }
                         }
                     )
-                    .as_str(),
+                        .as_str(),
                 );
 
                 return Ok(Html(index_data).into_response());
@@ -422,7 +421,7 @@ async fn print_request_response(
 
 async fn buffer_and_print<B>(direction: &str, body: B) -> Result<Bytes, (StatusCode, String)>
 where
-    B: axum::body::HttpBody<Data = Bytes>,
+    B: axum::body::HttpBody<Data=Bytes>,
     B::Error: std::fmt::Display,
 {
     let bytes = match body.collect().await {
