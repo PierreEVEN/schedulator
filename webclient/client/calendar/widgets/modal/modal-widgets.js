@@ -20,8 +20,6 @@ class CalendarModalContainer extends HTMLElement {
 
     /**
      * @typedef {Object} CreateInfos
-     * @property {string|undefined} custom_width
-     * @property {string|undefined} custom_height
      * @property {string|undefined} modal_class
      * @property {MouseEvent|undefined} relative_event
      * @property {function} on_close
